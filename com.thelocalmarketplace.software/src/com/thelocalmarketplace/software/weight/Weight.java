@@ -7,7 +7,9 @@ import com.jjjwelectronics.IDeviceListener;
 import com.jjjwelectronics.Mass;
 import com.jjjwelectronics.scale.ElectronicScaleListener;
 import com.jjjwelectronics.scale.IElectronicScale;
-import com.thelocalmarketplace.hardware.SelfCheckoutStation;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
 
 import ca.ucalgary.seng300.simulation.NullPointerSimulationException;
 
@@ -32,12 +34,23 @@ public class Weight {
 	private boolean isDiscrepancy= false; //Flag of weight Discrepancy, set to false in default
 
 	/**
-	 * Basic constructor for weight class
+	 * Basic constructors for weight class
 	 * 
+	 * @param scs
+	 * 			The self-checkout station in which the weight shall be registered to
 	 */ 
-	public Weight(SelfCheckoutStation scs) {
+	public Weight(SelfCheckoutStationBronze scs) {
 		scs.baggingArea.register(new innerListener());
 	}
+	
+	public Weight(SelfCheckoutStationSilver scs) {
+		scs.baggingArea.register(new innerListener());
+	}
+	
+	public Weight(SelfCheckoutStationGold scs) {
+		scs.baggingArea.register(new innerListener());
+	}
+	
 	/*
 	 * This method will update expected weight by accumulating the weight of scanned item from parameter
 	 * After each time this method been called, it will run checkDiscrepancy()

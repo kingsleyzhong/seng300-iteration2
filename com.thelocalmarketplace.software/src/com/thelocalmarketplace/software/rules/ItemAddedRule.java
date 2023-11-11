@@ -8,13 +8,13 @@ import com.jjjwelectronics.scanner.Barcode;
 import com.jjjwelectronics.scanner.BarcodeScannerListener;
 import com.jjjwelectronics.scanner.IBarcodeScanner;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
-import com.thelocalmarketplace.hardware.SelfCheckoutStation;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
 import com.thelocalmarketplace.hardware.external.ProductDatabases;
 import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
-
 import ca.ucalgary.seng300.simulation.InvalidArgumentSimulationException;
-import ca.ucalgary.seng300.simulation.NullPointerSimulationException;
 
 /**
  * Rule for adding items to the session.
@@ -35,21 +35,41 @@ public class ItemAddedRule {
 	private Session session;
     
 	/**
-	 * Basic constructor for ItemAddedRule
+	 * Basic constructor for ItemAddedRule. Registers a listener to scanners being used in the 
+	 * self-checkout station.
 	 * 
 	 * @param scs
 	 * 			The selfCheckoutStation in which to be installed
 	 * @param session
 	 * 			The session in which to add to
 	 */
-	public ItemAddedRule(SelfCheckoutStation scs, Session session) {
+	public ItemAddedRule(SelfCheckoutStationBronze scs, Session session) {
 		if (scs == null) {
 			throw new InvalidArgumentSimulationException("Self Checkout Station cannot be null.");
 		}
 		this.session = session;
-		scs.scanner.register(new innerListener());
+		scs.mainScanner.register(new innerListener());
+		scs.handheldScanner.register(new innerListener());
+	}
+	
+	public ItemAddedRule(SelfCheckoutStationSilver scs, Session session) {
+		if (scs == null) {
+			throw new InvalidArgumentSimulationException("Self Checkout Station cannot be null.");
+		}
+		this.session = session;
+		scs.mainScanner.register(new innerListener());
+		scs.handheldScanner.register(new innerListener());
 	}
 
+	public ItemAddedRule(SelfCheckoutStationGold scs, Session session) {
+		if (scs == null) {
+			throw new InvalidArgumentSimulationException("Self Checkout Station cannot be null.");
+		}
+		this.session = session;
+		scs.mainScanner.register(new innerListener());
+		scs.handheldScanner.register(new innerListener());
+	}
+	
 	/**
 	 * An innerListener class that listens to BarcodeScannerListener.
 	 * If a barcode has been scanned add item to the session
