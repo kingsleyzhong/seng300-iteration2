@@ -20,7 +20,7 @@ import com.tdc.CashOverloadException;
 import com.tdc.DisabledException;
 import com.tdc.coin.Coin;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
-import com.thelocalmarketplace.hardware.SelfCheckoutStation;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
 import com.thelocalmarketplace.hardware.external.ProductDatabases;
 import com.thelocalmarketplace.software.SelfCheckoutStationLogic;
 import com.thelocalmarketplace.software.Session;
@@ -37,16 +37,11 @@ import powerutility.PowerGrid;
  *  	Pay by coin
  * 
  * Project iteration group members:
- * 		Ayman Momin 		: 30192494
- * 		Emily Kiddle 		: 30122331
- * 		Fardin Rahman Sami 	: 30172916
- * 		Kaylee Xiao 		: 30173778
- * 		Tamanna Kaur 		: 30170920
- * 		YiPing Zhang 		: 30127823
+ * 		
  */
 
 public class SelfCheckoutStationSystemTest {
-	private SelfCheckoutStation scs;
+	private SelfCheckoutStationBronze scs;
 	private Session session;
 	private BarcodedProduct product;
 	private Barcode barcode;
@@ -56,7 +51,7 @@ public class SelfCheckoutStationSystemTest {
 	
 	@Before
 	public void setup() {
-		scs = new SelfCheckoutStation();
+		scs = new SelfCheckoutStationBronze();
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
 		session = new Session();
@@ -92,7 +87,7 @@ public class SelfCheckoutStationSystemTest {
 	@Test
 	public void testScanAnItem() {
 		session.start();
-		scs.scanner.scan(item);
+		scs.mainScanner.scan(item);
 		HashMap<BarcodedProduct, Integer> items = session.getBarcodedItems();
 		assertTrue("The barcoded product associated with the barcode has been added", items.containsKey(product));
 	}
@@ -100,7 +95,7 @@ public class SelfCheckoutStationSystemTest {
 	@Test
 	public void testScanAnItemFunds() {
 		session.start();
-		scs.scanner.scan(item);
+		scs.mainScanner.scan(item);
 		Funds funds = session.getFunds();
 		BigDecimal expected = new BigDecimal(10);
 		BigDecimal actual = funds.getItemsPrice();
@@ -110,7 +105,7 @@ public class SelfCheckoutStationSystemTest {
 	@Test
 	public void testScanAnItemWeight() {
 		session.start();
-		scs.scanner.scan(item);
+		scs.mainScanner.scan(item);
 		Weight weight = session.getWeight();
 		Mass expected = new Mass(20.0);
 		Mass actual = weight.getExpectedWeight();
@@ -134,7 +129,7 @@ public class SelfCheckoutStationSystemTest {
 	@Test
 	public void payForItemViaCoin() throws DisabledException, CashOverloadException {
 		session.start();
-		scs.scanner.scan(item);
+		scs.mainScanner.scan(item);
 		scs.baggingArea.addAnItem(item);
 		session.pay();
 		for (int i = 0; i < 10; i++) {
@@ -150,21 +145,21 @@ public class SelfCheckoutStationSystemTest {
 	@Test
 	public void testDiscrepancy() {
 		session.start();
-		scs.scanner.scan(item);
+		scs.mainScanner.scan(item);
 		assertTrue("Session is frozen upon discrepancy", session.isFrozen());
 	}
 	
 	@Test(expected = InvalidActionException.class)
 	public void testAddItemWhenDiscrepancy() {
 		session.start();
-		scs.scanner.scan(item);
-		scs.scanner.scan(item2);
+		scs.mainScanner.scan(item);
+		scs.mainScanner.scan(item2);
 	}
 	
 	@Test(expected = InvalidActionException.class)
 	public void testPayWhenDiscrepancy() throws DisabledException, CashOverloadException {
 		session.start();
-		scs.scanner.scan(item);
+		scs.mainScanner.scan(item);
 		scs.baggingArea.addAnItem(item);
 		session.pay();
 		scs.baggingArea.addAnItem(item2);
@@ -174,7 +169,7 @@ public class SelfCheckoutStationSystemTest {
 	@Test
 	public void testDiscrepancyDuringPay() {
 		session.start();
-		scs.scanner.scan(item);
+		scs.mainScanner.scan(item);
 		scs.baggingArea.addAnItem(item);
 		session.pay();
 		scs.baggingArea.addAnItem(item2);

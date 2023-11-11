@@ -12,7 +12,7 @@ import com.tdc.CashOverloadException;
 import com.tdc.DisabledException;
 import com.tdc.coin.Coin;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
-import com.thelocalmarketplace.hardware.SelfCheckoutStation;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
 import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import com.thelocalmarketplace.software.funds.Funds;
@@ -33,15 +33,10 @@ import java.util.Locale;
  * See tests for Weight, Funds to ensure no bugs.
  * 
  * Project iteration group members:
- * 		Ayman Momin 		: 30192494
- * 		Emily Kiddle 		: 30122331
- * 		Fardin Rahman Sami 	: 30172916
- * 		Kaylee Xiao 		: 30173778
- * 		Tamanna Kaur 		: 30170920
- * 		YiPing Zhang 		: 30127823
+ * 		
  */
 public class SessionTest {
-	private SelfCheckoutStation scs = new SelfCheckoutStation();
+	private SelfCheckoutStationBronze scs = new SelfCheckoutStationBronze();
     private Session session;
     private BarcodedProduct product;
     private BarcodedProduct product2;

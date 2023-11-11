@@ -9,7 +9,7 @@ import com.jjjwelectronics.Mass;
 import com.jjjwelectronics.Numeral;
 import com.jjjwelectronics.scanner.Barcode;
 import com.jjjwelectronics.scanner.BarcodedItem;
-import com.thelocalmarketplace.hardware.SelfCheckoutStation;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
 import com.thelocalmarketplace.software.weight.Weight;
 import com.thelocalmarketplace.software.weight.WeightListener;
 import ca.ucalgary.seng300.simulation.NullPointerSimulationException;
@@ -19,17 +19,12 @@ import powerutility.PowerGrid;
  * 
  * 
  *  * Project iteration group members:
- * 		Ayman Momin 		: 30192494
- * 		Emily Kiddle 		: 30122331
- * 		Fardin Rahman Sami 	: 30172916
- * 		Kaylee Xiao 		: 30173778
- * 		Tamanna Kaur 		: 30170920
- * 		YiPing Zhang 		: 30127823
+ * 		
  */
 public class WeightTest {
 	private Weight weight;
     private TestWeightListener weightListener;
-	private SelfCheckoutStation scs;
+	private SelfCheckoutStationBronze scs;
 	
 	/*
 	 * Stub for TestWeightListerner
@@ -55,7 +50,7 @@ public class WeightTest {
 	
     @Before
     public void setUp() {
-    	scs = new SelfCheckoutStation();
+    	scs = new SelfCheckoutStationBronze();
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
 		weight = new Weight(scs);
