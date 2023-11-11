@@ -140,7 +140,7 @@ public class Session {
 		if (sessionState.inPay()) {
 			funds.setPay(true);
 		} else {
-			sessionFrozen = false;
+			sessionState = SessionState.IN_SESSION;
 		}
 	}
 

@@ -5,7 +5,7 @@ public enum SessionState {
     IN_SESSION(false),
     BLOCKED(false),
     PAY_BY_CASH(true),
-    PAY_BY_CARD(true)
+    PAY_BY_CARD(true);
     
     // This is to simplify checking if the state is a pay state
     private final boolean payState;
