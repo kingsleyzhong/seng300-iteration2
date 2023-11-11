@@ -21,6 +21,8 @@ import com.tdc.DisabledException;
 import com.tdc.coin.Coin;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
 import com.thelocalmarketplace.hardware.external.ProductDatabases;
 import com.thelocalmarketplace.software.SelfCheckoutStationLogic;
 import com.thelocalmarketplace.software.Session;
@@ -42,7 +44,11 @@ import powerutility.PowerGrid;
 
 public class SelfCheckoutStationSystemTest {
 	private SelfCheckoutStationBronze scs;
+	private SelfCheckoutStationSilver scss;
+	private SelfCheckoutStationGold scsg;
 	private Session session;
+	private Session session2;
+	private Session session3;
 	private BarcodedProduct product;
 	private Barcode barcode;
 	private BarcodedItem item;
@@ -56,6 +62,18 @@ public class SelfCheckoutStationSystemTest {
 		scs.turnOn();
 		session = new Session();
 		SelfCheckoutStationLogic.installOn(scs, session);
+		
+		scss = new SelfCheckoutStationSilver();
+		scss.plugIn(PowerGrid.instance());
+		scss.turnOn();
+		session2 = new Session();
+		SelfCheckoutStationLogic.installOn(scss, session2);
+		
+		scsg = new SelfCheckoutStationGold();
+		scsg.plugIn(PowerGrid.instance());
+		scsg.turnOn();
+		session2 = new Session();
+		SelfCheckoutStationLogic.installOn(scsg, session3);
 		
 		// Populate database
 		barcode = new Barcode(new Numeral[] {Numeral.valueOf((byte) 1)});
