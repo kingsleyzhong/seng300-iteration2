@@ -10,6 +10,8 @@ import com.jjjwelectronics.Numeral;
 import com.jjjwelectronics.scanner.Barcode;
 import com.jjjwelectronics.scanner.BarcodedItem;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
 import com.thelocalmarketplace.software.weight.Weight;
 import com.thelocalmarketplace.software.weight.WeightListener;
 import ca.ucalgary.seng300.simulation.NullPointerSimulationException;
@@ -19,12 +21,21 @@ import powerutility.PowerGrid;
  * 
  * 
  *  * Project iteration group members:
- * 		
+ * 		Ayman Momin 		: 30192494
+ * 		Emily Kiddle 		: 30122331
+ * 		Fardin Rahman Sami 	: 30172916
+ * 		Kaylee Xiao 		: 30173778
+ * 		Tamanna Kaur 		: 30170920
+ * 		YiPing Zhang 		: 30127823
  */
 public class WeightTest {
 	private Weight weight;
+	private Weight weightSilver;
+	private Weight weightGold;
     private TestWeightListener weightListener;
 	private SelfCheckoutStationBronze scs;
+	private SelfCheckoutStationSilver scss;
+	private SelfCheckoutStationGold scsg;
 	
 	/*
 	 * Stub for TestWeightListerner
@@ -53,9 +64,23 @@ public class WeightTest {
     	scs = new SelfCheckoutStationBronze();
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
+		
+		scss = new SelfCheckoutStationSilver();
+		scss.plugIn(PowerGrid.instance());
+		scss.turnOn();
+		
+		scsg = new SelfCheckoutStationGold();
+		scsg.plugIn(PowerGrid.instance());
+		scsg.turnOn();
+		
 		weight = new Weight(scs);
+		weightSilver = new Weight(scss);
+		weightGold = new Weight(scsg);
+		
 		weightListener = new TestWeightListener();
 		weight.register(weightListener);
+		weightSilver.register(weightListener);
+		weightGold.register(weightListener);
     }
 	
 
@@ -80,17 +105,36 @@ public class WeightTest {
 		assertEquals("The expected Mass should be updated to 202.0", expected, actual);;
 	}
 
-		@Test
-		public void testTheMassOnTheScaleHasChangedUpdatesActualWeight() {
+	@Test
+	public void testTheMassOnTheScaleHasChangedUpdatesActualWeightBronze() {
 	    Mass newMass = new Mass(10.0);
 	    Barcode barcode = new Barcode(new Numeral[] {Numeral.valueOf((byte) 1)});
 	    Item item = new BarcodedItem(barcode, new Mass(10.0));
 	    scs.baggingArea.addAnItem(item);; // Simulate the scale reporting a new mass
 	    assertEquals("Actual weight should be updated to the new mass.", newMass, weight.getActualWeight());
+	}
+	
+	@Test
+	public void testTheMassOnTheScaleHasChangedUpdatesActualWeightSilver() {
+	    Mass newMass = new Mass(10.0);
+	    Barcode barcode = new Barcode(new Numeral[] {Numeral.valueOf((byte) 1)});
+	    Item item = new BarcodedItem(barcode, new Mass(10.0));
+	    scss.baggingArea.addAnItem(item);; // Simulate the scale reporting a new mass
+	    assertEquals("Actual weight should be updated to the new mass.", newMass, weightSilver.getActualWeight());
+	}	
+	
+	@Test
+	public void testTheMassOnTheScaleHasChangedUpdatesActualWeightGold() {
+	    Mass newMass = new Mass(10.0);
+	    Barcode barcode = new Barcode(new Numeral[] {Numeral.valueOf((byte) 1)});
+	    Item item = new BarcodedItem(barcode, new Mass(10.0));
+	    scsg.baggingArea.addAnItem(item);; // Simulate the scale reporting a new mass
+	    assertEquals("Actual weight should be updated to the new mass.", newMass, weightGold.getActualWeight());
 	}	
 		
-		@Test
-		public void testCheckDiscrepancyWithDifferentWeights() {
+	
+	@Test
+	public void testCheckDiscrepancyWithDifferentWeights() {
         weight.update(new Mass(100.0)); // Set expected weight to 100
         Barcode barcode = new Barcode(new Numeral[] {Numeral.valueOf((byte) 1)});
 	    Item item = new BarcodedItem(barcode, new Mass(150.0));
@@ -100,14 +144,54 @@ public class WeightTest {
         assertTrue("Discrepancy flag should be true.", weight.isDiscrepancy());
     }
 
+	@Test
+	public void testCheckDiscrepancyWithDifferentWeightsSilver() {
+        weightSilver.update(new Mass(100.0)); // Set expected weight to 100
+        Barcode barcode = new Barcode(new Numeral[] {Numeral.valueOf((byte) 1)});
+	    Item item = new BarcodedItem(barcode, new Mass(150.0));
+	    scss.baggingArea.addAnItem(item);; // Simulate the scale reporting a new mass
+
+        assertTrue("Discrepancy should be notified.", weightListener.discrepancyNotified);
+        assertTrue("Discrepancy flag should be true.", weightSilver.isDiscrepancy());
+    }
+	
+	@Test
+	public void testCheckDiscrepancyWithDifferentWeightsGold() {
+        weightGold.update(new Mass(100.0)); // Set expected weight to 100
+        Barcode barcode = new Barcode(new Numeral[] {Numeral.valueOf((byte) 1)});
+	    Item item = new BarcodedItem(barcode, new Mass(150.0));
+	    scsg.baggingArea.addAnItem(item);; // Simulate the scale reporting a new mass
+
+        assertTrue("Discrepancy should be notified.", weightListener.discrepancyNotified);
+        assertTrue("Discrepancy flag should be true.", weightGold.isDiscrepancy());
+    }
+	
+	
  	@Test
     public void testCheckDiscrepancyWithSameWeights() {
         weight.update(new Mass(100.0)); // Set expected weight to 100
         Barcode barcode = new Barcode(new Numeral[] {Numeral.valueOf((byte) 1)});
 	    Item item = new BarcodedItem(barcode, new Mass(100.0));
 	    scs.baggingArea.addAnItem(item);; // Simulate the scale reporting a new mass
-        //assertFalse("Discrepancy should not be notified.", weightListener.discrepancyNotified);
         assertFalse("Discrepancy flag should be false.", weight.isDiscrepancy());
+    }
+ 	
+ 	@Test
+    public void testCheckDiscrepancyWithSameWeightsSilver() {
+        weightSilver.update(new Mass(100.0)); // Set expected weight to 100
+        Barcode barcode = new Barcode(new Numeral[] {Numeral.valueOf((byte) 1)});
+	    Item item = new BarcodedItem(barcode, new Mass(100.0));
+	    scss.baggingArea.addAnItem(item);; // Simulate the scale reporting a new mass
+        assertFalse("Discrepancy flag should be false.", weightSilver.isDiscrepancy());
+    }
+ 	
+ 	@Test
+    public void testCheckDiscrepancyWithSameWeightsGold() {
+        weightGold.update(new Mass(100.0)); // Set expected weight to 100
+        Barcode barcode = new Barcode(new Numeral[] {Numeral.valueOf((byte) 1)});
+	    Item item = new BarcodedItem(barcode, new Mass(100.0));
+	    scsg.baggingArea.addAnItem(item);; // Simulate the scale reporting a new mass
+        assertFalse("Discrepancy flag should be false.", weightGold.isDiscrepancy());
     }
 	 
 	@Test
@@ -118,7 +202,6 @@ public class WeightTest {
 	    scs.baggingArea.addAnItem(item);; // Simulate the scale reporting a new mass
 	    Item item2 = new BarcodedItem(barcode, new Mass(50.0));
 	    scs.baggingArea.addAnItem(item2);
-        //assertTrue("Discrepancy fixed should be notified.", weightListener.discrepancyFixed);
         assertFalse("Discrepancy flag should be false.", weight.isDiscrepancy());
     }
 

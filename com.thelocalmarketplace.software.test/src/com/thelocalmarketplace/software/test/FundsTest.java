@@ -6,17 +6,14 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Currency;
-import java.util.List;
-
 import org.junit.Before;
 import org.junit.Test;
 
 import com.jjjwelectronics.IllegalDigitException;
 import com.tdc.coin.CoinValidator;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
-import com.thelocalmarketplace.software.Session;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.funds.FundsListener;
@@ -28,25 +25,49 @@ import powerutility.PowerGrid;
  * Testing for the Funds class
  * 
  * Project iteration group members:
- * 		
+ * 		Ayman Momin 		: 30192494
+ * 		Emily Kiddle 		: 30122331
+ * 		Fardin Rahman Sami 	: 30172916
+ * 		Kaylee Xiao 		: 30173778
+ * 		Tamanna Kaur 		: 30170920
+ * 		YiPing Zhang 		: 30127823	
  */
 
 public class FundsTest {
 	private SelfCheckoutStationBronze scs;
+	private SelfCheckoutStationSilver scss;
+	private SelfCheckoutStationGold scsg;
     private Funds fund;
+    private Funds funds;
+    private Funds fundg;
     private CoinValidator validator;
+    private CoinValidator validatorSilver;
+    private CoinValidator validatorGold;
     private BigDecimal value;
     private BigDecimal price;
     
     @Before
     public void setUp() {
     		scs = new SelfCheckoutStationBronze();
+    		scs.plugIn(PowerGrid.instance());
+    		scs.turnOn();
     		fund = new Funds(scs);
-    		Currency.getInstance("CAD");
-    		new ArrayList<>(Arrays.asList(BigDecimal.valueOf(0.25), BigDecimal.valueOf(1.00), BigDecimal.valueOf(2.00)));
+    		fund.setPay(true);
     		validator = scs.coinValidator;
-    		price = BigDecimal.valueOf(5.00);
-    		fund.setPay(true);		
+    		
+    		scss = new SelfCheckoutStationSilver();
+    		scss.plugIn(PowerGrid.instance());
+    		scss.turnOn();
+    		funds = new Funds(scss);
+    		validatorSilver = scss.coinValidator;
+    		
+    		scsg = new SelfCheckoutStationGold();
+    		scsg.plugIn(PowerGrid.instance());
+    		scs.turnOn();
+    		fundg = new Funds(scsg);
+    		validatorGold = scsg.coinValidator;
+    		
+    		price = BigDecimal.valueOf(5.00);		
     }
     
     /*@Test (expected = IllegalArgumentException.class) 
