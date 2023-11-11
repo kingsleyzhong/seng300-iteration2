@@ -26,6 +26,7 @@ import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
 import com.thelocalmarketplace.hardware.external.ProductDatabases;
 import com.thelocalmarketplace.software.SelfCheckoutStationLogic;
 import com.thelocalmarketplace.software.Session;
+import com.thelocalmarketplace.software.SessionState;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.weight.Weight;
@@ -99,16 +100,17 @@ public class SelfCheckoutStationSystemTest {
 	}
 
 	// Tests for start Session requirement use case
-
 	@Test
 	public void testInitialConfiguration() {
-		assertFalse("Session should be off", session.isOn());
+		assertEquals(Session.getState(), SessionState.PRE_SESSION);
+		assertFalse(Session.getState().inPay());
 	}
 
 	@Test
 	public void testStartSession() {
 		session.start();
-		assertTrue("session has been started", session.isOn());
+		assertEquals(Session.getState(), SessionState.IN_SESSION);
+		assertFalse(Session.getState().inPay());
 	}
 
 	// Tests for scan an Item requirement use case
@@ -166,7 +168,7 @@ public class SelfCheckoutStationSystemTest {
 		}
 		Funds funds = session.getFunds();
 		assertEquals("Session is fully paid for", BigDecimal.ZERO, funds.getAmountDue());
-		assertTrue("Session has been notified of full payment", session.hasPaid());
+		assertEquals("Session has been notified of full payment", Session.getState(), SessionState.PRE_SESSION);
 	}
 
 	// Tests for weight Discrepancy
@@ -175,7 +177,7 @@ public class SelfCheckoutStationSystemTest {
 	public void testDiscrepancy() {
 		session.start();
 		scs.mainScanner.scan(item);
-		assertTrue("Session is frozen upon discrepancy", session.isFrozen());
+		assertEquals("Session is frozen upon discrepancy", Session.getState(), SessionState.BLOCKED);
 	}
 
 	@Test(expected = InvalidActionException.class)
@@ -203,10 +205,10 @@ public class SelfCheckoutStationSystemTest {
 		session.pay();
 		scs.baggingArea.addAnItem(item2);
 		Funds funds = session.getFunds();
-		assertTrue(session.isFrozen());
+		assertEquals(Session.getState(), SessionState.BLOCKED);
 		assertFalse(funds.isPay());
 		scs.baggingArea.removeAnItem(item2);
-		assertTrue(session.isFrozen());
+		assertEquals(Session.getState(), SessionState.BLOCKED);
 		assertTrue(funds.isPay());
 	}
 }
