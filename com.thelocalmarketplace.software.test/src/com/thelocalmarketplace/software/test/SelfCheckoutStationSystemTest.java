@@ -84,7 +84,7 @@ public class SelfCheckoutStationSystemTest {
 		scsg = new SelfCheckoutStationGold();
 		scsg.plugIn(PowerGrid.instance());
 		scsg.turnOn();
-		session2 = new Session();
+		session3 = new Session();
 		SelfCheckoutStationLogic.installOn(scsg, session3);
 
 		// Populate database
