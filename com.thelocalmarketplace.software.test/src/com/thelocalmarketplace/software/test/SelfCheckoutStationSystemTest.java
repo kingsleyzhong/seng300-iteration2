@@ -32,19 +32,25 @@ import com.thelocalmarketplace.software.weight.Weight;
 
 import powerutility.PowerGrid;
 
-/** Unit test for the integration of software for selfCheckoutStation with corresponding hardware
- *  Contains tests for:
- *  	Start session
- *  	Scan item
- *  	Pay by coin
+/**
+ * Unit test for the integration of software for selfCheckoutStation with
+ * corresponding hardware
+ * Contains tests for:
+ * Start session
+ * Scan item
+ * Pay by coin
  * 
- * Project iteration group members:
- * 		Ayman Momin 		: 30192494
- * 		Emily Kiddle 		: 30122331
- * 		Fardin Rahman Sami 	: 30172916
- * 		Kaylee Xiao 		: 30173778
- * 		Tamanna Kaur 		: 30170920
- * 		YiPing Zhang 		: 30127823		
+ * Project iteration 2 group members:
+ * Aj Sallh : 30023811
+ * Anthony Kostal-Vazquez : 30048301
+ * Chloe Robitaille : 30022887
+ * Dvij Raval : 30024340
+ * Emily Kiddle : 30122331
+ * Katelan NG : 30144672
+ * Kingsley Zhong : 30197260
+ * Nick McCamis : 30192610
+ * Sua Lim : 30177039
+ * Subeg CHAHAL : 30196531
  */
 
 public class SelfCheckoutStationSystemTest {
@@ -59,7 +65,7 @@ public class SelfCheckoutStationSystemTest {
 	private BarcodedItem item;
 	private BarcodedItem item2;
 	private Coin coin;
-	
+
 	@Before
 	public void setup() {
 		scs = new SelfCheckoutStationBronze();
@@ -67,46 +73,46 @@ public class SelfCheckoutStationSystemTest {
 		scs.turnOn();
 		session = new Session();
 		SelfCheckoutStationLogic.installOn(scs, session);
-		
+
 		scss = new SelfCheckoutStationSilver();
 		scss.plugIn(PowerGrid.instance());
 		scss.turnOn();
 		session2 = new Session();
 		SelfCheckoutStationLogic.installOn(scss, session2);
-		
+
 		scsg = new SelfCheckoutStationGold();
 		scsg.plugIn(PowerGrid.instance());
 		scsg.turnOn();
 		session2 = new Session();
 		SelfCheckoutStationLogic.installOn(scsg, session3);
-		
+
 		// Populate database
-		barcode = new Barcode(new Numeral[] {Numeral.valueOf((byte) 1)});
+		barcode = new Barcode(new Numeral[] { Numeral.valueOf((byte) 1) });
 		product = new BarcodedProduct(barcode, "Some product", 10, 20.0);
 		ProductDatabases.BARCODED_PRODUCT_DATABASE.put(barcode, product);
-		
+
 		item = new BarcodedItem(barcode, new Mass(20.0));
 		item2 = new BarcodedItem(barcode, new Mass(20.0));
-		
+
 		Coin.DEFAULT_CURRENCY = Currency.getInstance(Locale.CANADA);
 		coin = new Coin(BigDecimal.ONE);
 	}
-	
+
 	// Tests for start Session requirement use case
-	
+
 	@Test
 	public void testInitialConfiguration() {
 		assertFalse("Session should be off", session.isOn());
 	}
-	
+
 	@Test
 	public void testStartSession() {
 		session.start();
 		assertTrue("session has been started", session.isOn());
 	}
-	
+
 	// Tests for scan an Item requirement use case
-	
+
 	@Test
 	public void testScanAnItem() {
 		session.start();
@@ -114,7 +120,7 @@ public class SelfCheckoutStationSystemTest {
 		HashMap<BarcodedProduct, Integer> items = session.getBarcodedItems();
 		assertTrue("The barcoded product associated with the barcode has been added", items.containsKey(product));
 	}
-	
+
 	@Test
 	public void testScanAnItemFunds() {
 		session.start();
@@ -124,7 +130,7 @@ public class SelfCheckoutStationSystemTest {
 		BigDecimal actual = funds.getItemsPrice();
 		assertEquals("Funds has correct amount", expected, actual);
 	}
-	
+
 	@Test
 	public void testScanAnItemWeight() {
 		session.start();
@@ -134,21 +140,21 @@ public class SelfCheckoutStationSystemTest {
 		Mass actual = weight.getExpectedWeight();
 		assertEquals("Weight has correct amount", expected, actual);
 	}
-	
+
 	// Tests for pay via coin
-	
+
 	@Test(expected = InvalidActionException.class)
 	public void enterPayWhenCartEmpty() {
 		session.start();
 		session.pay();
 	}
-	
+
 	@Test(expected = InvalidActionException.class)
 	public void addCoinWhenNotInPay() throws DisabledException, CashOverloadException {
 		session.start();
 		scs.coinSlot.receive(coin);
 	}
-	
+
 	@Test
 	public void payForItemViaCoin() throws DisabledException, CashOverloadException {
 		session.start();
@@ -162,23 +168,23 @@ public class SelfCheckoutStationSystemTest {
 		assertEquals("Session is fully paid for", BigDecimal.ZERO, funds.getAmountDue());
 		assertTrue("Session has been notified of full payment", session.hasPaid());
 	}
-	
+
 	// Tests for weight Discrepancy
-	
+
 	@Test
 	public void testDiscrepancy() {
 		session.start();
 		scs.mainScanner.scan(item);
 		assertTrue("Session is frozen upon discrepancy", session.isFrozen());
 	}
-	
+
 	@Test(expected = InvalidActionException.class)
 	public void testAddItemWhenDiscrepancy() {
 		session.start();
 		scs.mainScanner.scan(item);
 		scs.mainScanner.scan(item2);
 	}
-	
+
 	@Test(expected = InvalidActionException.class)
 	public void testPayWhenDiscrepancy() throws DisabledException, CashOverloadException {
 		session.start();
@@ -188,7 +194,7 @@ public class SelfCheckoutStationSystemTest {
 		scs.baggingArea.addAnItem(item2);
 		scs.coinSlot.receive(coin);
 	}
-	
+
 	@Test
 	public void testDiscrepancyDuringPay() {
 		session.start();

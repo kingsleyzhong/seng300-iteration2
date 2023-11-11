@@ -11,20 +11,23 @@ import com.thelocalmarketplace.software.SelfCheckoutStationLogic;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.weight.Weight;
 
-
 /**
  * Unit Testing for SelfCheckoutStation logic
  * 
- * Project iteration group members:
- * 		Ayman Momin 		: 30192494
- * 		Emily Kiddle 		: 30122331
- * 		Fardin Rahman Sami 	: 30172916
- * 		Kaylee Xiao 		: 30173778
- * 		Tamanna Kaur 		: 30170920
- * 		YiPing Zhang 		: 30127823		
+ * Project iteration 2 group members:
+ * Aj Sallh : 30023811
+ * Anthony Kostal-Vazquez : 30048301
+ * Chloe Robitaille : 30022887
+ * Dvij Raval : 30024340
+ * Emily Kiddle : 30122331
+ * Katelan NG : 30144672
+ * Kingsley Zhong : 30197260
+ * Nick McCamis : 30192610
+ * Sua Lim : 30177039
+ * Subeg CHAHAL : 30196531
  */
 public class SelfCheckoutStationLogicTest {
-	
+
     private SelfCheckoutStationBronze scsb;
     private SelfCheckoutStationSilver scss;
     private SelfCheckoutStationGold scsg;
@@ -41,36 +44,39 @@ public class SelfCheckoutStationLogicTest {
 
     @Test
     public void testInstallation() {
-    	logic = SelfCheckoutStationLogic.installOn(scsb, session);
+        logic = SelfCheckoutStationLogic.installOn(scsb, session);
         assertNotNull(logic);
     }
 
     @Test
     public void testInstallationComponentsBronze() {
-        // Check that the logic has installed Funds, Weight, and ItemAddedRule on the session and scsb.
-    	SelfCheckoutStationLogic.installOn(scsb, session);
+        // Check that the logic has installed Funds, Weight, and ItemAddedRule on the
+        // session and scsb.
+        SelfCheckoutStationLogic.installOn(scsb, session);
         Funds funds = session.getFunds();
         Weight weight = session.getWeight();
 
         assertNotNull(funds);
         assertNotNull(weight);
     }
-    
+
     @Test
     public void testInstallationComponentsSilver() {
-        // Check that the logic has installed Funds, Weight, and ItemAddedRule on the session and scsb.
-    	SelfCheckoutStationLogic.installOn(scss, session);
+        // Check that the logic has installed Funds, Weight, and ItemAddedRule on the
+        // session and scsb.
+        SelfCheckoutStationLogic.installOn(scss, session);
         Funds funds = session.getFunds();
         Weight weight = session.getWeight();
 
         assertNotNull(funds);
         assertNotNull(weight);
     }
-    
+
     @Test
     public void testInstallationComponentsGold() {
-        // Check that the logic has installed Funds, Weight, and ItemAddedRule on the session and scsb.
-    	SelfCheckoutStationLogic.installOn(scsg, session);
+        // Check that the logic has installed Funds, Weight, and ItemAddedRule on the
+        // session and scsb.
+        SelfCheckoutStationLogic.installOn(scsg, session);
         Funds funds = session.getFunds();
         Weight weight = session.getWeight();
 

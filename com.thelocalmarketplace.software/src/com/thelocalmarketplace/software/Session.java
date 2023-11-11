@@ -21,31 +21,33 @@ import com.thelocalmarketplace.software.weight.WeightListener;
  * representing all the products that have been added to the system as well
  * as the quantity of those items.
  * 
- * Project iteration group members:
- * 		Ayman Momin 		: 30192494
- * 		Emily Kiddle 		: 30122331
- * 		Fardin Rahman Sami 	: 30172916
- * 		Kaylee Xiao 		: 30173778
- * 		Tamanna Kaur 		: 30170920
- * 		YiPing Zhang 		: 30127823
+ * Project iteration 2 group members:
+ * Aj Sallh : 30023811
+ * Anthony Kostal-Vazquez : 30048301
+ * Chloe Robitaille : 30022887
+ * Dvij Raval : 30024340
+ * Emily Kiddle : 30122331
+ * Katelan NG : 30144672
+ * Kingsley Zhong : 30197260
+ * Nick McCamis : 30192610
+ * Sua Lim : 30177039
+ * Subeg CHAHAL : 30196531
+ *
  */
 public class Session {
-	private boolean sessionOn;
-	private boolean sessionFrozen;
-	private boolean payWithCoin;
-	private boolean hasPaid;
+	private static SessionState sessionState;
 	private HashMap<BarcodedProduct, Integer> barcodedItems;
 	private Funds funds;
 	private Weight weight;
-	
-	private class WeightDiscrepancyListener implements WeightListener{
+
+	private class WeightDiscrepancyListener implements WeightListener {
 
 		/**
 		 * Upon a weightDiscrepancy, session should freeze
 		 */
 		@Override
 		public void notifyDiscrepancy() {
-			freeze();		
+			block();
 		}
 
 		/**
@@ -55,43 +57,45 @@ public class Session {
 		public void notifyDiscrepancyFixed() {
 			resume();
 		}
-		
+
 	}
-	
-	private class PayListener implements FundsListener{
+
+	private class PayListener implements FundsListener {
 
 		/**
-		 * Signals to the system that the customer has payed the full amount. Ends the session.
+		 * Signals to the system that the customer has payed the full amount. Ends the
+		 * session.
 		 */
 		@Override
 		public void notifyPaid() {
-			hasPaid = true;
-			sessionOn = false;
+			sessionState = SessionState.PRE_SESSION;
 		}
-		
+
 	}
-	
+
 	/**
-	 * Constructor for the session method. Requires to be installed on self-checkout system 
+	 * Constructor for the session method. Requires to be installed on self-checkout
+	 * system
 	 * with logic to function
 	 */
 	public Session() {
-		sessionOn = false;
-		sessionFrozen = false;
-		payWithCoin = false;
+		sessionState = SessionState.PRE_SESSION;
 	}
-	
+
 	/**
 	 * Setup method for the session used in installing logic on the system
-	 * Initializes private variables to the ones passed. Initially has the session off, session unfrozen, and pay not
+	 * Initializes private variables to the ones passed. Initially has the session
+	 * off, session unfrozen, and pay not
 	 * enabled.
 	 * 
 	 * @param BarcodedItems
-	 * 			A hashMap of barcoded products and their associated quantity in shopping cart
+	 *                      A hashMap of barcoded products and their associated
+	 *                      quantity in shopping cart
 	 * @param funds
-	 * 			The funds used in the session
+	 *                      The funds used in the session
 	 * @param weight
-	 * 			The weight of the items and actual weight on the scale during the session
+	 *                      The weight of the items and actual weight on the scale
+	 *                      during the session
 	 */
 	public void setup(HashMap<BarcodedProduct, Integer> barcodedItems, Funds funds, Weight weight) {
 		this.barcodedItems = barcodedItems;
@@ -100,114 +104,81 @@ public class Session {
 		this.weight.register(new WeightDiscrepancyListener());
 		this.funds.register(new PayListener());
 	}
-	
+
 	/**
 	 * Sets the session to have started, allowing customer to interact with station
 	 */
 	public void start() {
-		sessionOn = true;
-		//barcodedItems.clear();
-		//funds.clear();
-		//weight.clear();
+		sessionState = SessionState.IN_SESSION;
+		// barcodedItems.clear();
+		// funds.clear();
+		// weight.clear();
 	}
-	
+
 	/**
 	 * Cancels the current session and resets the current session
 	 */
 	public void cancel() {
-		sessionOn = false;
+		sessionState = SessionState.PRE_SESSION;
 	}
- 
+
 	/**
-	 * Freezes the current session, preventing further action from the customer
+	 * Blocks the current session, preventing further action from the customer
 	 */
-	private void freeze() {
-		if(payWithCoin) {
+	private void block() {
+		if (sessionState.inPay()) {
 			funds.setPay(false);
-		}
-		else {
-			sessionFrozen = true;
+		} else {
+			sessionState = SessionState.BLOCKED;
 		}
 	}
-	
+
 	/**
 	 * Resumes the session, allowing the customer to continue interaction
 	 */
 	private void resume() {
-		if(payWithCoin) {
+		if (sessionState.inPay()) {
 			funds.setPay(true);
-		}
-		else {
-			sessionFrozen = false;
+		} else {
+			sessionState = SessionState.IN_SESSION;
 		}
 	}
-	
+
 	/**
-	 * Enters the pay mode for the customer. Prevents customer from adding further items by freezing session.
+	 * Enters the pay mode for the customer. Prevents customer from adding further
+	 * items by freezing session.
 	 */
 	public void pay() {
-		if(!barcodedItems.isEmpty()) {
-			payWithCoin = true;
+		if (!barcodedItems.isEmpty()) {
+			sessionState = SessionState.PAY_BY_CASH;
 			funds.setPay(true);
-			sessionFrozen = true;
-		}
-		else {
+		} else {
 			throw new CartEmptyException("Cannot pay for an empty order");
 		}
 	}
-	
+
 	/**
-	 * Checks if the session is on
+	 * Static getter for session state
 	 * 
 	 * @return
-	 * 			True if session is on. False is off
+	 *         Session State
 	 */
-	public boolean isOn() {
-		return sessionOn;
+	public static final SessionState getState() {
+		return sessionState;
 	}
-	
+
 	/**
-	 * Checks if session is frozen
-	 * 
-	 * @return
-	 * 			True if session is frozen. False is not frozen
-	 */
-	public boolean isFrozen() {
-		return sessionFrozen;
-	}
-	
-	/**
-	 * Checks if the session is in pay mode
-	 * 
-	 * @return
-	 * 			True if in pay mode, false otherwise.
-	 */
-	public boolean isPay() {
-		return payWithCoin;
-	}
-	
-	/**
-	 * Checks if the customer has fully paid for an order
-	 * 
-	 * @return
-	 * 			True if order fully paid for, false if still needs to pay
-	 */
-	public boolean hasPaid() {
-		return hasPaid;
-	}
-	
-	/**
-	 * Adds a barcoded product to the hashMap of the barcoded products. Updates the expected weight and price
+	 * Adds a barcoded product to the hashMap of the barcoded products. Updates the
+	 * expected weight and price
 	 * of the system based on the weight and price of the product.
 	 * 
 	 * @param product
-	 * 			The product to be added to the HashMap.
+	 *                The product to be added to the HashMap.
 	 */
 	public void addItem(BarcodedProduct product) {
 		if (barcodedItems.containsKey(product)) {
-			barcodedItems.replace(product, barcodedItems.get(product)+1);
-		}
-		else {
+			barcodedItems.replace(product, barcodedItems.get(product) + 1);
+		} else {
 			barcodedItems.put(product, 1);
 		}
 		double weight = product.getExpectedWeight();
@@ -217,17 +188,17 @@ public class Session {
 		this.weight.update(mass);
 		funds.update(itemPrice);
 	}
-	
-	public HashMap<BarcodedProduct, Integer> getBarcodedItems(){
+
+	public HashMap<BarcodedProduct, Integer> getBarcodedItems() {
 		return barcodedItems;
 	}
-	
+
 	public Funds getFunds() {
 		return funds;
 	}
-	
+
 	public Weight getWeight() {
 		return weight;
 	}
-	
+
 }
