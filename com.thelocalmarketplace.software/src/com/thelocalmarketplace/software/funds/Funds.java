@@ -8,10 +8,10 @@ import com.tdc.IComponent;
 import com.tdc.IComponentObserver;
 import com.tdc.coin.CoinValidator;
 import com.tdc.coin.CoinValidatorObserver;
-import com.thelocalmarketplace.hardware.SelfCheckoutStation;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
-import com.thelocalmarketplace.software.weight.WeightListener;
-
 import ca.ucalgary.seng300.simulation.NullPointerSimulationException;
 
 /**
@@ -43,16 +43,38 @@ public class Funds {
      * 
      * @param scs The self-checkout station
      */
-    public Funds (SelfCheckoutStation scs) {
+    public Funds (SelfCheckoutStationBronze scs) {
         if (scs == null) {
             throw new IllegalArgumentException("SelfCheckoutStation should not be null.");
         }
-
         this.itemsPrice = BigDecimal.ZERO;
         this.paid = BigDecimal.ZERO;
         this.amountDue = BigDecimal.ZERO;
         this.isPay = false;
-
+        InnerListener listener = new InnerListener();
+        scs.coinValidator.attach(listener);
+    }
+    
+    public Funds (SelfCheckoutStationSilver scs) {
+        if (scs == null) {
+            throw new IllegalArgumentException("SelfCheckoutStation should not be null.");
+        }
+        this.itemsPrice = BigDecimal.ZERO;
+        this.paid = BigDecimal.ZERO;
+        this.amountDue = BigDecimal.ZERO;
+        this.isPay = false;
+        InnerListener listener = new InnerListener();
+        scs.coinValidator.attach(listener);
+    }
+    
+    public Funds (SelfCheckoutStationGold scs) {
+        if (scs == null) {
+            throw new IllegalArgumentException("SelfCheckoutStation should not be null.");
+        }
+        this.itemsPrice = BigDecimal.ZERO;
+        this.paid = BigDecimal.ZERO;
+        this.amountDue = BigDecimal.ZERO;
+        this.isPay = false;
         InnerListener listener = new InnerListener();
         scs.coinValidator.attach(listener);
     }
