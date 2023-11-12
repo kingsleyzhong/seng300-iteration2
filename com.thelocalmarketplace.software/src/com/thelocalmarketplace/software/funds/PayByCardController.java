@@ -1,16 +1,10 @@
 package com.thelocalmarketplace.software.funds;
 
-<<<<<<< Updated upstream
-/**
- * Communicates with the Card payment systems
- * 
-=======
 import com.thelocalmarketplace.hardware.external.*;
 
 /**
  * This class will handle and do whatever it is supposed to do
  *  
->>>>>>> Stashed changes
  * Project iteration 2 group members:
  * 		Aj Sallh 				: 30023811
  *		Anthony Kostal-Vazquez 	: 30048301
@@ -23,21 +17,10 @@ import com.thelocalmarketplace.hardware.external.*;
  *		Sua Lim 				: 30177039
  *		Subeg CHAHAL 			: 30196531
  */
-<<<<<<< Updated upstream
-public PayByCardController {
-
-	CardIssuer minionCard = new CardIssuer();
-=======
-
 public class PayByCardController {
 	CardIssuer disasterCard = new CardIssuer(null, 0);
->>>>>>> Stashed changes
-	
-	
-	
-	
-<<<<<<< Updated upstream
-	public void valid();
-=======
->>>>>>> Stashed changes
+
+	public void valid() {
+		return;
+	}
 }
