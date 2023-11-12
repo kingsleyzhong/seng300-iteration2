@@ -17,6 +17,7 @@ import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
 import com.thelocalmarketplace.hardware.external.ProductDatabases;
 import com.thelocalmarketplace.software.Session;
+import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.rules.ItemAddedRule;
 import com.thelocalmarketplace.software.weight.Weight;
@@ -65,15 +66,19 @@ public class ItemAddedRuleTest {
         session = new Session();
         session2 = new Session();
         session3 = new Session();
+        
         scsb = new SelfCheckoutStationBronze();
         scsb.plugIn(PowerGrid.instance());
         scsb.turnOn();
+        
         scss = new SelfCheckoutStationSilver();
         scss.plugIn(PowerGrid.instance());
         scss.turnOn();
+        
         scsg = new SelfCheckoutStationGold();
         scsg.plugIn(PowerGrid.instance());
         scsg.turnOn();
+        
         new ItemAddedRule(scsb, session);
         new ItemAddedRule(scss, session2);
         new ItemAddedRule(scsg, session3);
@@ -81,6 +86,7 @@ public class ItemAddedRuleTest {
         barcode = new Barcode(new Numeral[] { Numeral.valueOf((byte) 1) });
         product = new BarcodedProduct(barcode, "Product 1", 10, 100.0);
         item = new BarcodedItem(barcode, new Mass(100.0));
+        ProductDatabases.BARCODED_PRODUCT_DATABASE.put(barcode, product); // Add a product to the database
 
         weightBronze = new Weight(scsb);
         fundsBronze = new Funds(scsb);
@@ -88,50 +94,100 @@ public class ItemAddedRuleTest {
         fundsSilver = new Funds(scss);
         weightGold = new Weight(scsg);
         fundsGold = new Funds(scsg);
+        
+        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze);
+        session2.setup(new HashMap<BarcodedProduct, Integer>(), fundsSilver, weightSilver);
+        session3.setup(new HashMap<BarcodedProduct, Integer>(), fundsGold, weightGold);
     }
 
     @Test
     public void testAddItemInDatabaseBronze() {
-        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze);
         session.start();
-        ProductDatabases.BARCODED_PRODUCT_DATABASE.put(barcode, product); // Add a product to the database
         scsb.mainScanner.scan(item);
 
-        // Check that the product was added
         HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
         assertTrue(productList.containsKey(product));
     }
 
     @Test
     public void testAddItemInDatabaseSilver() {
-        session2.setup(new HashMap<BarcodedProduct, Integer>(), fundsSilver, weightSilver);
         session2.start();
-        ProductDatabases.BARCODED_PRODUCT_DATABASE.put(barcode, product); // Add a product to the database
         scss.mainScanner.scan(item);
 
-        // Check that the product was added
         HashMap<BarcodedProduct, Integer> productList = session2.getBarcodedItems();
         assertTrue(productList.containsKey(product));
     }
 
     @Test
     public void testAddItemInDatabaseGold() {
-        session3.setup(new HashMap<BarcodedProduct, Integer>(), fundsGold, weightGold);
         session3.start();
-        ProductDatabases.BARCODED_PRODUCT_DATABASE.put(barcode, product); // Add a product to the database
         scsg.mainScanner.scan(item);
 
-        // Check that the product was added
+        HashMap<BarcodedProduct, Integer> productList = session3.getBarcodedItems();
+        assertTrue(productList.containsKey(product));
+    }
+    
+    @Test
+    public void testAddItemInDatabaseHandheldScannerBronze() {
+        session.start();
+        scsb.handheldScanner.scan(item);
+
+        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
+        assertTrue(productList.containsKey(product));
+    }
+
+    @Test
+    public void testAddItemInDatabaseHandheldScannerSilver() {
+        session2.start();
+        scss.handheldScanner.scan(item);
+
+        HashMap<BarcodedProduct, Integer> productList = session2.getBarcodedItems();
+        assertTrue(productList.containsKey(product));
+    }
+
+    @Test
+    public void testAddItemInDatabaseHandheldScannerGold() {
+        session3.start();
+        scsg.handheldScanner.scan(item);
+
         HashMap<BarcodedProduct, Integer> productList = session3.getBarcodedItems();
         assertTrue(productList.containsKey(product));
     }
 
     @Test(expected = InvalidArgumentSimulationException.class)
-    public void testAddItemNotInDatabaseBronze() {
-        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze);
+    public void testAddItemNotInDatabaseHandheldScannerBronze() {
         session.start();
-        ProductDatabases.BARCODED_PRODUCT_DATABASE.put(barcode, product); // Add a product to the database
+        
+        Barcode barcodeNotInDatabase = new Barcode(new Numeral[] { Numeral.five, Numeral.five, Numeral.eight });
+        BarcodedItem itemNotInDatabase = new BarcodedItem(barcodeNotInDatabase, new Mass(100.0));
 
+        scsb.handheldScanner.scan(itemNotInDatabase);
+    }
+
+    @Test(expected = InvalidArgumentSimulationException.class)
+    public void testAddItemNotInDatabaseHandheldScannerSilver() {
+        session2.start();
+        
+        Barcode barcodeNotInDatabase = new Barcode(new Numeral[] { Numeral.five, Numeral.five, Numeral.eight });
+        BarcodedItem itemNotInDatabase = new BarcodedItem(barcodeNotInDatabase, new Mass(100.0));
+
+        scss.handheldScanner.scan(itemNotInDatabase);
+    }
+
+    @Test(expected = InvalidArgumentSimulationException.class)
+    public void testAddItemNotInDatabaseHandheldScannerGold() {
+        session3.start();
+        
+        Barcode barcodeNotInDatabase = new Barcode(new Numeral[] { Numeral.five, Numeral.five, Numeral.eight });
+        BarcodedItem itemNotInDatabase = new BarcodedItem(barcodeNotInDatabase, new Mass(100.0));
+
+        scsg.handheldScanner.scan(itemNotInDatabase);
+    }
+    
+    @Test(expected = InvalidArgumentSimulationException.class)
+    public void testAddItemNotInDatabaseBronze() {
+        session.start();
+        
         Barcode barcodeNotInDatabase = new Barcode(new Numeral[] { Numeral.five, Numeral.five, Numeral.eight });
         BarcodedItem itemNotInDatabase = new BarcodedItem(barcodeNotInDatabase, new Mass(100.0));
 
@@ -140,10 +196,8 @@ public class ItemAddedRuleTest {
 
     @Test(expected = InvalidArgumentSimulationException.class)
     public void testAddItemNotInDatabaseSilver() {
-        session2.setup(new HashMap<BarcodedProduct, Integer>(), fundsSilver, weightSilver);
         session2.start();
-        ProductDatabases.BARCODED_PRODUCT_DATABASE.put(barcode, product); // Add a product to the database
-
+        
         Barcode barcodeNotInDatabase = new Barcode(new Numeral[] { Numeral.five, Numeral.five, Numeral.eight });
         BarcodedItem itemNotInDatabase = new BarcodedItem(barcodeNotInDatabase, new Mass(100.0));
 
@@ -152,47 +206,17 @@ public class ItemAddedRuleTest {
 
     @Test(expected = InvalidArgumentSimulationException.class)
     public void testAddItemNotInDatabaseGold() {
-        session3.setup(new HashMap<BarcodedProduct, Integer>(), fundsGold, weightGold);
         session3.start();
-        ProductDatabases.BARCODED_PRODUCT_DATABASE.put(barcode, product); // Add a product to the database
-
+        
         Barcode barcodeNotInDatabase = new Barcode(new Numeral[] { Numeral.five, Numeral.five, Numeral.eight });
         BarcodedItem itemNotInDatabase = new BarcodedItem(barcodeNotInDatabase, new Mass(100.0));
 
         scsg.mainScanner.scan(itemNotInDatabase);
     }
 
-    // BROKEN TESTS
+    @Test
+    public void testSessionNotOnBronze() {
+    	
+    }
 
-    // @Test (expected = InvalidArgumentSimulationException.class)
-    // public void testAddItemNullSCS() {
-    // itemAddedRule = new ItemAddedRule(null, session);
-    // }
-
-    // @Test(expected = InvalidActionException.class)
-    // public void testSessionFrozen() {
-    // session = new frozenSessionStub(); //session is frozen
-    // itemAddedRule.new
-    // innerListener().aBarcodeHasBeenScanned(selfCheckoutStation.scanner, barcode);
-    // }
-
-    // @Test(expected = InvalidActionException.class)
-    // public void testSessionIsOff() {
-    // session = new isOnStub(); //session is off
-    // itemAddedRule.new
-    // innerListener().aBarcodeHasBeenScanned(selfCheckoutStation.scanner, barcode);
-    // }
-
-    // Can't even tell you what this genius idea was... smh
-    /*
-     * @Test
-     * public void forCoverage() {
-     * selfCheckoutStation.plugIn(PowerGrid.instance());
-     * selfCheckoutStation.turnOn();
-     * selfCheckoutStation.mainScanner.disable();
-     * selfCheckoutStation.mainScanner.enable();
-     * selfCheckoutStation.mainScanner.turnOn();
-     * selfCheckoutStation.mainScanner.turnOff();
-     * }
-     */
 }
