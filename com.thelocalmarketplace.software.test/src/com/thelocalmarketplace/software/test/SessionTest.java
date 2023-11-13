@@ -11,6 +11,7 @@ import com.jjjwelectronics.scanner.BarcodedItem;
 import com.tdc.CashOverloadException;
 import com.tdc.DisabledException;
 import com.tdc.coin.Coin;
+import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
@@ -70,6 +71,8 @@ public class SessionTest {
 
     @Before
     public void setUp() {
+    	AbstractSelfCheckoutStation.resetConfigurationToDefaults();
+    	
         session = new Session();
         num = 1;
         numeral = Numeral.valueOf(num);
