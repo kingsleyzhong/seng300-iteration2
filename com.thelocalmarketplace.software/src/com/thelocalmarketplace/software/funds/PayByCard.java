@@ -1,6 +1,7 @@
 package com.thelocalmarketplace.software.funds;
 
 import com.thelocalmarketplace.hardware.external.*;
+import com.thelocalmarketplace.software.SessionState;
 
 /**
  * This class will handle and do whatever it is supposed to do
@@ -17,10 +18,14 @@ import com.thelocalmarketplace.hardware.external.*;
  *		Sua Lim 				: 30177039
  *		Subeg CHAHAL 			: 30196531
  */
-public class PayByCardController {
-	CardIssuer disasterCard = new CardIssuer(null, 0);
-
+public class PayByCard {
+	
 	public void valid() {
-		return;
+		if (SessionState.PAY_BY_CARD) {
+			
+		} else {
+			return;			
+		}
+
 	}
 }
