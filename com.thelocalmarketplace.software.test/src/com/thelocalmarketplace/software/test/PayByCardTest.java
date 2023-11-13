@@ -15,7 +15,10 @@ import org.junit.Test;
 
 import com.jjjwelectronics.IllegalDigitException;
 import com.tdc.coin.CoinValidator;
-import com.thelocalmarketplace.hardware.SelfCheckoutStation;
+import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
+import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
 import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import com.thelocalmarketplace.software.funds.Funds;
@@ -41,7 +44,9 @@ import powerutility.PowerGrid;
  */
 
 public class PayByCardTest {
-	private SelfCheckoutStation scs;
+	private SelfCheckoutStationBronze scs;
+	private SelfCheckoutStationSilver scss;
+	private SelfCheckoutStationGold scsg;
     private Funds fund;
     private CoinValidator validator;
     private BigDecimal value;
