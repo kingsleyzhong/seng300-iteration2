@@ -188,6 +188,10 @@ public class Session {
 		this.weight.update(mass);
 		funds.update(itemPrice);
 	}
+	
+	public void removeItem(BarcodedProduct product) {
+		
+	}
 
 	public HashMap<BarcodedProduct, Integer> getBarcodedItems() {
 		return barcodedItems;
