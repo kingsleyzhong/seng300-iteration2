@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import com.jjjwelectronics.IllegalDigitException;
 import com.tdc.coin.CoinValidator;
+import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
@@ -52,6 +53,8 @@ public class FundsTest {
 
 	@Before
 	public void setUp() {
+		AbstractSelfCheckoutStation.resetConfigurationToDefaults();
+		
 		scs = new SelfCheckoutStationBronze();
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
