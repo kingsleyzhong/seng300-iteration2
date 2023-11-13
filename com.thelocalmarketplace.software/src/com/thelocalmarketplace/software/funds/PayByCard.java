@@ -1,12 +1,16 @@
 package com.thelocalmarketplace.software.funds;
 
 import com.thelocalmarketplace.hardware.external.*;
+import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.SessionState;
+import com.thelocalmarketplace.software.exceptions.InvalidActionException;
+
+import java.io.IOException;
+
 import com.jjjwelectronics.IDevice;
 import com.jjjwelectronics.IDeviceListener;
 import com.jjjwelectronics.card.Card.CardData;
-import com.jjjwelectronics.card.CardReaderListener;
-import com.jjjwelectronics.card.Card;
+import com.jjjwelectronics.card.*;
 
 /**
  * <p> This class facilitates communication between com.jjjwelectronics.card.CardReaderListener and com.thelocalmarketplace.software.funds.Funds</p> 
@@ -26,7 +30,7 @@ import com.jjjwelectronics.card.Card;
 public class PayByCard {
 	public Card card;
 	
-	private class PayByCardListener implements CardReaderListener {
+	private class InnerListener implements CardReaderListener {
 
 		@Override
 		public void aDeviceHasBeenEnabled(IDevice<? extends IDeviceListener> device) {
@@ -53,21 +57,44 @@ public class PayByCard {
 		}
 
 		@Override
-		public void aCardHasBeenSwiped() {
-			// TODO Auto-generated method stub
-			
+		public void aCardHasBeenSwiped(){
+			 try {
+				theDataFromACardHasBeenRead(card.swipe());
+			} catch (BlockedCardException  | IOException e) {
+				System.out.println("Declined");
+				e.printStackTrace();
+			}	
 		}
 
 		@Override
-		public void theDataFromACardHasBeenRead(CardData data) {
-			// TODO Auto-generated method stub
-			
+		public void theDataFromACardHasBeenRead(CardData data) {	
+				// Not sure yet what happens here
+				// Card card = new Card(data.getType(), data.getNumber(), data.getCardholder(), data.getCVV());	
 		}
 		
 	}
 	
 	public void getTransactionFromBank() {
-		
+		if (Session.getState() == SessionState.PAY_BY_CARD) {
+			
+			// Not sure yet what happens here also
+			// Some card types to determine what object of CardIssuer to use
+			// Can be changed or removed as required
+			if (card.kind == "DisasterCard") {
+				
+			} else if (card.kind == "Viva") {
+				
+			} else if (card.kind == "Canadian Depress") {
+				
+			} else if (card.kind == "Detrac Debit") {
+				
+			} else {
+				throw new InvalidActionException("Card not recognized");
+			}
+			
+		} else {
+			throw new InvalidActionException("Not in Card Payment state");
+		}
 
 	}
 }
