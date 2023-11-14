@@ -67,12 +67,19 @@ public class Weight {
 		
 		//first we make mass to subtract a negative 
 		//BigInteger negative_mass = BigInteger.valueOf(massToSubtract.inMicrograms().multiply(null));
-		BigInteger conversion = BigInteger.valueOf(-1);
-		Mass  negativemass = new Mass(massToSubtract.inMicrograms().multiply(conversion));
+		//BigInteger conversion = BigInteger.valueOf(-1);
+		
+		BigInteger NewValue = this.expectedWeight.inMicrograms().subtract(massToSubtract.inMicrograms());
 		
 		
 		
-		this.expectedWeight = this.expectedWeight.sum(negativemass);
+		
+		//Mass negativemass = new Mass(massToSubtract.inMicrograms().multiply(conversion));
+		
+		
+		
+		
+		this.expectedWeight = new Mass(NewValue);
 		
 	}
 	/*
