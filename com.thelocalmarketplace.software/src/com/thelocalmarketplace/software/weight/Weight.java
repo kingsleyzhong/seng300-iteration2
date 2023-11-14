@@ -66,8 +66,25 @@ public class Weight {
 		checkDiscrepancy();
 	}
 	
-	public void removeItemWeightUpdate(Mass mass) {
+	
+	/* This method will change the expected weight after the item is removed
+	 * 
+	 * 
+	 * 
+	 */
+	
+	public void removeItemWeightUpdate(Mass massToSubtract) {
 		//Figure this part out 
+		
+		//first we make mass to subtract a negative 
+		//BigInteger negative_mass = BigInteger.valueOf(massToSubtract.inMicrograms().multiply(null));
+		BigInteger conversion = BigInteger.valueOf(-1);
+		Mass  negativemass = new Mass(massToSubtract.inMicrograms().multiply(conversion));
+		
+		
+		
+		this.expectedWeight = this.expectedWeight.sum(negativemass);
+		
 	}
 	/*
 	 * This method checks if there is a Discrepancy between expectedWeight and actualWeight.

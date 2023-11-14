@@ -209,7 +209,8 @@ public class Session {
 			double weight = product.getExpectedWeight();
 			Mass mass = new Mass(weight);
 			barcodedItems.remove(product);
-		} else {
+		} 
+		else {
 			throw new ProductNotFoundException("Item not found");
 		}
 	}
