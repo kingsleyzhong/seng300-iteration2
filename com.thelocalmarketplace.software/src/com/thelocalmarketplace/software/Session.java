@@ -132,6 +132,7 @@ public class Session {
 			sessionState = SessionState.BLOCKED;
 		}
 	}
+	
 
 	/**
 	 * Resumes the session, allowing the customer to continue interaction
@@ -157,6 +158,19 @@ public class Session {
 		}
 	}
 
+	/*
+	 * Enters the add bag mode for the customer.  
+	 * 
+	 */
+	public void addbags() {
+		
+		
+		
+		
+	}
+	
+	
+	
 	/**
 	 * Static getter for session state
 	 * 
