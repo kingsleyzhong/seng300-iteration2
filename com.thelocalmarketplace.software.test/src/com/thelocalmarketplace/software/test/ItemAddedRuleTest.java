@@ -1,5 +1,6 @@
 package com.thelocalmarketplace.software.test;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
@@ -216,7 +217,76 @@ public class ItemAddedRuleTest {
 
     @Test
     public void testSessionNotOnBronze() {
-    	
+        scsb.mainScanner.scan(item);
+        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
+        assertFalse(productList.containsKey(product));
+    }
+    
+    @Test
+    public void testSessionNotOnSilver() {
+        scss.mainScanner.scan(item);
+        HashMap<BarcodedProduct, Integer> productList = session2.getBarcodedItems();
+        assertFalse(productList.containsKey(product));
     }
 
+    @Test
+    public void testSessionNotOnGold() {
+        scsg.mainScanner.scan(item);
+        HashMap<BarcodedProduct, Integer> productList = session3.getBarcodedItems();
+        assertFalse(productList.containsKey(product));
+    }
+    
+    @Test
+    public void testSessionFrozenBronze() {
+    	session.start();
+    	
+        scsb.mainScanner.scan(item);
+        
+        Barcode newBarcode = new Barcode(new Numeral[] { Numeral.five, Numeral.five, Numeral.eight });
+        BarcodedItem newItem = new BarcodedItem(newBarcode, new Mass(100.0));
+        BarcodedProduct newProduct = new BarcodedProduct(newBarcode, "New Product", 10, 100.0);
+        ProductDatabases.BARCODED_PRODUCT_DATABASE.put(newBarcode, newProduct);
+        
+        scsb.mainScanner.scan(newItem);
+        
+        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
+        assertTrue(productList.containsKey(product));
+        assertFalse(productList.containsKey(newProduct));
+    }
+    
+    @Test
+    public void testSessionFrozenSilver() {
+    	session2.start();
+    	
+        scss.mainScanner.scan(item);
+        
+        Barcode newBarcode = new Barcode(new Numeral[] { Numeral.five, Numeral.five, Numeral.eight });
+        BarcodedItem newItem = new BarcodedItem(newBarcode, new Mass(100.0));
+        BarcodedProduct newProduct = new BarcodedProduct(newBarcode, "New Product", 10, 100.0);
+        ProductDatabases.BARCODED_PRODUCT_DATABASE.put(newBarcode, newProduct);
+        
+        scss.mainScanner.scan(newItem);
+        
+        HashMap<BarcodedProduct, Integer> productList = session2.getBarcodedItems();
+        assertTrue(productList.containsKey(product));
+        assertFalse(productList.containsKey(newProduct));
+    }
+    
+    @Test
+    public void testSessionFrozenGold() {
+    	session3.start();
+    	
+        scsg.mainScanner.scan(item);
+        
+        Barcode newBarcode = new Barcode(new Numeral[] { Numeral.five, Numeral.five, Numeral.eight });
+        BarcodedItem newItem = new BarcodedItem(newBarcode, new Mass(100.0));
+        BarcodedProduct newProduct = new BarcodedProduct(newBarcode, "New Product", 10, 100.0);
+        ProductDatabases.BARCODED_PRODUCT_DATABASE.put(newBarcode, newProduct);
+        
+        scsg.mainScanner.scan(newItem);
+        
+        HashMap<BarcodedProduct, Integer> productList = session3.getBarcodedItems();
+        assertTrue(productList.containsKey(product));
+        assertFalse(productList.containsKey(newProduct));
+    }
 }
