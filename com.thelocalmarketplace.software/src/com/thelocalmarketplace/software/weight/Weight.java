@@ -67,7 +67,7 @@ public class Weight {
 	}
 	
 	public void removeItemWeightUpdate(Mass mass) {
-		MassDifference difference = this.expectedWeight.difference(mass);
+		//Figure this part out 
 	}
 	/*
 	 * This method checks if there is a Discrepancy between expectedWeight and actualWeight.

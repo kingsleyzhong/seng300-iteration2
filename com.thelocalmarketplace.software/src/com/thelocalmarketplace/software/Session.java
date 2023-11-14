@@ -6,6 +6,7 @@ import java.util.HashMap;
 import com.jjjwelectronics.Mass;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.software.exceptions.CartEmptyException;
+import com.thelocalmarketplace.software.exceptions.ProductNotFoundException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.funds.FundsListener;
 import com.thelocalmarketplace.software.weight.Weight;
@@ -198,17 +199,18 @@ public class Session {
 	 *                The product to be added to the HashMap.
 	 */
 	public void removeItem(BarcodedProduct product) {
-		if (!barcodedItems.isEmpty()) {
-			// need to reduce total payment of transaction by product 
+		if (barcodedItems.containsKey(product)) {
+			
 			BigDecimal itemPrice = new BigDecimal(product.getPrice());
-			funds.removeItemPrice(itemPrice);
+			int quantity = barcodedItems.get(product);
+			funds.removeItemPrice(itemPrice.multiply(BigDecimal.valueOf(quantity)));
+			
 			//need to reduce weight expectation of transaction by product
 			double weight = product.getExpectedWeight();
 			Mass mass = new Mass(weight);
-			this.weight.removeItemWeightUpdate(mass);
 			barcodedItems.remove(product);
 		} else {
-			throw new CartEmptyException("No items to remove");
+			throw new ProductNotFoundException("Item not found");
 		}
 	}
 
