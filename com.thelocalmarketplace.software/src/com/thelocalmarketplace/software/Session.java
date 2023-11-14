@@ -39,6 +39,9 @@ public class Session {
 	private HashMap<BarcodedProduct, Integer> barcodedItems;
 	private Funds funds;
 	private Weight weight;
+	
+	//hard coded in because i don't know if it will change everyones constructors to add this now
+	private final Mass MaxBagWeight = 2;
 
 	private class WeightDiscrepancyListener implements WeightListener {
 
@@ -159,7 +162,7 @@ public class Session {
 	}
 
 	/*
-	 * Enters the add bag mode for the customer.  
+	 * The customer indicates they want to add a bag by calling addbags 
 	 * 
 	 */
 	public void addbags() {
@@ -169,8 +172,9 @@ public class Session {
 		//get the weight of the scale
 		Weight WeightBeforeAddBag = this.getWeight();
 		
-		//then the customer adds the 
-		while(){
+		//then the customer adds the bag
+		
+		if
 			
 			
 			
