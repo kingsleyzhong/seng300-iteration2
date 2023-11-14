@@ -19,6 +19,7 @@ import com.jjjwelectronics.scanner.BarcodedItem;
 import com.tdc.CashOverloadException;
 import com.tdc.DisabledException;
 import com.tdc.coin.Coin;
+import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
@@ -69,6 +70,8 @@ public class SelfCheckoutStationSystemTest {
 
 	@Before
 	public void setup() {
+		AbstractSelfCheckoutStation.resetConfigurationToDefaults();
+		
 		scs = new SelfCheckoutStationBronze();
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
@@ -199,6 +202,7 @@ public class SelfCheckoutStationSystemTest {
 
 	@Test
 	public void testDiscrepancyDuringPay() {
+		// todo: fix this; rethink behavior
 		session.start();
 		scs.mainScanner.scan(item);
 		scs.baggingArea.addAnItem(item);

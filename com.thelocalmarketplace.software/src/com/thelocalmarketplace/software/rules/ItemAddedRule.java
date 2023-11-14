@@ -7,10 +7,8 @@ import com.jjjwelectronics.IDeviceListener;
 import com.jjjwelectronics.scanner.Barcode;
 import com.jjjwelectronics.scanner.BarcodeScannerListener;
 import com.jjjwelectronics.scanner.IBarcodeScanner;
+import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
-import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
-import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
-import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
 import com.thelocalmarketplace.hardware.external.ProductDatabases;
 import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.SessionState;
@@ -49,25 +47,7 @@ public class ItemAddedRule {
 	 * @param session
 	 *                The session in which to add to
 	 */
-	public ItemAddedRule(SelfCheckoutStationBronze scs, Session session) {
-		if (scs == null) {
-			throw new InvalidArgumentSimulationException("Self Checkout Station cannot be null.");
-		}
-		this.session = session;
-		scs.mainScanner.register(new innerListener());
-		scs.handheldScanner.register(new innerListener());
-	}
-
-	public ItemAddedRule(SelfCheckoutStationSilver scs, Session session) {
-		if (scs == null) {
-			throw new InvalidArgumentSimulationException("Self Checkout Station cannot be null.");
-		}
-		this.session = session;
-		scs.mainScanner.register(new innerListener());
-		scs.handheldScanner.register(new innerListener());
-	}
-
-	public ItemAddedRule(SelfCheckoutStationGold scs, Session session) {
+	public ItemAddedRule(AbstractSelfCheckoutStation scs, Session session) {
 		if (scs == null) {
 			throw new InvalidArgumentSimulationException("Self Checkout Station cannot be null.");
 		}

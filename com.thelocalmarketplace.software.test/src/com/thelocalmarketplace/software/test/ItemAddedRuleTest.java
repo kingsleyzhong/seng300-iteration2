@@ -12,6 +12,7 @@ import com.jjjwelectronics.Mass;
 import com.jjjwelectronics.Numeral;
 import com.jjjwelectronics.scanner.Barcode;
 import com.jjjwelectronics.scanner.BarcodedItem;
+import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
@@ -64,6 +65,8 @@ public class ItemAddedRuleTest {
 
     @Before
     public void setup() {
+    	AbstractSelfCheckoutStation.resetConfigurationToDefaults();
+    	
         session = new Session();
         session2 = new Session();
         session3 = new Session();
