@@ -189,13 +189,23 @@ public class Session {
 		funds.update(itemPrice);
 	}
 	
+	/**
+	 * Adds a barcoded product to the hashMap of the barcoded products. Updates the
+	 * expected weight and price
+	 * of the system based on the weight and price of the product.
+	 * 
+	 * @param product
+	 *                The product to be added to the HashMap.
+	 */
 	public void removeItem(BarcodedProduct product) {
 		if (!barcodedItems.isEmpty()) {
 			// need to reduce total payment of transaction by product 
 			BigDecimal itemPrice = new BigDecimal(product.getPrice());
 			funds.removeItemPrice(itemPrice);
 			//need to reduce weight expectation of transaction by product
-			
+			double weight = product.getExpectedWeight();
+			Mass mass = new Mass(weight);
+			this.weight.removeItemWeightUpdate(mass);
 			barcodedItems.remove(product);
 		} else {
 			throw new CartEmptyException("No items to remove");

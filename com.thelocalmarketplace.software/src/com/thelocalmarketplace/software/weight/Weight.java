@@ -1,10 +1,12 @@
 package com.thelocalmarketplace.software.weight;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 
 import com.jjjwelectronics.IDevice;
 import com.jjjwelectronics.IDeviceListener;
 import com.jjjwelectronics.Mass;
+import com.jjjwelectronics.Mass.MassDifference;
 import com.jjjwelectronics.scale.ElectronicScaleListener;
 import com.jjjwelectronics.scale.IElectronicScale;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
@@ -64,6 +66,9 @@ public class Weight {
 		checkDiscrepancy();
 	}
 	
+	public void removeItemWeightUpdate(Mass mass) {
+		MassDifference difference = this.expectedWeight.difference(mass);
+	}
 	/*
 	 * This method checks if there is a Discrepancy between expectedWeight and actualWeight.
 	 * if two values are equal and isDiscrepancy is true, then call DisrepancyFixed() on it's listener and set isDiscrepancy False
