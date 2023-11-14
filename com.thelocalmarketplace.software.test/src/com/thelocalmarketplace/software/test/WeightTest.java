@@ -61,6 +61,7 @@ public class WeightTest {
             discrepancyFixed = true;
             discrepancyNotified = false;
         }
+
     }
 	
 	
