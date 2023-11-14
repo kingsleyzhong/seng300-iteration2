@@ -47,9 +47,9 @@ public class RemoveItemTests {
 //    private Weight weightSilver;
 //    private Weight weightGold;
 	
-    private SelfCheckoutStationBronze scs = new SelfCheckoutStationBronze();
-    private SelfCheckoutStationSilver scss = new SelfCheckoutStationSilver();
-    private SelfCheckoutStationGold scsg = new SelfCheckoutStationGold();
+    private SelfCheckoutStationBronze scs;// = new SelfCheckoutStationBronze();
+    private SelfCheckoutStationSilver scss; // = new SelfCheckoutStationSilver();
+    private SelfCheckoutStationGold scsg;// = new SelfCheckoutStationGold();
 
     private Session session;
     private BarcodedProduct product;
@@ -68,6 +68,10 @@ public class RemoveItemTests {
     @Before
     public void setUp() {
     	AbstractSelfCheckoutStation.resetConfigurationToDefaults();
+    	scs = new SelfCheckoutStationBronze();
+    	scss = new SelfCheckoutStationSilver();
+    	scsg = new SelfCheckoutStationGold();
+    	
     	
         session = new Session();
         num = 1;
