@@ -9,10 +9,7 @@ import com.jjjwelectronics.Mass;
 import com.jjjwelectronics.Mass.MassDifference;
 import com.jjjwelectronics.scale.ElectronicScaleListener;
 import com.jjjwelectronics.scale.IElectronicScale;
-import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
-import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
-import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
-
+import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import ca.ucalgary.seng300.simulation.NullPointerSimulationException;
 
 /**
@@ -45,15 +42,7 @@ public class Weight {
 	 * @param scs
 	 * 			The self-checkout station in which the weight shall be registered to
 	 */ 
-	public Weight(SelfCheckoutStationBronze scs) {
-		scs.baggingArea.register(new innerListener());
-	}
-	
-	public Weight(SelfCheckoutStationSilver scs) {
-		scs.baggingArea.register(new innerListener());
-	}
-	
-	public Weight(SelfCheckoutStationGold scs) {
+	public Weight(AbstractSelfCheckoutStation scs) {
 		scs.baggingArea.register(new innerListener());
 	}
 	
