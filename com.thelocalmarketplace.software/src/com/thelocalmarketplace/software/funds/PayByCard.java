@@ -71,7 +71,6 @@ public class PayByCard {
 				// Not sure yet what happens here
 				// Card card = new Card(data.getType(), data.getNumber(), data.getCardholder(), data.getCVV());	
 		}
-		
 	}
 	
 	public void getTransactionFromBank() {
