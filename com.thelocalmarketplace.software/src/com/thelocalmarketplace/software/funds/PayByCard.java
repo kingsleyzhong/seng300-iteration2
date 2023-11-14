@@ -6,6 +6,8 @@ import com.thelocalmarketplace.software.SessionState;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.HashMap;
 
 import com.jjjwelectronics.IDevice;
 import com.jjjwelectronics.IDeviceListener;
@@ -28,7 +30,18 @@ import com.jjjwelectronics.card.*;
  *		Subeg CHAHAL 			: 30196531
  */
 public class PayByCard {
-	public Card card;
+	
+	private Card card;
+	private BigDecimal paid;
+	private BigDecimal amountDue;
+	private HashMap <CardIssuer, String> bankList;
+	
+	public PayByCard(Funds funds, HashMap<CardIssuer, String> banks) {
+		amountDue = funds.getAmountDue();
+		bankList.putAll(banks);
+	}
+	
+
 	
 	private class InnerListener implements CardReaderListener {
 
@@ -61,15 +74,14 @@ public class PayByCard {
 			 try {
 				theDataFromACardHasBeenRead(card.swipe());
 			} catch (BlockedCardException  | IOException e) {
-				System.out.println("Declined");
+				System.out.println("Failed");
 				e.printStackTrace();
 			}	
 		}
 
 		@Override
 		public void theDataFromACardHasBeenRead(CardData data) {	
-				// Not sure yet what happens here
-				// Card card = new Card(data.getType(), data.getNumber(), data.getCardholder(), data.getCVV());	
+				Card card = new Card(data.getType(), data.getNumber(), data.getCardholder(), data.getCVV());	
 		}
 	}
 	
@@ -79,13 +91,20 @@ public class PayByCard {
 			// Not sure yet what happens here also
 			// Some card types to determine what object of CardIssuer to use
 			// Can be changed or removed as required
-			if (card.kind == "DisasterCard") {
+			// We need to retrieve the funds
+			// We determine the type of card, check the database for validity, then attempt 
+			
+			if (card.kind == bankList.get("DisasterCard")) {
 				
-			} else if (card.kind == "Viva") {
 				
-			} else if (card.kind == "Canadian Depress") {
+			} else if (card.kind == bankList.get("Viva")) {
 				
-			} else if (card.kind == "Detrac Debit") {
+				
+			} else if (card.kind == bankList.get("Canadian Depress")) {
+				
+				
+			} else if (card.kind == bankList.get("Detrac Debit")) {
+				
 				
 			} else {
 				throw new InvalidActionException("Card not recognized");
@@ -94,6 +113,5 @@ public class PayByCard {
 		} else {
 			throw new InvalidActionException("Not in Card Payment state");
 		}
-
 	}
 }
