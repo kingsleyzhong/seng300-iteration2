@@ -142,6 +142,16 @@ public class Funds {
         this.itemsPrice = this.itemsPrice.add(price);
         calculateAmountDue();
     }
+    
+    /**
+     * Updates the total items price after an item has been removed.
+     * 
+     * @param price The price to be added (in cents)
+     */
+    public void removeItemPrice(BigDecimal price) {
+    	this.itemsPrice = this.itemsPrice.subtract(price);
+    	calculateAmountDue();
+    }
 
     /**
      * Sets the pay mode.

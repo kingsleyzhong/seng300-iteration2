@@ -190,7 +190,16 @@ public class Session {
 	}
 	
 	public void removeItem(BarcodedProduct product) {
-		
+		if (!barcodedItems.isEmpty()) {
+			// need to reduce total payment of transaction by product 
+			BigDecimal itemPrice = new BigDecimal(product.getPrice());
+			funds.removeItemPrice(itemPrice);
+			//need to reduce weight expectation of transaction by product
+			
+			barcodedItems.remove(product);
+		} else {
+			throw new CartEmptyException("No items to remove");
+		}
 	}
 
 	public HashMap<BarcodedProduct, Integer> getBarcodedItems() {
