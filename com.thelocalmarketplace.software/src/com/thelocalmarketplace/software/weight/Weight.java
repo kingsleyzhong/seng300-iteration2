@@ -71,9 +71,6 @@ public class Weight {
 		
 		BigInteger NewValue = this.expectedWeight.inMicrograms().subtract(massToSubtract.inMicrograms());
 		
-		
-		
-		
 		//Mass negativemass = new Mass(massToSubtract.inMicrograms().multiply(conversion));
 		
 		

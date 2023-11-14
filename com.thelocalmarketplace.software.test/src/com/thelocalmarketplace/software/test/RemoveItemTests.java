@@ -1,8 +1,10 @@
 package com.thelocalmarketplace.software.test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 
 import org.junit.Before;
@@ -90,17 +92,34 @@ public class RemoveItemTests {
 	//Successfully remove item (update weight and price) Bronze, Silver, Gold
     @Test
     public void testRemoveItemInDatabaseBronze() {
-        session.start();
+        //start the session
+    	session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         HashMap<BarcodedProduct, Integer> list = session.getBarcodedItems();
+        
+        //add item
         session.addItem(product);
-        // Check that the product was added
+        
+        //Check that the product was added
         HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
         assertTrue(productList.containsKey(product));
+
         
-        // Check that the product has been removed
+        //Funds costBefore = session.getFunds();
+        //BigDecimal cost = costBefore.getAmountDue();
+        //System.out.println(cost);
+        
+        //Remove item
         session.removeItem(product);
+        System.out.println(session.getFunds().toString() );
+        
+        
+        
+        //check that the weights and values 
         assertFalse(productList.containsKey(product));
+        assertEquals(BigDecimal.ZERO, session.getFunds().getAmountDue());
+        
+        
     }
     
     @Test
@@ -140,6 +159,7 @@ public class RemoveItemTests {
     
     @Test
     public void testRemoveDupliacateItemInDatabaseSilver() {
+    	
     	
     }
     
