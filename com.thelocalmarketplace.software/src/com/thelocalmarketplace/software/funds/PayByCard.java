@@ -32,16 +32,13 @@ import com.jjjwelectronics.card.*;
 public class PayByCard {
 	
 	private Card card;
-	private BigDecimal paid;
-	private BigDecimal amountDue;
-	private HashMap <CardIssuer, String> bankList;
+	private double amountDue;
+	private HashMap <String, CardIssuer> bankList;
 	
-	public PayByCard(Funds funds, HashMap<CardIssuer, String> banks) {
-		amountDue = funds.getAmountDue();
+	public PayByCard(Funds funds, HashMap<String,CardIssuer> banks) {
+		amountDue = funds.getAmountDue().doubleValue();
 		bankList.putAll(banks);
 	}
-	
-
 	
 	private class InnerListener implements CardReaderListener {
 
@@ -85,7 +82,7 @@ public class PayByCard {
 		}
 	}
 	
-	public void getTransactionFromBank() {
+	public boolean getTransactionFromBank() {
 		if (Session.getState() == SessionState.PAY_BY_CARD) {
 			
 			// Not sure yet what happens here also
@@ -94,22 +91,74 @@ public class PayByCard {
 			// We need to retrieve the funds
 			// We determine the type of card, check the database for validity, then attempt 
 			
-			if (card.kind == bankList.get("DisasterCard")) {
+			if (card.kind == "DisasterCard") {
+				long holdNumber = bankList.get("DisasterCard").authorizeHold(card.number, 1);
 				
+				if (holdNumber == -1L) {
+					// There are not enough available holds
+					// Invalid card
+					// Blocked card
+					// Maxed holds
+					return false;
+				} else {	
+					boolean post = bankList.get("DisasterCard").postTransaction(card.number, holdNumber, amountDue);
+					if (!post) {
+						// This failed for some reason
+						// Credit limit
+						return false;
+					} else {
+						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
+						bankList.get("DisasterCard").releaseHold(card.number, 1);
+					}
+					return true;		
+				}
+								
+			} else if (card.kind == "Canadian Depress") {
+				long holdNumber = bankList.get("Canadian Depress").authorizeHold(card.number, 1);
 				
-			} else if (card.kind == bankList.get("Viva")) {
+				if (holdNumber == -1L) {
+					// There are not enough available holds
+					// Invalid card
+					// Blocked card
+					// Maxed holds
+					return false;
+				} else {	
+					boolean post = bankList.get("Canadian Depress").postTransaction(card.number, holdNumber, amountDue);
+					if (!post) {
+						// This failed for some reason
+						// Credit limit
+						return false;
+					} else {
+						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
+						bankList.get("Canadian Depress").releaseHold(card.number, 1);
+					}
+					return true;		
+				}
 				
+			} else if (card.kind == "Detrac Debit") {
+				long holdNumber = bankList.get("Detrac Debit").authorizeHold(card.number, 1);
 				
-			} else if (card.kind == bankList.get("Canadian Depress")) {
-				
-				
-			} else if (card.kind == bankList.get("Detrac Debit")) {
-				
-				
+				if (holdNumber == -1L) {
+					// There are not enough available holds
+					// Invalid card
+					// Blocked card
+					// Maxed holds
+					return false;
+				} else {	
+					boolean post = bankList.get("Detrac Debit").postTransaction(card.number, holdNumber, amountDue);
+					if (!post) {
+						// This failed for some reason
+						// Credit limit
+						return false;
+					} else {
+						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
+						bankList.get("Detrac Debit").releaseHold(card.number, 1);
+					}
+					return true;		
+				}
 			} else {
 				throw new InvalidActionException("Card not recognized");
-			}
-			
+			}		
 		} else {
 			throw new InvalidActionException("Not in Card Payment state");
 		}
