@@ -6,6 +6,7 @@ import java.util.HashMap;
 import com.jjjwelectronics.Mass;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.software.exceptions.CartEmptyException;
+import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.funds.FundsListener;
 import com.thelocalmarketplace.software.weight.Weight;
@@ -13,14 +14,14 @@ import com.thelocalmarketplace.software.weight.WeightListener;
 
 /**
  * Class facade representing the session of a self-checkout station
- * 
+ *
  * Can be started and canceled. Becomes frozen when a weight discrepancy
  * occurs and unfrozen when weight discrepancy is fixed.
- * 
+ *
  * Contains the funds of the system, the weight of the system, and a list
  * representing all the products that have been added to the system as well
  * as the quantity of those items.
- * 
+ *
  * Project iteration 2 group members:
  * Aj Sallh : 30023811
  * Anthony Kostal-Vazquez : 30048301
@@ -87,8 +88,8 @@ public class Session {
 	 * Initializes private variables to the ones passed. Initially has the session
 	 * off, session unfrozen, and pay not
 	 * enabled.
-	 * 
-	 * @param BarcodedItems
+	 *
+	 * @param barcodedItems
 	 *                      A hashMap of barcoded products and their associated
 	 *                      quantity in shopping cart
 	 * @param funds
@@ -159,7 +160,7 @@ public class Session {
 
 	/**
 	 * Static getter for session state
-	 * 
+	 *
 	 * @return
 	 *         Session State
 	 */
@@ -171,7 +172,7 @@ public class Session {
 	 * Adds a barcoded product to the hashMap of the barcoded products. Updates the
 	 * expected weight and price
 	 * of the system based on the weight and price of the product.
-	 * 
+	 *
 	 * @param product
 	 *                The product to be added to the HashMap.
 	 */
@@ -189,6 +190,25 @@ public class Session {
 		funds.update(itemPrice);
 	}
 
+	/**
+	 * Subtracts the weight of the bulky item from the total expected weight
+	 * of the system
+	 * Can only call if there is a weight discrepancy
+	 */
+	public void addBulkyItem() {
+		if (Session.getState() != SessionState.BLOCKED) {
+			throw new InvalidActionException("There is no weight discrepancy; cannot call addBulkyItem");
+		}
+
+		Mass bulkyItemWeight = this.weight.getLastWeightAdded();
+		this.weight.subtract(bulkyItemWeight);
+	}
+
+	/**
+	 * determines if customer can call bulky item or not
+	 * customer cannot call bulky item if there is a weight discrepancy
+	 * @return boolean value representing callBulkyItem
+	 */
 	public HashMap<BarcodedProduct, Integer> getBarcodedItems() {
 		return barcodedItems;
 	}
