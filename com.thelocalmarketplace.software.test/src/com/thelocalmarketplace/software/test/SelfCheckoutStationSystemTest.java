@@ -202,6 +202,7 @@ public class SelfCheckoutStationSystemTest {
 
 	@Test
 	public void testDiscrepancyDuringPay() {
+		// todo: fix this; rethink behavior
 		session.start();
 		scs.mainScanner.scan(item);
 		scs.baggingArea.addAnItem(item);
