@@ -198,12 +198,22 @@ public class RemoveItemTests {
     
     @Test(expected = ProductNotFoundException.class)
     public void testRemoveSameItemTwiceSilver()  {
-
+    	session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        HashMap<BarcodedProduct, Integer> list = session.getBarcodedItems();
+        session.removeItem(product);
+        session.removeItem(product);
     }
     
-    @Test
+    @Test (expected = ProductNotFoundException.class)
     public void testRemoveSameItemTwiceGold() {
-
+    	session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        HashMap<BarcodedProduct, Integer> list = session.getBarcodedItems();
+        session.removeItem(product);
+        session.removeItem(product);
     }
     
     
