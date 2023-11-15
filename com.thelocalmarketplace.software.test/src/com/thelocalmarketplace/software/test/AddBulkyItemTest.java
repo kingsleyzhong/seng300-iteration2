@@ -6,6 +6,7 @@ import com.jjjwelectronics.IDevice;
 import com.jjjwelectronics.IDeviceListener;
 import com.jjjwelectronics.scanner.BarcodeScannerListener;
 import com.jjjwelectronics.scanner.IBarcodeScanner;
+import com.thelocalmarketplace.software.Attendant;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -25,6 +26,7 @@ import com.thelocalmarketplace.software.weight.Weight;
 
 import powerutility.PowerGrid;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -120,6 +122,46 @@ public class AddBulkyItemTest {
         Mass actual = itemWeight.getExpectedWeight();
         Mass expected = new Mass(0);
         assertEquals("Mass is 0", expected, actual);
+    }
+
+    /**
+     * test case for adding two items and call addBulkyItem
+     * Scenario: add items, call addBulkyItem
+     */
+    @Test
+    public void testAddTwoBulkyItem() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        session.addItem(product2);
+        session.addBulkyItem();
+        scs.plugIn(PowerGrid.instance());
+        scs.turnOn();
+
+        Weight itemWeight = session.getWeight();
+        Mass actual = itemWeight.getExpectedWeight();
+        Mass expected = new Mass(BigDecimal.valueOf(100));
+        assertEquals("Mass is 100", expected, actual);
+    }
+
+    /**
+     * test case for adding two same items and call addBulkyItem
+     * Scenario: add items, call addBulkyItem
+     */
+    @Test
+    public void testAddTwoSameBulkyItem() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        session.addItem(product);
+        session.addBulkyItem();
+        scs.plugIn(PowerGrid.instance());
+        scs.turnOn();
+
+        Weight itemWeight = session.getWeight();
+        Mass actual = itemWeight.getExpectedWeight();
+        Mass expected = new Mass(BigDecimal.valueOf(100));
+        assertEquals("Mass is 100", expected, actual);
     }
 
     /**
@@ -281,6 +323,47 @@ public class AddBulkyItemTest {
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         session.addItem(product);
         session.addBulkyItem();
+        assertEquals("Discrepancy is fixed", Session.getState(), SessionState.IN_SESSION);
+    }
+
+    /**
+     * test case for fixing weight discrepancy by calling attendant 1
+     * scenario: add item, call addBulkyItem(), then place the bulky item in the bagging area anyways,
+     * fix: by calling attendant
+     *
+     * weight discrepancy fixed using option 3
+     */
+    @Test
+    public void testBulkyItemWeightDiscrepancyCallAttendant() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        session.addBulkyItem();
+        scs.plugIn(PowerGrid.instance());
+        scs.turnOn();
+        BarcodedItem item = new BarcodedItem(barcode, new Mass(100.0));
+        scs.baggingArea.addAnItem(item);
+        Attendant attendant = new Attendant();
+        attendant.attendantFixNoCallAddBulkyItem(scs, item);
+        assertEquals("Discrepancy resolved", Session.getState(), SessionState.IN_SESSION);
+    }
+
+    /**
+     * test case for fixing weight discrepancy by calling attendant 2
+     * scenario: add item, do not call addBulkyItem(), and not place the item in the bagging area,
+     * fix: by calling attendant
+     *
+     * weight discrepancy fixed using option 3
+     */
+    @Test
+    public void testAddItemButNotCallBulkyItemCallAttendant() {
+        scs.plugIn(PowerGrid.instance());
+        scs.turnOn();
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        Attendant attendant = new Attendant();
+        attendant.attendantFixNoItemInBaggingArea(session);
         assertEquals("Discrepancy is fixed", Session.getState(), SessionState.IN_SESSION);
     }
 
