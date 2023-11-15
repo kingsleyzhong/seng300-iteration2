@@ -97,7 +97,7 @@ public class RemoveItemTests {
 
         barcode = new Barcode(new Numeral[] { Numeral.valueOf((byte) 1) });
         product = new BarcodedProduct(barcode, "Product 1", 10, 100.0);
-        product2 = new BarcodedProduct(barcode, "Product 2", 10, 100.0);
+        product2 = new BarcodedProduct(barcode, "Product 2", 10, 120.0);
         
         
         item = new BarcodedItem(barcode, new Mass(100.0));
@@ -108,7 +108,7 @@ public class RemoveItemTests {
         fundsSilver = new Funds(scss);
         weightGold = new Weight(scsg);
         fundsGold = new Funds(scsg);
-    }
+    } 
 
    
 	//Successfully remove item (update weight and price) Bronze, Silver, Gold
@@ -126,14 +126,17 @@ public class RemoveItemTests {
         
         //Remove item
         session.removeItem(product);
-        System.out.println(session.getFunds().toString());
-        Weight itemWeight = session.getWeight();
-        Mass actual = itemWeight.getExpectedWeight();
-        Mass expected = new Mass(0);
         
         //check that the weights and values 
         assertFalse(productList.containsKey(product));
-        assertEquals(expected, actual);         
+        assertEquals(BigDecimal.ZERO, session.getFunds().getAmountDue());
+        
+        //Initializing weights to test for adjustment
+        Weight itemWeight = session.getWeight();
+        Mass actual = itemWeight.getExpectedWeight();
+        Mass expected = new Mass(0);
+        assertEquals(expected, actual);
+         
     }
     
     @Test
@@ -149,15 +152,19 @@ public class RemoveItemTests {
         assertTrue(productList.containsKey(product));
         
         //Remove item
-        session.removeItem(product);
-        System.out.println(session.getFunds().toString());
-        
+        session.removeItem(product);        
         
         
         //check that the weights and values 
         assertFalse(productList.containsKey(product));
         assertEquals(BigDecimal.ZERO, session.getFunds().getAmountDue());
         
+        //Initializing weights to test for adjustment
+        Weight itemWeight = session.getWeight();
+        Mass actual = itemWeight.getExpectedWeight();
+        Mass expected = new Mass(0);
+        assertEquals(expected, actual);
+         
     }
     
     @Test
@@ -173,15 +180,18 @@ public class RemoveItemTests {
         assertTrue(productList.containsKey(product));
         
         //Remove item
-        session.removeItem(product);
-        System.out.println(session.getFunds().toString());
-        
+        session.removeItem(product);        
         
         
         //check that the weights and values 
         assertFalse(productList.containsKey(product));
         assertEquals(BigDecimal.ZERO, session.getFunds().getAmountDue());
         
+        //Initializing weights to test for adjustment
+        Weight itemWeight = session.getWeight();
+        Mass actual = itemWeight.getExpectedWeight();
+        Mass expected = new Mass(0);
+        assertEquals(expected, actual);  
     	
     }
     
@@ -194,7 +204,7 @@ public class RemoveItemTests {
         session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze);        
         
         
-        //Remove item
+        //Remove item 
         session.removeItem(product);
     }
     
@@ -237,13 +247,17 @@ public class RemoveItemTests {
         assertTrue(productList.containsKey(product));
         
         //Remove item once
-        session.removeItem(product);
-        System.out.println(session.getFunds().toString());
-        
+        session.removeItem(product);        
         
         //check that the weights and values 
         assertTrue(productList.containsKey(product));
         assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
+        
+        //Initializing weights to test for adjustment
+        Weight itemWeight = session.getWeight();
+        Mass actual = itemWeight.getExpectedWeight();
+        Mass expected = new Mass(100.0);
+        assertEquals(expected, actual);
     }
     
     @Test
@@ -261,13 +275,17 @@ public class RemoveItemTests {
         assertTrue(productList.containsKey(product));
         
         //Remove item once
-        session.removeItem(product);
-        System.out.println(session.getFunds().toString());
-        
+        session.removeItem(product);        
         
         //check that the weights and values 
         assertTrue(productList.containsKey(product));
         assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
+        
+        //Initializing weights to test for adjustment
+        Weight itemWeight = session.getWeight();
+        Mass actual = itemWeight.getExpectedWeight();
+        Mass expected = new Mass(100.0);
+        assertEquals(expected, actual);
     	
     }
     
@@ -286,13 +304,17 @@ public class RemoveItemTests {
         assertTrue(productList.containsKey(product));
         
         //Remove item once
-        session.removeItem(product);
-        System.out.println(session.getFunds().toString());
-        
+        session.removeItem(product);        
         
         //check that the weights and values 
         assertTrue(productList.containsKey(product));
         assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
+        
+        //Initializing weights to test for adjustment
+        Weight itemWeight = session.getWeight();
+        Mass actual = itemWeight.getExpectedWeight();
+        Mass expected = new Mass(100.0);
+        assertEquals(expected, actual);
     }
 	
 	
@@ -344,17 +366,21 @@ public class RemoveItemTests {
         assertTrue(productList.containsKey(product));
         
         //Remove item once
-        session.removeItem(product);
-        System.out.println(session.getFunds().toString());
-        
+        session.removeItem(product);        
         
         //check that the weights and values 
         assertFalse(productList.containsKey(product));
         assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
+        
+        //Initializing weights to test for adjustment
+        Weight itemWeight = session.getWeight();
+        Mass actual = itemWeight.getExpectedWeight();
+        Mass expected = new Mass(120.0); 
+        assertEquals(expected, actual);
     }
     
     @Test
-    public void testRemoveItemThatsNotLastAddedilver() {
+    public void testRemoveItemThatsNotLastAddedSilver() {
         //start the session
     	session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), fundsSilver, weightSilver);        
@@ -368,13 +394,17 @@ public class RemoveItemTests {
         assertTrue(productList.containsKey(product));
         
         //Remove item once
-        session.removeItem(product);
-        System.out.println(session.getFunds().toString());
-        
+        session.removeItem(product);        
         
         //check that the weights and values 
         assertFalse(productList.containsKey(product));
         assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
+        
+        //Initializing weights to test for adjustment
+        Weight itemWeight = session.getWeight();
+        Mass actual = itemWeight.getExpectedWeight();
+        Mass expected = new Mass(120.0); 
+        assertEquals(expected, actual);
     	 
     }
      
@@ -393,13 +423,17 @@ public class RemoveItemTests {
         assertTrue(productList.containsKey(product));
         
         //Remove item once
-        session.removeItem(product);
-        System.out.println(session.getFunds().toString());
-        
+        session.removeItem(product);        
         
         //check that the weights and values 
         assertFalse(productList.containsKey(product));
         assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
+        
+        //Initializing weights to test for adjustment
+        Weight itemWeight = session.getWeight();
+        Mass actual = itemWeight.getExpectedWeight();
+        Mass expected = new Mass(120.0); 
+        assertEquals(expected, actual);
     }
 	
 }
