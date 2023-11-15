@@ -53,26 +53,6 @@ import powerutility.PowerGrid;
 
 public class RemoveItemTests {
 	
-//    private SelfCheckoutStationBronze scsb;
-//    private SelfCheckoutStationSilver scss;
-//    private SelfCheckoutStationGold scsg;
-//
-//    private Session session;
-//    private Session session2;
-//    private Session session3;
-//
-//    private BarcodedProduct product;
-//    private Barcode barcode;
-//    private BarcodedItem item;
-//
-//    private Funds fundsBronze;
-//    private Funds fundsSilver;
-//    private Funds fundsGold;
-//
-//    private Weight weightBronze;
-//    private Weight weightSilver;
-//    private Weight weightGold;
-	
     private SelfCheckoutStationBronze scsb;
     private SelfCheckoutStationSilver scss;
     private SelfCheckoutStationGold scsg;
@@ -397,7 +377,7 @@ public class RemoveItemTests {
         assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
     	
     }
-    
+     
     @Test
     public void testRemoveItemThatsNotLastAddedGold() {
         //start the session
@@ -421,13 +401,5 @@ public class RemoveItemTests {
         assertFalse(productList.containsKey(product));
         assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
     }
-    
-    
-    
-    
-    
-    
-	
-	
 	
 }
