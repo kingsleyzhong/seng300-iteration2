@@ -191,35 +191,35 @@ public class Session {
 	}
 	
 	/**
-	 * Adds a barcoded product to the hashMap of the barcoded products. Updates the
-	 * expected weight and price
-	 * of the system based on the weight and price of the product.
+	 * Removes a selected product from the hashMap of barcoded items.
+	 * Updates the weight and price of the products.
 	 * 
 	 * @param product
-	 *                The product to be added to the HashMap.
+	 *                The product to be removed from the HashMap.
 	 */
 	public void removeItem(BarcodedProduct product) {
-		if (barcodedItems.containsKey(product)) {
-			
-			BigDecimal itemPrice = new BigDecimal(product.getPrice());
-			int quantity = barcodedItems.get(product);
-			funds.removeItemPrice(itemPrice.multiply(BigDecimal.valueOf(quantity)));
-			
-			//need to reduce weight expectation of transaction by product
-			double weight = product.getExpectedWeight();
-			Mass mass = new Mass(weight);
-			
+		double weight = product.getExpectedWeight();
+		long price = product.getPrice(); 
+		Mass mass = new Mass(weight);
+		BigDecimal ItemPrice = new BigDecimal(price);
+		
+		if (barcodedItems.containsKey(product) && barcodedItems.get(product) > 1 ) {
+			barcodedItems.replace(product, barcodedItems.get(product)-1);
+			this.weight.removeItemWeightUpdate(mass);
+			funds.removeItemPrice(ItemPrice);
+		} else if (barcodedItems.containsKey(product) && barcodedItems.get(product) == 1 ) { 
+			funds.removeItemPrice(ItemPrice);
 			this.weight.removeItemWeightUpdate(mass);
 			barcodedItems.remove(product);
 		} else {
 			throw new ProductNotFoundException("Item not found");
-		}
-	}
-
+		} 
+	} 
+ 
 	public HashMap<BarcodedProduct, Integer> getBarcodedItems() {
 		return barcodedItems;
 	}
-
+   
 	public Funds getFunds() {
 		return funds;
 	}
