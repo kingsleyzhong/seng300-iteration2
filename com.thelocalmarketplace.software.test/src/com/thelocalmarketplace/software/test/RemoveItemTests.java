@@ -27,6 +27,28 @@ import com.thelocalmarketplace.software.weight.Weight;
 
 import powerutility.PowerGrid;
 
+/**
+ * Unit Test class for RemoveItemMethod and interaction with surrounding classes Weight
+ * and Funds
+ * Tests for turning session on, turning session off
+ * Adding a single item, adding multiple duplicate items, adding different items
+ * Session freezing when discrepancy occurs and un-freezing when discrepancy
+ * resolved
+ * See tests for Weight, Funds to ensure no bugs.
+ * 
+ * Project iteration 2 group members:
+ * Aj Sallh : 30023811
+ * Anthony Kostal-Vazquez : 30048301
+ * Chloe Robitaille : 30022887
+ * Dvij Raval : 30024340
+ * Emily Kiddle : 30122331
+ * Katelan NG : 30144672
+ * Kingsley Zhong : 30197260
+ * Nick McCamis : 30192610
+ * Sua Lim : 30177039
+ * Subeg CHAHAL : 30196531
+ */
+
 public class RemoveItemTests {
 	
 //    private SelfCheckoutStationBronze scsb;
@@ -49,10 +71,9 @@ public class RemoveItemTests {
 //    private Weight weightSilver;
 //    private Weight weightGold;
 	
-    private SelfCheckoutStationBronze scs;// = new SelfCheckoutStationBronze();
-    private SelfCheckoutStationSilver scss; // = new SelfCheckoutStationSilver();
-    private SelfCheckoutStationGold scsg;// = new SelfCheckoutStationGold();
-
+    private SelfCheckoutStationBronze scs;
+    private SelfCheckoutStationSilver scss; 
+    private SelfCheckoutStationGold scsg;
     private Session session;
     private BarcodedProduct product;
     private BarcodedProduct product2;
@@ -103,15 +124,10 @@ public class RemoveItemTests {
         //Check that the product was added
         HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
         assertTrue(productList.containsKey(product));
-
-        
-        //Funds costBefore = session.getFunds();
-        //BigDecimal cost = costBefore.getAmountDue();
-        //System.out.println(cost);
         
         //Remove item
         session.removeItem(product);
-        System.out.println(session.getFunds().toString() );
+        System.out.println(session.getFunds().toString());
         
         
         
@@ -172,17 +188,41 @@ public class RemoveItemTests {
 	//remove item twice Bronze, Silver, Gold
     @Test
     public void testRemoveSameItemTwiceBronze() {
-    	
+    	session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        HashMap<BarcodedProduct, Integer> list = session.getBarcodedItems();
+        session.addItem(product);
+        session.addItem(product);
+        Funds fund = session.getFunds();
+        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
+        session.removeItem(product);
+        assertEquals(BigDecimal.ZERO, funds.getItemsPrice());
     }
     
     @Test
     public void testRemoveSameItemTwiceSilver() {
-    	
+    	session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        HashMap<BarcodedProduct, Integer> list = session.getBarcodedItems();
+        session.addItem(product);
+        session.addItem(product);
+        Funds fund = session.getFunds();
+        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
+        session.removeItem(product);
+        assertEquals(BigDecimal.ZERO, funds.getItemsPrice());
     }
     
     @Test
     public void testRemoveSameItemTwiceGold() {
-    	
+    	session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        HashMap<BarcodedProduct, Integer> list = session.getBarcodedItems();
+        session.addItem(product);
+        session.addItem(product);
+        Funds fund = session.getFunds();
+        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
+        session.removeItem(product);
+        assertEquals(BigDecimal.ZERO, funds.getItemsPrice());
     }
     
     
