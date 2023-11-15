@@ -2,7 +2,7 @@ package com.thelocalmarketplace.software.exceptions;
 
 /**
  * Exception that occurs when an action in unable to occur due to 
- * the shopping cart being empty.
+ * the product no being found in the list.
  * 
  * Project iteration 2 group members:
  * 		Aj Sallh 				: 30023811
