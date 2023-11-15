@@ -117,8 +117,26 @@ public class Funds {
         if (amountDue.intValue() <= 0.0005) {
 			for(FundsListener l : listeners)
 				l.notifyPaid();
+			
+			returnChange();
+			
         }
     }
+    
+	public void returnChange() {
+		
+		
+		BigDecimal change = (this.amountDue.subtract(this.paid)).abs();
+		
+		
+		//check if coin dispensers have enough change 
+		//how? idk yet
+		//if false --> return error, block session
+		
+		//return change by maximizing the largest denomination, this will minimize the number of cash they will receive
+		//or could use walker's code idk yet
+		
+	}
 
     /**
      * Methods for adding funds listeners to the funds
@@ -137,4 +155,5 @@ public class Funds {
 
 		listeners.add(listener);
 	}
+	
 }
