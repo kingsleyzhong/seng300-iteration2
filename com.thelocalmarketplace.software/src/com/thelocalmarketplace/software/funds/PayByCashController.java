@@ -40,15 +40,18 @@ public class PayByCashController {
 	
 /***
  * Constructor that begins the total paid in cash at 0
+ * @param scs
+ * @param paid 
  */
 	public PayByCashController(AbstractSelfCheckoutStation scs) {
 		
-		BigDecimal cashPaid = BigDecimal.ZERO;
+		this.cashPaid = BigDecimal.ZERO;
+				
 		InnerCoinListener coinListener = new InnerCoinListener();
 		InnerBankNoteListener banknoteListener = new InnerBankNoteListener();
 		scs.coinValidator.attach(coinListener);
 		scs.banknoteValidator.attach(banknoteListener);
-
+				
 	}
 	
 /***
@@ -87,6 +90,7 @@ public class PayByCashController {
 	            }
 				
 	            if (Session.getState() == SessionState.PAY_BY_CASH) {
+	            	
 	                updateCoin(value); 
 	            }
 	            
@@ -96,7 +100,6 @@ public class PayByCashController {
 				
 			}
 
-			@Override
 			public void invalidCoinDetected(CoinValidator validator) {
 				// TODO Auto-generated method stub
 				
@@ -144,6 +147,7 @@ public class PayByCashController {
 				
 	            if (Session.getState() == SessionState.PAY_BY_CASH) {
 	            	updateBankNote(denomination); 
+	            	
 	            }
 	            
 	            else {
@@ -154,7 +158,6 @@ public class PayByCashController {
 
 			@Override
 			public void badBanknote(BanknoteValidator validator) {
-				// TODO Auto-generated method stub
 				
 			}	
 	}
@@ -163,9 +166,9 @@ public class PayByCashController {
  * This method will update the cashPaid based on the coin received
  */
 	private void updateCoin(BigDecimal value) {
-		
-		this.cashPaid.add(value);
-		
+				
+		this.cashPaid = cashPaid.add(value);
+				
 	}
 	
 /***
@@ -173,7 +176,8 @@ public class PayByCashController {
  */
 	private void updateBankNote(BigDecimal denomination) {
 		
-		this.cashPaid.add(denomination);
+		this.cashPaid = cashPaid.add(denomination);
+	
 		
 	}
 

@@ -8,9 +8,9 @@ import com.tdc.IComponent;
 import com.tdc.IComponentObserver;
 import com.tdc.coin.CoinValidator;
 import com.tdc.coin.CoinValidatorObserver;
-import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
-import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
-import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
+import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
+import com.thelocalmarketplace.software.Session;
+import com.thelocalmarketplace.software.SessionState;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import ca.ucalgary.seng300.simulation.NullPointerSimulationException;
 
@@ -36,6 +36,9 @@ public class Funds {
     private BigDecimal paid;       // Amount paid by the customer (in cents)
     private BigDecimal amountDue;  // Remaining amount to be paid (in cents)
     private boolean isPay;   // Flag indicating if the session is in pay mode
+    private PayByCashController cashController;
+    
+    //private PayByCardController cardController;
 
 
     /**
@@ -43,7 +46,7 @@ public class Funds {
      * 
      * @param scs The self-checkout station
      */
-    public Funds (SelfCheckoutStationBronze scs) {
+    public Funds (AbstractSelfCheckoutStation scs) {
         if (scs == null) {
             throw new IllegalArgumentException("SelfCheckoutStation should not be null.");
         }
@@ -51,84 +54,11 @@ public class Funds {
         this.paid = BigDecimal.ZERO;
         this.amountDue = BigDecimal.ZERO;
         this.isPay = false;
-        InnerListener listener = new InnerListener();
-        scs.coinValidator.attach(listener);
+        this.cashController = new PayByCashController(scs);
+        
+        //this.cardController = new PayByCardController(scs);
     }
-    
-    public Funds (SelfCheckoutStationSilver scs) {
-        if (scs == null) {
-            throw new IllegalArgumentException("SelfCheckoutStation should not be null.");
-        }
-        this.itemsPrice = BigDecimal.ZERO;
-        this.paid = BigDecimal.ZERO;
-        this.amountDue = BigDecimal.ZERO;
-        this.isPay = false;
-        InnerListener listener = new InnerListener();
-        scs.coinValidator.attach(listener);
-    }
-    
-    public Funds (SelfCheckoutStationGold scs) {
-        if (scs == null) {
-            throw new IllegalArgumentException("SelfCheckoutStation should not be null.");
-        }
-        this.itemsPrice = BigDecimal.ZERO;
-        this.paid = BigDecimal.ZERO;
-        this.amountDue = BigDecimal.ZERO;
-        this.isPay = false;
-        InnerListener listener = new InnerListener();
-        scs.coinValidator.attach(listener);
-    }
-    
-    /**
-     * Inner class to listen for valid coin additions and update the paid amount.
-     */
-    public class InnerListener implements CoinValidatorObserver {
-
-		@Override
-		public void enabled(IComponent<? extends IComponentObserver> component) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void disabled(IComponent<? extends IComponentObserver> component) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void turnedOn(IComponent<? extends IComponentObserver> component) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void turnedOff(IComponent<? extends IComponentObserver> component) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void validCoinDetected(CoinValidator validator, BigDecimal value) {
-			if (value.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Coin value should be positive.");
-            }
-            if (isPay) {
-                paid = paid.add(value);
-                calculateAmountDue();
-            }
-            else {
-            	throw new InvalidActionException("Pay is not activated at the moment.");
-            }
-			
-		}
-
-		@Override
-		public void invalidCoinDetected(CoinValidator validator) {
-			// TODO Auto-generated method stub
-			
-		}
-    }
+       
 
     /**
      * Updates the total items price.
@@ -172,8 +102,17 @@ public class Funds {
      * Calculates the amount due by subtracting the paid amount from the total items price.
      */
     private void calculateAmountDue() {
+    	
+    	if (Session.getState() == SessionState.PAY_BY_CASH) {
+    		this.paid = cashController.getCashPaid();
+    	}
+    	
+    	if (Session.getState() == SessionState.PAY_BY_CARD) {
+    		//this.paid = cardController.getCardPaid();
+    	}
+   
         this.amountDue = this.itemsPrice.subtract(this.paid);
-        
+                
         // To account for any rounding errors, checks if less that 0.0005 rather than just 0
         if (amountDue.intValue() <= 0.0005) {
 			for(FundsListener l : listeners)
@@ -181,7 +120,6 @@ public class Funds {
         }
     }
 
-    
     /**
      * Methods for adding funds listeners to the funds
      */
