@@ -111,8 +111,8 @@ public class AddBulkyItemTest {
     public void testAddBulkyItem() {
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
-        session.addItem(product);   // mass is 100
-        session.addBulkyItem();     // mass should now be 0
+        session.addItem(product);
+        session.addBulkyItem();
         scs.plugIn(PowerGrid.instance());
         scs.turnOn();
 
@@ -130,7 +130,6 @@ public class AddBulkyItemTest {
     public void testAddBulkyItemBronzeHandheldScanner() {
         scs.plugIn(PowerGrid.instance());
         scs.turnOn();
-
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weightBronze);
 
@@ -153,16 +152,14 @@ public class AddBulkyItemTest {
     public void testAddBulkyItemSilverHandheldScanner() {
         scss.plugIn(PowerGrid.instance());
         scss.turnOn();
-
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weightSilver);
 
         while (!listener.barcodesScanned.contains(item.getBarcode())) {
-            scss.handheldScanner.scan(item); // mass is 100
+            scss.handheldScanner.scan(item);
         }
 
-        session.addBulkyItem();     // mass should now be 0
-
+        session.addBulkyItem();
         Weight itemWeight = session.getWeight();
         Mass actual = itemWeight.getExpectedWeight();
         Mass expected = new Mass(0);
@@ -177,16 +174,14 @@ public class AddBulkyItemTest {
     public void testAddBulkyItemGoldHandheldScanner() {
         scsg.plugIn(PowerGrid.instance());
         scsg.turnOn();
-
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weightGold);
 
         while (!listener.barcodesScanned.contains(item.getBarcode())) {
-            scsg.handheldScanner.scan(item); // mass is 100
+            scsg.handheldScanner.scan(item);
         }
 
-        session.addBulkyItem();     // mass should now be 0
-
+        session.addBulkyItem();
         Weight itemWeight = session.getWeight();
         Mass actual = itemWeight.getExpectedWeight();
         Mass expected = new Mass(0);
@@ -202,8 +197,8 @@ public class AddBulkyItemTest {
     public void testAddBulkyItemInSession() {
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
-        session.addItem(product);   // mass is 100
-        session.addBulkyItem();     // mass should now be 0
+        session.addItem(product);
+        session.addBulkyItem();
         scs.plugIn(PowerGrid.instance());
         scs.turnOn();
         assertEquals(Session.getState(), SessionState.IN_SESSION);
