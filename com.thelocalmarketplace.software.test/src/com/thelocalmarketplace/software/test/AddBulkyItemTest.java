@@ -315,7 +315,7 @@ public class AddBulkyItemTest {
      * scenario: add item, call addBulkyItem(), then place the bulky item in the bagging area anyways,
      * fix: by calling attendant
      *
-     * weight discrepancy fixed using option 3
+     * weight discrepancy fixed using option 3 (call attendant)
      */
     @Test
     public void testBulkyItemWeightDiscrepancyCallAttendant() {
@@ -337,7 +337,7 @@ public class AddBulkyItemTest {
      * scenario: add item, do not call addBulkyItem(), and not place the item in the bagging area,
      * fix: by calling attendant
      *
-     * weight discrepancy fixed using option 3
+     * weight discrepancy fixed using option 3 (call attendant)
      */
     @Test
     public void testAddItemButNotCallBulkyItemCallAttendant() {
