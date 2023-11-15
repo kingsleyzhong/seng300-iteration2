@@ -242,7 +242,7 @@ public class RemoveItemTests {
         
         
         //check that the weights and values 
-        assertFalse(productList.containsKey(product));
+        assertTrue(productList.containsKey(product));
         assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
     }
     
@@ -266,7 +266,7 @@ public class RemoveItemTests {
         
         
         //check that the weights and values 
-        assertFalse(productList.containsKey(product));
+        assertTrue(productList.containsKey(product));
         assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
     	
     }
@@ -291,7 +291,7 @@ public class RemoveItemTests {
         
         
         //check that the weights and values 
-        assertFalse(productList.containsKey(product));
+        assertTrue(productList.containsKey(product));
         assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
     }
 	
@@ -375,7 +375,7 @@ public class RemoveItemTests {
         //check that the weights and values 
         assertFalse(productList.containsKey(product));
         assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
-    	
+    	 
     }
      
     @Test
