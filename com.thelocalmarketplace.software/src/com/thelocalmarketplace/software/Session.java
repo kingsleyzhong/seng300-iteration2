@@ -208,6 +208,7 @@ public class Session {
 			//need to reduce weight expectation of transaction by product
 			double weight = product.getExpectedWeight();
 			Mass mass = new Mass(weight);
+			
 			this.weight.removeItemWeightUpdate(mass);
 			barcodedItems.remove(product);
 		} else {

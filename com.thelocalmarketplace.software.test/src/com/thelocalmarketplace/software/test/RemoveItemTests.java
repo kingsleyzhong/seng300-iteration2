@@ -73,51 +73,70 @@ public class RemoveItemTests {
 //    private Weight weightSilver;
 //    private Weight weightGold;
 	
-    private SelfCheckoutStationBronze scs;
-    private SelfCheckoutStationSilver scss; 
+    private SelfCheckoutStationBronze scsb;
+    private SelfCheckoutStationSilver scss;
     private SelfCheckoutStationGold scsg;
+
     private Session session;
+    private Session session2;
+    private Session session3;
+
     private BarcodedProduct product;
     private BarcodedProduct product2;
-    byte num;
-    private Numeral numeral;
-    private Numeral[] digits;
     private Barcode barcode;
-    private Barcode barcode2;
+    private BarcodedItem item;
 
-    private Funds funds;
-    private Weight weight;
+    private Funds fundsBronze;
+    private Funds fundsSilver;
+    private Funds fundsGold;
+
+    private Weight weightBronze;
     private Weight weightSilver;
     private Weight weightGold;
 
+    //sets up the test cases
     @Before
-    public void setUp() {
+    public void setup() {
     	AbstractSelfCheckoutStation.resetConfigurationToDefaults();
-    	scs = new SelfCheckoutStationBronze();
-    	scss = new SelfCheckoutStationSilver();
-    	scsg = new SelfCheckoutStationGold();
-    	
     	
         session = new Session();
-        num = 1;
-        numeral = Numeral.valueOf(num);
-        digits = new Numeral[] { numeral, numeral, numeral };
-        barcode = new Barcode(digits);
-        barcode2 = new Barcode(new Numeral[] { numeral });
-        product = new BarcodedProduct(barcode, "Sample Product", 10, 100.0);
-        product2 = new BarcodedProduct(barcode2, "Sample Product 2", 15, 20.0);
-        funds = new Funds(scs);
-        weight = new Weight(scs);
+        session2 = new Session();
+        session3 = new Session();
+        scsb = new SelfCheckoutStationBronze();
+        scsb.plugIn(PowerGrid.instance());
+        scsb.turnOn();
+        scss = new SelfCheckoutStationSilver();
+        scss.plugIn(PowerGrid.instance());
+        scss.turnOn();
+        scsg = new SelfCheckoutStationGold();
+        scsg.plugIn(PowerGrid.instance());
+        scsg.turnOn();
+        new ItemAddedRule(scsb, session);
+        new ItemAddedRule(scss, session2);
+        new ItemAddedRule(scsg, session3);
+
+        barcode = new Barcode(new Numeral[] { Numeral.valueOf((byte) 1) });
+        product = new BarcodedProduct(barcode, "Product 1", 10, 100.0);
+        product2 = new BarcodedProduct(barcode, "Product 2", 10, 100.0);
+        
+        
+        item = new BarcodedItem(barcode, new Mass(100.0));
+
+        weightBronze = new Weight(scsb);
+        fundsBronze = new Funds(scsb);
+        weightSilver = new Weight(scss);
+        fundsSilver = new Funds(scss);
+        weightGold = new Weight(scsg);
+        fundsGold = new Funds(scsg);
     }
 
-    
-	
+   
 	//Successfully remove item (update weight and price) Bronze, Silver, Gold
     @Test
     public void testRemoveItemInDatabaseBronze() {
         //start the session
     	session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);        
+        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze);        
         //add item
         session.addItem(product);
         
@@ -135,53 +154,165 @@ public class RemoveItemTests {
         assertFalse(productList.containsKey(product));
         assertEquals(BigDecimal.ZERO, session.getFunds().getAmountDue());
         
-        
     }
     
     @Test
     public void testRemoveItemInDatabaseSilver() {
-    	
+        //start the session
+    	session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsSilver, weightSilver);        
+        //add item
+        session.addItem(product);
+        
+        //Check that the product was added
+        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
+        assertTrue(productList.containsKey(product));
+        
+        //Remove item
+        session.removeItem(product);
+        System.out.println(session.getFunds().toString());
+        
+        
+        
+        //check that the weights and values 
+        assertFalse(productList.containsKey(product));
+        assertEquals(BigDecimal.ZERO, session.getFunds().getAmountDue());
+        
     }
-	
     
     @Test
     public void testRemoveItemInDatabaseGold() {
-    	
+        //start the session
+    	session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsGold, weightGold);        
+        //add item
+        session.addItem(product);
+        
+        //Check that the product was added
+        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
+        assertTrue(productList.containsKey(product));
+        
+        //Remove item
+        session.removeItem(product);
+        System.out.println(session.getFunds().toString());
+        
+        
+        
+        //check that the weights and values 
+        assertFalse(productList.containsKey(product));
+        assertEquals(BigDecimal.ZERO, session.getFunds().getAmountDue());
+        
     	
     }
+    
     
 	//remove item that hasn't been scanned Bronze, Silver, Gold
-    @Test
+    @Test (expected = ProductNotFoundException.class)
     public void testRemoveItemNotInDatabaseBronze() {
-    	
+        //start the session
+    	session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze);        
+        
+        
+        //Remove item
+        session.removeItem(product);
     }
     
-    @Test
+    @Test (expected = ProductNotFoundException.class)
     public void testRemoveItemNotInDatabaseSilver() {
-    	
+        //start the session
+    	session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsSilver, weightSilver);        
+        
+        //Remove item
+        session.removeItem(product);
+
     }
     
-    @Test
+    @Test (expected = ProductNotFoundException.class)
     public void testRemoveItemNotInDatabaseGold() {
-    	
+        //start the session
+    	session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsGold, weightGold);
+        
+        //Remove item
+        session.removeItem(product);
+
     }
     
     
 	//remove duplicate item (update weight and price) Bronze, Silver, Gold
     @Test
     public void testRemoveDupliacateItemInDatabaseBronze() {
-    	
+        //start the session
+    	session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze);        
+        
+        //add item twice
+        session.addItem(product);
+        session.addItem(product);
+        
+        //Check that the product was added
+        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
+        assertTrue(productList.containsKey(product));
+        
+        //Remove item once
+        session.removeItem(product);
+        System.out.println(session.getFunds().toString());
+        
+        
+        //check that the weights and values 
+        assertFalse(productList.containsKey(product));
+        assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
     }
     
     @Test
     public void testRemoveDupliacateItemInDatabaseSilver() {
-    	
+        //start the session
+    	session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsSilver, weightSilver);        
+        
+        //add item twice
+        session.addItem(product);
+        session.addItem(product);
+        
+        //Check that the product was added
+        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
+        assertTrue(productList.containsKey(product));
+        
+        //Remove item once
+        session.removeItem(product);
+        System.out.println(session.getFunds().toString());
+        
+        
+        //check that the weights and values 
+        assertFalse(productList.containsKey(product));
+        assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
     	
     }
     
     @Test
     public void testRemoveDupliacateItemInDatabaseGold() {
-    	
+        //start the session
+    	session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsGold, weightGold);        
+        
+        //add item twice
+        session.addItem(product);
+        session.addItem(product);
+        
+        //Check that the product was added
+        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
+        assertTrue(productList.containsKey(product));
+        
+        //Remove item once
+        session.removeItem(product);
+        System.out.println(session.getFunds().toString());
+        
+        
+        //check that the weights and values 
+        assertFalse(productList.containsKey(product));
+        assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
     }
 	
 	
@@ -189,7 +320,7 @@ public class RemoveItemTests {
     @Test (expected = ProductNotFoundException.class)
     public void testRemoveSameItemTwiceBronze() {
     	session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+    	session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze); 
         session.addItem(product);
         HashMap<BarcodedProduct, Integer> list = session.getBarcodedItems();
         session.removeItem(product);
@@ -199,7 +330,7 @@ public class RemoveItemTests {
     @Test(expected = ProductNotFoundException.class)
     public void testRemoveSameItemTwiceSilver()  {
     	session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+    	session.setup(new HashMap<BarcodedProduct, Integer>(), fundsSilver, weightSilver); 
         session.addItem(product);
         HashMap<BarcodedProduct, Integer> list = session.getBarcodedItems();
         session.removeItem(product);
@@ -209,12 +340,88 @@ public class RemoveItemTests {
     @Test (expected = ProductNotFoundException.class)
     public void testRemoveSameItemTwiceGold() {
     	session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+    	session.setup(new HashMap<BarcodedProduct, Integer>(), fundsGold, weightGold); 
         session.addItem(product);
         HashMap<BarcodedProduct, Integer> list = session.getBarcodedItems();
         session.removeItem(product);
         session.removeItem(product);
     }
+    
+    
+    //remove item that was not the last added
+    @Test
+    public void testRemoveItemThatsNotLastAddedbronze() {
+        //start the session
+    	session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze);        
+        
+        //add two different items
+        session.addItem(product);
+        session.addItem(product2);
+        
+        //Check that the product was added
+        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
+        assertTrue(productList.containsKey(product));
+        
+        //Remove item once
+        session.removeItem(product);
+        System.out.println(session.getFunds().toString());
+        
+        
+        //check that the weights and values 
+        assertFalse(productList.containsKey(product));
+        assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
+    }
+    
+    @Test
+    public void testRemoveItemThatsNotLastAddedilver() {
+        //start the session
+    	session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsSilver, weightSilver);        
+        
+        //add item twice
+        session.addItem(product);
+        session.addItem(product2);
+        
+        //Check that the product was added
+        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
+        assertTrue(productList.containsKey(product));
+        
+        //Remove item once
+        session.removeItem(product);
+        System.out.println(session.getFunds().toString());
+        
+        
+        //check that the weights and values 
+        assertFalse(productList.containsKey(product));
+        assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
+    	
+    }
+    
+    @Test
+    public void testRemoveItemThatsNotLastAddedGold() {
+        //start the session
+    	session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsGold, weightGold);        
+        
+        //add item twice
+        session.addItem(product);
+        session.addItem(product2);
+        
+        //Check that the product was added
+        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
+        assertTrue(productList.containsKey(product));
+        
+        //Remove item once
+        session.removeItem(product);
+        System.out.println(session.getFunds().toString());
+        
+        
+        //check that the weights and values 
+        assertFalse(productList.containsKey(product));
+        assertEquals(BigDecimal.TEN , session.getFunds().getAmountDue());
+    }
+    
     
     
     
