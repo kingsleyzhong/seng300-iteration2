@@ -190,18 +190,27 @@ public class Session {
 		funds.update(itemPrice);
 	}
 
+	private boolean callBulkyItem = true;
+
 	/**
 	 * Subtracts the weight of the bulky item from the total expected weight
 	 * of the system
 	 * Can only call if there is a weight discrepancy
+	 *
+	 * If called when there is no weight discrepancy, then nothing happens
 	 */
 	public void addBulkyItem() {
 		if (Session.getState() != SessionState.BLOCKED) {
-			throw new InvalidActionException("There is no weight discrepancy; cannot call addBulkyItem");
+			this.callBulkyItem = false;
+			return;
 		}
 
 		Mass bulkyItemWeight = this.weight.getLastWeightAdded();
 		this.weight.subtract(bulkyItemWeight);
+	}
+
+	public boolean getCallAddBulkyItem() {
+		return this.callBulkyItem;
 	}
 
 	/**

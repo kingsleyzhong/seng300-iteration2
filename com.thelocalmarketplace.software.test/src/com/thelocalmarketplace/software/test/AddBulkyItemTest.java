@@ -1,8 +1,6 @@
 package com.thelocalmarketplace.software.test;
 
 import static org.junit.Assert.*;
-
-import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -201,7 +199,7 @@ public class AddBulkyItemTest {
     /**
      * test case for calling AddBulkyItem() when there is no weight discrepancy
      */
-    @Test (expected = InvalidActionException.class)
+    @Test
     public void testCallAddBulkyItemWithoutWeightDiscrepancy() {
         scs.plugIn(PowerGrid.instance());
         scs.turnOn();
@@ -211,5 +209,6 @@ public class AddBulkyItemTest {
         BarcodedItem item = new BarcodedItem(barcode, new Mass(100.0));
         scs.baggingArea.addAnItem(item);
         session.addBulkyItem();
+        assertFalse("Cannot call AddBulkyItem if there is no weight discrepancy", session.getCallAddBulkyItem());
     }
 }
