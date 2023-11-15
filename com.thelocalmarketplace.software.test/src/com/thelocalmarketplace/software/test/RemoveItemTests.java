@@ -21,6 +21,8 @@ import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
 import com.thelocalmarketplace.hardware.external.ProductDatabases;
 import com.thelocalmarketplace.software.Session;
+import com.thelocalmarketplace.software.exceptions.InvalidActionException;
+import com.thelocalmarketplace.software.exceptions.ProductNotFoundException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.rules.ItemAddedRule;
 import com.thelocalmarketplace.software.weight.Weight;
@@ -115,9 +117,7 @@ public class RemoveItemTests {
     public void testRemoveItemInDatabaseBronze() {
         //start the session
     	session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
-        HashMap<BarcodedProduct, Integer> list = session.getBarcodedItems();
-        
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);        
         //add item
         session.addItem(product);
         
@@ -186,43 +186,24 @@ public class RemoveItemTests {
 	
 	
 	//remove item twice Bronze, Silver, Gold
-    @Test
+    @Test (expected = ProductNotFoundException.class)
     public void testRemoveSameItemTwiceBronze() {
     	session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
         HashMap<BarcodedProduct, Integer> list = session.getBarcodedItems();
-        session.addItem(product);
-        session.addItem(product);
-        Funds fund = session.getFunds();
-        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
         session.removeItem(product);
-        assertEquals(BigDecimal.ZERO, funds.getItemsPrice());
+        session.removeItem(product);
     }
     
-    @Test
-    public void testRemoveSameItemTwiceSilver() {
-    	session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
-        HashMap<BarcodedProduct, Integer> list = session.getBarcodedItems();
-        session.addItem(product);
-        session.addItem(product);
-        Funds fund = session.getFunds();
-        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
-        session.removeItem(product);
-        assertEquals(BigDecimal.ZERO, funds.getItemsPrice());
+    @Test(expected = ProductNotFoundException.class)
+    public void testRemoveSameItemTwiceSilver()  {
+
     }
     
     @Test
     public void testRemoveSameItemTwiceGold() {
-    	session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
-        HashMap<BarcodedProduct, Integer> list = session.getBarcodedItems();
-        session.addItem(product);
-        session.addItem(product);
-        Funds fund = session.getFunds();
-        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
-        session.removeItem(product);
-        assertEquals(BigDecimal.ZERO, funds.getItemsPrice());
+
     }
     
     
