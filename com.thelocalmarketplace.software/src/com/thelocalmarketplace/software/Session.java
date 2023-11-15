@@ -211,6 +211,12 @@ public class Session {
 		this.weight.subtract(bulkyItemWeight);
 	}
 
+	/**
+	 * method to check if addBulkyItem() can be called or not
+	 * @return boolean callBulkyItem
+	 * true if addBulkyItem() can be called
+	 * false if addBulkyItem() cannot be called
+	 */
 	public boolean getCallAddBulkyItem() {
 		return this.callBulkyItem;
 	}
