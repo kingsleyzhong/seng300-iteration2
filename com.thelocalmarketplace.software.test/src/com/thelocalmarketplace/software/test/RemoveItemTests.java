@@ -127,13 +127,13 @@ public class RemoveItemTests {
         //Remove item
         session.removeItem(product);
         System.out.println(session.getFunds().toString());
-        
-        
+        Weight itemWeight = session.getWeight();
+        Mass actual = itemWeight.getExpectedWeight();
+        Mass expected = new Mass(0);
         
         //check that the weights and values 
         assertFalse(productList.containsKey(product));
-        assertEquals(BigDecimal.ZERO, session.getFunds().getAmountDue());
-        
+        assertEquals(expected, actual);         
     }
     
     @Test
@@ -326,7 +326,7 @@ public class RemoveItemTests {
         session.removeItem(product);
         session.removeItem(product);
     }
-    
+     
     
     //remove item that was not the last added
     @Test
