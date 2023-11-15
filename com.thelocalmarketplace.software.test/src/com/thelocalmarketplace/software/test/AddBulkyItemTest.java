@@ -6,7 +6,6 @@ import com.jjjwelectronics.IDevice;
 import com.jjjwelectronics.IDeviceListener;
 import com.jjjwelectronics.scanner.BarcodeScannerListener;
 import com.jjjwelectronics.scanner.IBarcodeScanner;
-import com.thelocalmarketplace.software.Attendant;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -106,7 +105,7 @@ public class AddBulkyItemTest {
     }
 
     /**
-     * test case for adding bulky item
+     * test case for adding bulky item successfully
      * Scenario: add an item, call addBulkyItem
      */
     @Test
@@ -122,6 +121,7 @@ public class AddBulkyItemTest {
         Mass actual = itemWeight.getExpectedWeight();
         Mass expected = new Mass(0);
         assertEquals("Mass is 0", expected, actual);
+        assertEquals(Session.getState(), SessionState.IN_SESSION);
     }
 
     /**
@@ -129,7 +129,7 @@ public class AddBulkyItemTest {
      * Scenario: add items, call addBulkyItem
      */
     @Test
-    public void testAddTwoBulkyItem() {
+    public void testAddTwoBulkyItemAndInSession() {
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         session.addItem(product);
@@ -230,22 +230,6 @@ public class AddBulkyItemTest {
         assertEquals("Mass is 0", expected, actual);
     }
 
-
-    /**
-     * test case for checking if the session is IN_SESSION if adding bulky item
-     * scenario: add item, call addBulkyItem()
-     */
-    @Test
-    public void testAddBulkyItemInSession() {
-        session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
-        session.addItem(product);
-        session.addBulkyItem();
-        scs.plugIn(PowerGrid.instance());
-        scs.turnOn();
-        assertEquals(Session.getState(), SessionState.IN_SESSION);
-    }
-
     /**
      * test case for causing weight discrepancy 1
      * scenario: add item, call addBulkyItem(), then place the bulky item in the bagging area anyways
@@ -343,8 +327,8 @@ public class AddBulkyItemTest {
         scs.turnOn();
         BarcodedItem item = new BarcodedItem(barcode, new Mass(100.0));
         scs.baggingArea.addAnItem(item);
-        Attendant attendant = new Attendant();
-        attendant.attendantFixNoCallAddBulkyItem(scs, item);
+        assertTrue(session.getCallAssistant());
+        session.assistantHelpNoCallAddBulkyItem(scs, item);
         assertEquals("Discrepancy resolved", Session.getState(), SessionState.IN_SESSION);
     }
 
@@ -362,8 +346,8 @@ public class AddBulkyItemTest {
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         session.addItem(product);
-        Attendant attendant = new Attendant();
-        attendant.attendantFixNoItemInBaggingArea(session);
+        assertTrue(session.getCallAssistant());
+        session.assistantHelpNoItemInBaggingArea();
         assertEquals("Discrepancy is fixed", Session.getState(), SessionState.IN_SESSION);
     }
 

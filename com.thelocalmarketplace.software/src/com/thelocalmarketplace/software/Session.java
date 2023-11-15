@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 
 import com.jjjwelectronics.Mass;
+import com.jjjwelectronics.scanner.BarcodedItem;
+import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.software.exceptions.CartEmptyException;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
@@ -190,9 +192,14 @@ public class Session {
 		BigDecimal itemPrice = new BigDecimal(price);
 		this.weight.update(mass);
 		funds.update(itemPrice);
+
+		if (this.getWeight().isDiscrepancy()) {
+			this.setCallAssistant(true);
+		}
 	}
 
 	private boolean callBulkyItem = true;
+	public boolean callAssistant = false;
 
 	/**
 	 * Subtracts the weight of the bulky item from the total expected weight
@@ -207,8 +214,41 @@ public class Session {
 			return;
 		}
 
+		this.callAssistant = true;
 		Mass bulkyItemWeight = this.weight.getLastWeightAdded();
 		this.weight.subtract(bulkyItemWeight);
+	}
+
+	/**
+	 * method for calling assistant for weight discrepancy
+	 * If customer adds item but does not place it in the bagging area
+	 */
+	public void assistantHelpNoItemInBaggingArea() {
+			this.addBulkyItem();
+			this.setCallAssistant(false);
+	}
+
+	/**
+	 * method for calling assistant for weight discrepancy
+	 * If customer calls addBulkyItem but places the item in the bagging area anyways
+	 */
+	public void assistantHelpNoCallAddBulkyItem(AbstractSelfCheckoutStation sc, BarcodedItem item) {
+			sc.baggingArea.removeAnItem(item);
+			this.setCallAssistant(false);
+	}
+
+	/**
+	 * method to determine if assistant is needed or not
+	 */
+	public void setCallAssistant(boolean bool) {
+		this.callAssistant = bool;
+	}
+
+	/**
+	 * method to check if assistant is needed or not
+	 */
+	public boolean getCallAssistant() {
+		return this.callAssistant;
 	}
 
 	/**
