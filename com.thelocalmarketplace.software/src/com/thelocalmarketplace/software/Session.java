@@ -22,6 +22,8 @@ import com.thelocalmarketplace.software.weight.WeightListener;
  * representing all the products that have been added to the system as well
  * as the quantity of those items.
  *
+ * Has add bulky item functionality
+ *
  * Project iteration 2 group members:
  * Aj Sallh : 30023811
  * Anthony Kostal-Vazquez : 30048301
