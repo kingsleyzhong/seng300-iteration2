@@ -29,13 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
- * Unit Test class for Session and interaction with surrounding classes Weight
- * and Funds
- * Tests for turning session on, turning session off
- * Adding a single item, adding multiple duplicate items, adding different items
- * Session freezing when discrepancy occurs and un-freezing when discrepancy
- * resolved
- * See tests for Weight, Funds to ensure no bugs.
+ * Unit Test class for Add Bulky Item
  *
  * Project iteration 2 group members:
  * Aj Sallh : 30023811
