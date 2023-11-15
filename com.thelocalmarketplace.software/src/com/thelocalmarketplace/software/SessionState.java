@@ -7,6 +7,8 @@ public enum SessionState {
     PAY_BY_CASH(true),
     PAY_BY_CARD(true);
     
+	
+	
     // This is to simplify checking if the state is a pay state
     private final boolean payState;
 	private SessionState(final boolean payState) {
