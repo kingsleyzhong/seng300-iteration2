@@ -47,7 +47,7 @@ public class Session {
 	 * 
 	 */
 	private Mass MAXBAGWEIGHT = new Mass(500 + Mass.MICROGRAMS_PER_GRAM); // 500g ~ 1lb??
-	
+	private boolean addBagOverride = false; // override to allow a bag to be added that is over the mass limit
 	
 	
 	private class WeightDiscrepancyListener implements WeightListener {
@@ -181,6 +181,12 @@ public class Session {
 
 	/*
 	 * The customer indicates they want to add a bag by calling addbags 
+	 * Assumes the customer will add their bags to the bagging area when prompted
+	 * 
+	 * After bags are added to the scale, the system adjusts the expected weight to account for the bags
+	 * 
+	 * If the weight of the bag(s) exceeds some defined limit (MAXBAGWEIGHT) then the system will signal that the bags are too heavy,
+	 * and alert the attendant
 	 * 
 	 */
 	public void addBags() {
@@ -193,19 +199,42 @@ public class Session {
 			//get the weight of the scale before adding the bag
 			Weight WeightBeforeAddBag = this.getWeight();
 		
+			System.out.println("Before adding: " + WeightBeforeAddBag.toString());
+			
 			// signal custome to add bag to the bagging area (somehow)
 		
 			//then the customer adds the bag(s)
 			while(this.getWeight().equals(WeightBeforeAddBag)) {
 				// customer adds bag(s)
+				
+				// after some amount of time the system should signal the Customer again
+				
+				// for iteration 2 I am assuming that the customer will always add bags
+				// when the GUI exists a cancel button would allow the user
+				return; // this is broken help
 			}
 		
 			//get the weight of the scale after the bag was added
 			Weight WeightAfterAddingBag = this.getWeight();
-		
+			System.out.println("Weight after: " + WeightAfterAddingBag.toString());
+			
+			// check that the weight change was caused by adding weight
+			if(WeightAfterAddingBag.getActualWeight().compareTo(WeightBeforeAddBag.getActualWeight())  <= 0 ){
+				// unexpected change in the bagging area
+				// signal problem to the customer
+				
+				// do not update the expected weight
+				
+				// frees
+				
+				// cancel the interaction
+				this.sessionState = SessionState.IN_SESSION;
+				
+			}
+			
 			// check if the updated weight is to heavy for just a bag (Throw exception??)
 			// if weight > expected weight of a bag
-			if(WeightAfterAddingBag.getActualWeight().compareTo(MAXBAGWEIGHT) > 0) {
+			if(WeightAfterAddingBag.getActualWeight().compareTo(MAXBAGWEIGHT) >= 0) {
 				bagsTooHeavy(); 
 			}
 			// else: the bag added is within the allowed weight range
@@ -215,7 +244,7 @@ public class Session {
 			Mass actualBagWeight = WeightAfterAddingBag.getActualWeight().difference(WeightBeforeAddBag.getActualWeight()).abs();
 		
 			// update the expected weight on the scale
-			this.weight.update(actualBagWeight);// this should just work???
+			this.weight.update(actualBagWeight);
 		
 			// unblock the session
 			this.start(); 
@@ -233,9 +262,6 @@ public class Session {
 	public void bagsTooHeavy() {
 		// this is an attendant method
 		// not sure what to put here
-		
-		// unblock session
-		this.start();
 	}
 	
 	/**
