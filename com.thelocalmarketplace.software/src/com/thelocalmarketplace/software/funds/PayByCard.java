@@ -135,7 +135,7 @@ public class PayByCard {
 					return true;		
 				}
 				
-			} else if (card.kind == "Detrac Debit") {
+			} else if (card.kind == ) {
 				long holdNumber = bankList.get("Detrac Debit").authorizeHold(card.number, 1);
 				
 				if (holdNumber == -1L) {
