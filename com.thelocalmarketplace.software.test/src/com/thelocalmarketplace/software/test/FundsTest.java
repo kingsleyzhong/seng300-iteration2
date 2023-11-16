@@ -51,6 +51,7 @@ public class FundsTest {
 	private BigDecimal value;
 	private BigDecimal price;
 
+	// Test
 	@Before
 	public void setUp() {
 		AbstractSelfCheckoutStation.resetConfigurationToDefaults();
