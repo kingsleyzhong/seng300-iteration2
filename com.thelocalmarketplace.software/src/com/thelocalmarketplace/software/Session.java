@@ -2,12 +2,15 @@ package com.thelocalmarketplace.software;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.Map;
 
 import com.jjjwelectronics.Mass;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.software.exceptions.CartEmptyException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.funds.FundsListener;
+import com.thelocalmarketplace.software.receipt.PrintReceipt;
+import com.thelocalmarketplace.software.receipt.PrintReceiptListener;
 import com.thelocalmarketplace.software.weight.Weight;
 import com.thelocalmarketplace.software.weight.WeightListener;
 
@@ -39,6 +42,7 @@ public class Session {
 	private HashMap<BarcodedProduct, Integer> barcodedItems;
 	private Funds funds;
 	private Weight weight;
+	private PrintReceipt receiptPrinter; // Code added
 
 	private class WeightDiscrepancyListener implements WeightListener {
 
@@ -72,6 +76,38 @@ public class Session {
 		}
 
 	}
+	
+	// Code added
+	private class printerListener implements PrintReceiptListener {
+
+		@Override
+		public void notifiyOutOfPaper() {
+			block();
+		}
+
+		@Override
+		public void notifiyOutOfInk() {
+			block();
+		}
+
+		@Override
+		public void notifiyPaperRefilled() {
+			resume();
+		}
+
+		@Override
+		public void notifiyInkRefilled() {
+			resume();
+		}
+
+		@Override
+		public void notifiyReceiptPrinted() {
+			// Should notifyPaid() not wait until receipt is successfully printed to change to PRE_SESSION?
+			sessionState = SessionState.PRE_SESSION;
+			
+		}
+		
+	}
 
 	/**
 	 * Constructor for the session method. Requires to be installed on self-checkout
@@ -97,12 +133,15 @@ public class Session {
 	 *                      The weight of the items and actual weight on the scale
 	 *                      during the session
 	 */
-	public void setup(HashMap<BarcodedProduct, Integer> barcodedItems, Funds funds, Weight weight) {
+	public void setup(HashMap<BarcodedProduct, Integer> barcodedItems, Funds funds, Weight weight, PrintReceipt receiptPrinter) {
 		this.barcodedItems = barcodedItems;
 		this.funds = funds;
 		this.weight = weight;
 		this.weight.register(new WeightDiscrepancyListener());
 		this.funds.register(new PayListener());
+		// Code added
+		this.receiptPrinter = receiptPrinter;
+		this.receiptPrinter.register(new printerListener());
 	}
 
 	/**
@@ -199,6 +238,19 @@ public class Session {
 
 	public Weight getWeight() {
 		return weight;
+	}
+	
+	// Code added
+	public void printReceipt() {
+		String formattedReceipt = "";
+		for (Map.Entry<BarcodedProduct, Integer> item : barcodedItems.entrySet()) {
+			BarcodedProduct product = item.getKey();
+			int numberOfProduct = item.getValue().intValue();
+			// barcoded item does not store the price for items which need to be weighted
+			long overallPrice = product.getPrice()*numberOfProduct;
+			formattedReceipt = formattedReceipt.concat("Item: " + product.getDescription() + " Amount: " + numberOfProduct + " Price: " + overallPrice + "\n");
+		}
+		receiptPrinter.printReceipt(formattedReceipt);
 	}
 
 }
