@@ -101,8 +101,7 @@ public class PayByCashController {
 			}
 
 			public void invalidCoinDetected(CoinValidator validator) {
-				// TODO Auto-generated method stub
-				
+				//Dealt with in the hardware
 			}
 			
 		 }
@@ -158,7 +157,7 @@ public class PayByCashController {
 
 			@Override
 			public void badBanknote(BanknoteValidator validator) {
-				
+				//Dealt with in the hardware
 			}	
 	}
 		
