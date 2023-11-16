@@ -71,7 +71,7 @@ public class SelfCheckoutStationSystemTest {
 	@Before
 	public void setup() {
 		AbstractSelfCheckoutStation.resetConfigurationToDefaults();
-		
+
 		scs = new SelfCheckoutStationBronze();
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
@@ -183,11 +183,13 @@ public class SelfCheckoutStationSystemTest {
 		assertEquals("Session is frozen upon discrepancy", Session.getState(), SessionState.BLOCKED);
 	}
 
-	@Test(expected = InvalidActionException.class)
+	@Test
 	public void testAddItemWhenDiscrepancy() {
 		session.start();
 		scs.mainScanner.scan(item);
 		scs.mainScanner.scan(item2);
+		HashMap<BarcodedProduct, Integer> list = session.getBarcodedItems();
+		assertFalse("Item is not added to list", list.containsKey(item2));
 	}
 
 	@Test(expected = InvalidActionException.class)
@@ -203,6 +205,7 @@ public class SelfCheckoutStationSystemTest {
 	@Test
 	public void testDiscrepancyDuringPay() {
 		// todo: fix this; rethink behavior
+		// do we want to allow the user to remove the item and continue paying?
 		session.start();
 		scs.mainScanner.scan(item);
 		scs.baggingArea.addAnItem(item);
