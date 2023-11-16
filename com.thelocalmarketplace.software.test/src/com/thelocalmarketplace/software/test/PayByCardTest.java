@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,10 +61,18 @@ public class PayByCardTest {
 	private Session session;
 	private Session session2;
 	private Session session3;
-	private Card card;
 	private HashMap <String, CardIssuer> bankList;
 	private static SupportedCardIssuers supportedCards;
-	private ArrayList<String> supportedCardsNames;
+	private ArrayList <String> supportedCardsNames;
+	private CardIssuer ci1;
+	private CardIssuer ci2;
+	private CardIssuer ci3;
+	private CardIssuer ci4;
+	private Card disCard;
+	private Card viva;
+	private Card cdnDep;
+	private Card debit;
+	
     
 	@Before
 	public void setup() {
@@ -88,14 +97,31 @@ public class PayByCardTest {
 		SelfCheckoutStationLogic.installOn(scsg, session3);  
 		
 		for(SupportedCardIssuers supportedCards : SupportedCardIssuers.values()) {
-			supportedCardsNames.add(supportedCards.getIssuer());	
-		}		
+			supportedCardsNames.add(supportedCards.getIssuer());
+		}
+		
+		CardIssuer ci1 = new CardIssuer(supportedCardsNames.get(0), 0);
+		CardIssuer ci2 = new CardIssuer(supportedCardsNames.get(1), 5);
+		CardIssuer ci3 = new CardIssuer(supportedCardsNames.get(2), 1);
+		CardIssuer ci4 = new CardIssuer(supportedCardsNames.get(3), 2);
+		
+		Card disCard = new Card(supportedCardsNames.get(0), "5299334598001547", "Brandon Chan", "666");
+		Card viva = new Card(supportedCardsNames.get(1), "4504389022574000", "Dorris Giles", "343");
+		Card cdnDep = new Card(supportedCardsNames.get(2), "1111111111111111", "Not A Real Person", "420");
+		Card debit = new Card(supportedCardsNames.get(3), "5160617843321186", "Brent ", "911");
+		
+		ci1.addCardData(disCard.kind, disCard.cardholder, null, disCard.cvv, 10000);
+		ci2.addCardData(viva.kind, viva.cardholder, null, viva.cvv, 7500);
+		ci3.addCardData("0", cdnDep.cardholder, null, cdnDep.cvv, 0);
+		ci4.addCardData(debit.kind, debit.cardholder, null, debit.cvv, 2);
 	}
 	
 	@Test
-	public void testInvalidCardNumber() {
-		// This will decline a card if the card number does not exist in the respective database
+	public void testInvalidCardNumber() throws IOException {
+		scs.cardReader.swipe(cdnDep);
+		// The card numbers do not match and will decline a card if the card is blocked
 		// authorizeHold should return -1 
+		// How do we effectively call authorize hold
 	}
 	
 	@Test

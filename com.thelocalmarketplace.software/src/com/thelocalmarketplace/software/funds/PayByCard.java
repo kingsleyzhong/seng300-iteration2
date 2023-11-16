@@ -70,27 +70,26 @@ public class PayByCard {
 		public void aCardHasBeenSwiped(){
 			 try {
 				theDataFromACardHasBeenRead(card.swipe());
+				if(Session.getState() != SessionState.PAY_BY_CARD) {
+					throw new InvalidActionException("Card reader not in use");
+				}
 			} catch (BlockedCardException  | IOException e) {
 				System.out.println("Failed");
 				e.printStackTrace();
-			}	
+			}
 		}
 
 		@Override
 		public void theDataFromACardHasBeenRead(CardData data) {	
-				Card card = new Card(data.getType(), data.getNumber(), data.getCardholder(), data.getCVV());	
+				Card card = new Card(data.getType(), data.getNumber(), data.getCardholder(), data.getCVV());
+				
 		}
 	}
 	
 	public boolean getTransactionFromBank() {
 		if (Session.getState() == SessionState.PAY_BY_CARD) {
-			
-			// Not sure yet what happens here also
-			// Some card types to determine what object of CardIssuer to use
-			// Can be changed or removed as required
 			// We need to retrieve the funds
-			// We determine the type of card, check the database for validity, then attempt 
-			
+			// We determine the type of card, check the database for validity, then attempt 		
 			if (card.kind == "DisasterCard") {
 				long holdNumber = bankList.get("DisasterCard").authorizeHold(card.number, 1);
 				
@@ -135,7 +134,7 @@ public class PayByCard {
 					return true;		
 				}
 				
-			} else if (card.kind == ) {
+			} else if (card.kind == "Detrac Debit") {
 				long holdNumber = bankList.get("Detrac Debit").authorizeHold(card.number, 1);
 				
 				if (holdNumber == -1L) {
