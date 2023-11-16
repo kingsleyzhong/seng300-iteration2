@@ -1,5 +1,6 @@
 package com.thelocalmarketplace.software.funds;
 
+import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.external.*;
 import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.SessionState;
@@ -35,9 +36,11 @@ public class PayByCard {
 	private double amountDue;
 	private HashMap <String, CardIssuer> bankList;
 	
-	public PayByCard(Funds funds, HashMap<String,CardIssuer> banks) {
+	public PayByCard(AbstractSelfCheckoutStation scs, Funds funds) {
+		InnerListener cardListener = new InnerListener();
+		
 		amountDue = funds.getAmountDue().doubleValue();
-		bankList.putAll(banks);
+		bankList.putAll(funds.banks);
 	}
 	
 	private class InnerListener implements CardReaderListener {
@@ -74,7 +77,7 @@ public class PayByCard {
 					throw new InvalidActionException("Card reader not in use");
 				}
 			} catch (BlockedCardException  | IOException e) {
-				System.out.println("Failed");
+				System.out.println("Declined");
 				e.printStackTrace();
 			}
 		}
@@ -90,8 +93,8 @@ public class PayByCard {
 		if (Session.getState() == SessionState.PAY_BY_CARD) {
 			// We need to retrieve the funds
 			// We determine the type of card, check the database for validity, then attempt 		
-			if (card.kind == "DisasterCard") {
-				long holdNumber = bankList.get("DisasterCard").authorizeHold(card.number, 1);
+			if (card.kind == SupportedCardIssuers.ONE.getIssuer()) {
+				long holdNumber = bankList.get(SupportedCardIssuers.ONE.getIssuer()).authorizeHold(card.number, 1);
 				
 				if (holdNumber == -1L) {
 					// There are not enough available holds
@@ -100,20 +103,20 @@ public class PayByCard {
 					// Maxed holds
 					return false;
 				} else {	
-					boolean post = bankList.get("DisasterCard").postTransaction(card.number, holdNumber, amountDue);
+					boolean post = bankList.get(SupportedCardIssuers.ONE.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
 					if (!post) {
 						// This failed for some reason
 						// Credit limit
 						return false;
 					} else {
 						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-						bankList.get("DisasterCard").releaseHold(card.number, 1);
+						bankList.get(SupportedCardIssuers.ONE.getIssuer()).releaseHold(card.number, 1);
 					}
 					return true;		
 				}
 								
-			} else if (card.kind == "Canadian Depress") {
-				long holdNumber = bankList.get("Canadian Depress").authorizeHold(card.number, 1);
+			} else if (card.kind == SupportedCardIssuers.THREE.getIssuer()) {
+				long holdNumber = bankList.get(SupportedCardIssuers.THREE.getIssuer()).authorizeHold(card.number, 1);
 				
 				if (holdNumber == -1L) {
 					// There are not enough available holds
@@ -122,20 +125,20 @@ public class PayByCard {
 					// Maxed holds
 					return false;
 				} else {	
-					boolean post = bankList.get("Canadian Depress").postTransaction(card.number, holdNumber, amountDue);
+					boolean post = bankList.get(SupportedCardIssuers.THREE.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
 					if (!post) {
 						// This failed for some reason
 						// Credit limit
 						return false;
 					} else {
 						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-						bankList.get("Canadian Depress").releaseHold(card.number, 1);
+						bankList.get(SupportedCardIssuers.THREE.getIssuer()).releaseHold(card.number, 1);
 					}
 					return true;		
 				}
 				
-			} else if (card.kind == "Detrac Debit") {
-				long holdNumber = bankList.get("Detrac Debit").authorizeHold(card.number, 1);
+			} else if (card.kind == SupportedCardIssuers.FOUR.getIssuer()) {
+				long holdNumber = bankList.get(SupportedCardIssuers.FOUR.getIssuer()).authorizeHold(card.number, 1);
 				
 				if (holdNumber == -1L) {
 					// There are not enough available holds
@@ -144,14 +147,14 @@ public class PayByCard {
 					// Maxed holds
 					return false;
 				} else {	
-					boolean post = bankList.get("Detrac Debit").postTransaction(card.number, holdNumber, amountDue);
+					boolean post = bankList.get(SupportedCardIssuers.FOUR.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
 					if (!post) {
 						// This failed for some reason
 						// Credit limit
 						return false;
 					} else {
 						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-						bankList.get("Detrac Debit").releaseHold(card.number, 1);
+						bankList.get(SupportedCardIssuers.FOUR.getIssuer()).releaseHold(card.number, 1);
 					}
 					return true;		
 				}

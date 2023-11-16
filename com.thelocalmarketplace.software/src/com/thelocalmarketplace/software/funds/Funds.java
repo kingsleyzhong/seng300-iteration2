@@ -2,6 +2,7 @@ package com.thelocalmarketplace.software.funds;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import com.jjjwelectronics.IllegalDigitException;
 import com.tdc.IComponent;
@@ -9,7 +10,9 @@ import com.tdc.IComponentObserver;
 import com.tdc.coin.CoinValidator;
 import com.tdc.coin.CoinValidatorObserver;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
+import com.thelocalmarketplace.hardware.external.CardIssuer;
 import com.thelocalmarketplace.software.Session;
+import com.thelocalmarketplace.software.SessionState;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import ca.ucalgary.seng300.simulation.NullPointerSimulationException;
 
@@ -35,6 +38,11 @@ public class Funds {
     private BigDecimal paid;       // Amount paid by the customer (in cents)
     private BigDecimal amountDue;  // Remaining amount to be paid (in cents)
     private boolean isPay;   // Flag indicating if the session is in pay mode
+    private PayByCashController cashController;
+    private PayByCard cardController;
+	private ArrayList <String> supportedCardsNames;
+    
+    //private PayByCardController cardController;
 
 
     /**
@@ -50,60 +58,10 @@ public class Funds {
         this.paid = BigDecimal.ZERO;
         this.amountDue = BigDecimal.ZERO;
         this.isPay = false;
-        InnerListener listener = new InnerListener();
-        scs.coinValidator.attach(listener);
+        this.cashController = new PayByCashController(scs);
+        this.cardController = new PayByCard(scs, this);
     }
-    
-    /**
-     * Inner class to listen for valid coin additions and update the paid amount.
-     */
-    public class InnerListener implements CoinValidatorObserver {
-
-		@Override
-		public void enabled(IComponent<? extends IComponentObserver> component) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void disabled(IComponent<? extends IComponentObserver> component) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void turnedOn(IComponent<? extends IComponentObserver> component) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void turnedOff(IComponent<? extends IComponentObserver> component) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void validCoinDetected(CoinValidator validator, BigDecimal value) {
-			if (value.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Coin value should be positive.");
-            }
-            if (isPay) {
-                paid = paid.add(value);
-                calculateAmountDue();
-            }
-            else {
-            	throw new InvalidActionException("Pay is not activated at the moment.");
-            }
-			
-		}
-
-		@Override
-		public void invalidCoinDetected(CoinValidator validator) {
-			// TODO Auto-generated method stub
-			
-		}
-    }
+       
 
     /**
      * Updates the total items price.
@@ -116,18 +74,6 @@ public class Funds {
         }
         this.itemsPrice = this.itemsPrice.add(price);
         calculateAmountDue();
-    }
-    
-    /**
-     * Updates the total items price after an item has been removed.
-     * 
-     * @param price The price to be added (in cents)
-     */
-    public void removeItemPrice(BigDecimal price) {
-    	this.itemsPrice = this.itemsPrice.subtract(price);
-    	
-    	
-    	calculateAmountDue();
     }
 
     /**
@@ -159,21 +105,54 @@ public class Funds {
      * Calculates the amount due by subtracting the paid amount from the total items price.
      */
     private void calculateAmountDue() {
+    	
+    	if (Session.getState() == SessionState.PAY_BY_CASH) {
+    		this.paid = cashController.getCashPaid();
+    	}
+    	
+    	if (Session.getState() == SessionState.PAY_BY_CARD) {
+    		if (cardController.getTransactionFromBank()) this.paid = amountDue;
+    	}
+   
         this.amountDue = this.itemsPrice.subtract(this.paid);
-        
+                
         // To account for any rounding errors, checks if less that 0.0005 rather than just 0
-        if (Session.getState().inPay())
-        {
-	        if (amountDue.intValue() <= 0.0005) {
-				for(FundsListener l : listeners)
-					l.notifyPaid();
-	        }
-        	
-        	
+        if (amountDue.intValue() <= 0.0005) {
+			for(FundsListener l : listeners)
+				l.notifyPaid();
+			
+			returnChange();
+			
         }
     }
-
     
+	public void returnChange() {
+		
+		
+		BigDecimal change = (this.amountDue.subtract(this.paid)).abs();
+		
+		
+		//check if coin dispensers have enough change 
+		//how? idk yet
+		//if false --> return error, block session
+		
+		//return change by maximizing the largest denomination, this will minimize the number of cash they will receive
+		//or could use walker's code idk yet
+		
+	}
+    /**
+     * Method for registering supported CardIssuer(s) name
+     */
+	public void addBanks(String bankName) {
+		supportedCardsNames.add(bankName);
+	}
+    /**
+     * Method for retrieving a supported CardIssuer(s) name
+     */	
+	public String retrieveBanks(int index) {
+		return supportedCardsNames.get(index);
+	}
+	
     /**
      * Methods for adding funds listeners to the funds
      */
@@ -191,4 +170,5 @@ public class Funds {
 
 		listeners.add(listener);
 	}
+	
 }

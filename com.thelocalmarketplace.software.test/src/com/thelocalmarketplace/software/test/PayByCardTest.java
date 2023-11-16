@@ -17,6 +17,7 @@ import org.junit.Test;
 
 import com.jjjwelectronics.IllegalDigitException;
 import com.jjjwelectronics.card.Card;
+import com.jjjwelectronics.card.BlockedCardException;
 import com.tdc.coin.CoinValidator;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
@@ -63,7 +64,7 @@ public class PayByCardTest {
 	private Session session3;
 	private HashMap <String, CardIssuer> bankList;
 	private static SupportedCardIssuers supportedCards;
-	private ArrayList <String> supportedCardsNames;
+//	private ArrayList <String> supportedCardsNames;
 	private CardIssuer ci1;
 	private CardIssuer ci2;
 	private CardIssuer ci3;
@@ -97,35 +98,44 @@ public class PayByCardTest {
 		SelfCheckoutStationLogic.installOn(scsg, session3);  
 		
 		for(SupportedCardIssuers supportedCards : SupportedCardIssuers.values()) {
-			supportedCardsNames.add(supportedCards.getIssuer());
+			fund.addBanks(supportedCards.getIssuer());
 		}
 		
-		CardIssuer ci1 = new CardIssuer(supportedCardsNames.get(0), 0);
-		CardIssuer ci2 = new CardIssuer(supportedCardsNames.get(1), 5);
-		CardIssuer ci3 = new CardIssuer(supportedCardsNames.get(2), 1);
-		CardIssuer ci4 = new CardIssuer(supportedCardsNames.get(3), 2);
+		CardIssuer ci1 = new CardIssuer(fund.retrieveBanks(0), 0);
+		CardIssuer ci2 = new CardIssuer(fund.retrieveBanks(1), 5);
+		CardIssuer ci3 = new CardIssuer(fund.retrieveBanks(2), 1);
+		CardIssuer ci4 = new CardIssuer(fund.retrieveBanks(3), 2);
 		
-		Card disCard = new Card(supportedCardsNames.get(0), "5299334598001547", "Brandon Chan", "666");
-		Card viva = new Card(supportedCardsNames.get(1), "4504389022574000", "Dorris Giles", "343");
-		Card cdnDep = new Card(supportedCardsNames.get(2), "1111111111111111", "Not A Real Person", "420");
-		Card debit = new Card(supportedCardsNames.get(3), "5160617843321186", "Brent ", "911");
+		Card disCard = new Card(fund.retrieveBanks(0), "5299334598001547", "Brandon Chan", "666");
+		Card viva = new Card(fund.retrieveBanks(0), "4504389022574000", "Dorris Giles", "343");
+		Card cdnDep = new Card(fund.retrieveBanks(0), "1111111111111111", "Not A Real Person", "420");
+		Card debit = new Card(fund.retrieveBanks(0), "5160617843321186", "Brent ", "911");
 		
-		ci1.addCardData(disCard.kind, disCard.cardholder, null, disCard.cvv, 10000);
-		ci2.addCardData(viva.kind, viva.cardholder, null, viva.cvv, 7500);
+		ci1.addCardData(disCard.number, disCard.cardholder, null, disCard.cvv, 10000);
+		ci2.addCardData(viva.number, viva.cardholder, null, viva.cvv, 7500);
 		ci3.addCardData("0", cdnDep.cardholder, null, cdnDep.cvv, 0);
-		ci4.addCardData(debit.kind, debit.cardholder, null, debit.cvv, 2);
+		ci4.addCardData(debit.number, debit.cardholder, null, debit.cvv, 2);
 	}
 	
-	@Test
-	public void testInvalidCardNumber() throws IOException {
+	@Test (expected = InvalidActionException.class)
+	public void swipeIncorrectState() throws IOException{
+		scs.cardReader.swipe(viva);
+		// Swiping a card when the reader is not supposed to be in use (wrong session state
+		// Expect that aCardHasBeenSwiped throws InvalidActionException
+	}
+	
+	@Test (expected = IOException.class)
+	public void testInvalidCardNumber() throws IOException{
 		scs.cardReader.swipe(cdnDep);
 		// The card numbers do not match and will decline a card if the card is blocked
 		// authorizeHold should return -1 
 		// How do we effectively call authorize hold
 	}
 	
-	@Test
-	public void testBlockedCard() {
+	@Test (expected = BlockedCardException.class)
+	public void testBlockedCard() throws IOException {
+		ci4.block(debit.number);
+		scs.cardReader.swipe(debit);
 		// This will decline a card if the card is blocked
 		// authorizeHold should return -1 
 	}
