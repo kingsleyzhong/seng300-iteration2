@@ -229,6 +229,7 @@ public class Session {
 	 * method that records if customer calls handle bulky item (to the system and to the assistant)
 	 */
 	public void bulkyItemCalled() {
+		// nothing happens if there is no weight discrepancy
 		if (Session.getState() != SessionState.BLOCKED) {
 			return;
 		}
@@ -256,8 +257,6 @@ public class Session {
 	 * If called when there is no weight discrepancy, then nothing happens
 	 */
 	public void addBulkyItem() {
-		// nothing happens if there is no weight discrepancy
-
 		// customer calls add bulky item themselves
 		if (this.bulkyItemCalled) {
 			// block session
