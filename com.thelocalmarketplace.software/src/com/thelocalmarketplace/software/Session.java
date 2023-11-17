@@ -78,7 +78,7 @@ public class Session {
 	}
 	
 	// Code added
-	private class printerListener implements PrintReceiptListener {
+	private class PrinterListener implements PrintReceiptListener {
 
 		@Override
 		public void notifiyOutOfPaper() {
@@ -104,7 +104,6 @@ public class Session {
 		public void notifiyReceiptPrinted() {
 			// Should notifyPaid() not wait until receipt is successfully printed to change to PRE_SESSION?
 			sessionState = SessionState.PRE_SESSION;
-			
 		}
 		
 	}
@@ -141,7 +140,7 @@ public class Session {
 		this.funds.register(new PayListener());
 		// Code added
 		this.receiptPrinter = receiptPrinter;
-		this.receiptPrinter.register(new printerListener());
+		this.receiptPrinter.register(new PrinterListener());
 	}
 
 	/**

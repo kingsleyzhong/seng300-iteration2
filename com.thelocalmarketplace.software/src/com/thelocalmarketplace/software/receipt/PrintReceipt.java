@@ -10,13 +10,12 @@ import com.jjjwelectronics.printer.IReceiptPrinter;
 import com.jjjwelectronics.printer.ReceiptPrinterListener;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 
-import ca.ucalgary.seng300.simulation.NullPointerSimulationException;
-
 public class PrintReceipt {
 	
 	public ArrayList<PrintReceiptListener> listeners = new ArrayList<>();
 	private boolean isOutOfPaper = false; //Flag for running our of paper, set to false in default
 	private boolean isOutOfInk = false; //Flag for running our of ink, set to false in default
+	private boolean duplicateNeeded = false; //Flag for if the receipt was not printed out fully and a duplicate is needed.
 	private String receipt; //The receipt that should be printed
 	private IReceiptPrinter printer; //The printer associated with the session;
 
@@ -63,11 +62,13 @@ public class PrintReceipt {
 		@Override
 		public void thePrinterIsOutOfPaper() {
 			isOutOfPaper = true;
+			duplicateNeeded = true;
 		}
 
 		@Override
 		public void thePrinterIsOutOfInk() {
 			isOutOfInk = true;
+			duplicateNeeded = true;
 		}
 
 		@Override
@@ -83,8 +84,11 @@ public class PrintReceipt {
 		@Override
 		public void paperHasBeenAddedToThePrinter() {
 			isOutOfPaper = false;
-			if (!isOutOfInk) {
-				// start printing duplicate copy of the receipt again?
+			for(PrintReceiptListener l : listeners) {
+				l.notifiyPaperRefilled();
+			}
+			if (!isOutOfInk && duplicateNeeded) {
+				// start printing duplicate copy of the receipt again if one is needed
 				print();
 			}
 		}
@@ -92,8 +96,11 @@ public class PrintReceipt {
 		@Override
 		public void inkHasBeenAddedToThePrinter() {
 			isOutOfInk = false;
-			if (!isOutOfPaper) {
-				// start printing duplicate copy of the receipt again?
+			for(PrintReceiptListener l : listeners) {
+				l.notifiyInkRefilled();
+			}
+			if (!isOutOfPaper && duplicateNeeded) {
+				// start printing duplicate copy of the receipt again if one is needed
 				print();
 			}
 		}
@@ -105,38 +112,42 @@ public class PrintReceipt {
     }
     
     private void print() {
-    	int charcount = 0;
-    	for (int i = 0, n = receipt.length() ; i < n ; i++) {
-    		// Notify and break out of the printing loop if
-    		if (isOutOfPaper) {
-    			for(PrintReceiptListener l : listeners) {
-    				l.notifiyOutOfPaper();
-    			}
-    			break;
-    		}
-    		if (isOutOfInk) {
-    			for(PrintReceiptListener l : listeners) {
-    				l.notifiyOutOfInk();
-    			}
-    			break;
-    		}
-    		
-    		try {
+    	try {
+    		printer.print('\n'); // Ensures any new receipt being printed startes on a fresh line
+        	int charcount = 0;
+        	for (int i = 0, n = receipt.length() ; i < n ; i++) {
+        		// Notify and break out of the printing loop if
+        		if (isOutOfPaper) {
+        			for(PrintReceiptListener l : listeners) {
+        				l.notifiyOutOfPaper();
+        			}
+        			break;
+        		}
+        		if (isOutOfInk) {
+        			for(PrintReceiptListener l : listeners) {
+        				l.notifiyOutOfInk();
+        			}
+        			break;
+        		}
+        		// Send the character to the printer to print
     			printer.print(receipt.charAt(i));
-    			++charcount;
-    		} catch (EmptyDevice e) {
-    			System.err.println("There is either no ink or no paper in the printer");
-    		} catch (OverloadedDevice e) {
-    			System.err.println("The line is too long. Add a newline");
-    		}
-    	}
-    	
-    	// If the condition is passed, then all characters were successfully printed to the receipt
-    	if (charcount == (receipt.length()-1)) {
-    		for(PrintReceiptListener l : listeners) {
-				l.notifiyReceiptPrinted();
-			}
-    	}
+    			charcount++;
+        	}
+        	
+        	// If the condition is passed, then all characters were successfully printed to the receipt
+        	if (charcount == receipt.length()) {
+        		for(PrintReceiptListener l : listeners) {
+    				l.notifiyReceiptPrinted();
+    			}
+        	}
+        // The empty device exception should never run as it requires printer.print() to be called when 
+        // the printer is out of paper or ink, but that can never occur in this method as if isOutOfPaper or
+        // isOutOfInk is true, then a call to printer.print() is never made.
+    	} catch (EmptyDevice e) {
+			System.err.println("There is either no ink or no paper in the printer");
+		} catch (OverloadedDevice e) {
+			System.err.println("The line is too long. Add a newline");
+		}
     }
     
     
@@ -153,9 +164,6 @@ public class PrintReceipt {
 	}
 
 	public final synchronized void register(PrintReceiptListener listener) {
-		if(listener == null)
-			throw new NullPointerSimulationException("listener");
-
 		listeners.add(listener);
 	}
 }
