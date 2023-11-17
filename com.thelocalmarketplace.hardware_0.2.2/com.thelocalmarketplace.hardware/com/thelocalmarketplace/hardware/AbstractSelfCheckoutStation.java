@@ -107,7 +107,7 @@ public abstract class AbstractSelfCheckoutStation {
 	public static void configureCoinTrayCapacity(int count) {
 		if(count <= 0)
 			throw new InvalidArgumentSimulationException("Count must be positive.");
-		coinStorageUnitCapacityConfiguration = count;
+		coinTrayCapacityConfiguration = count;
 	}
 
 	protected static Currency currencyConfiguration;

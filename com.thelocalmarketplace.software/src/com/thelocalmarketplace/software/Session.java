@@ -120,8 +120,7 @@ public class Session {
 	/**
 	 * Setup method for the session used in installing logic on the system
 	 * Initializes private variables to the ones passed. Initially has the session
-	 * off, session unfrozen, and pay not
-	 * enabled.
+	 * off, session unfrozen, and pay not enabled.
 	 * 
 	 * @param BarcodedItems
 	 *                      A hashMap of barcoded products and their associated
@@ -131,6 +130,30 @@ public class Session {
 	 * @param weight
 	 *                      The weight of the items and actual weight on the scale
 	 *                      during the session
+	 */
+	public void setup(HashMap<BarcodedProduct, Integer> barcodedItems, Funds funds, Weight weight) {
+		this.barcodedItems = barcodedItems;
+		this.funds = funds;
+		this.weight = weight;
+		this.weight.register(new WeightDiscrepancyListener());
+		this.funds.register(new PayListener());
+	}
+	/**
+	 * Setup method for the session used in installing logic on the system
+	 * Initializes private variables to the ones passed. Initially has the session
+	 * off, session unfrozen, and pay not enabled.
+	 * 
+	 * @param BarcodedItems
+	 *                      A hashMap of barcoded products and their associated
+	 *                      quantity in shopping cart
+	 * @param funds
+	 *                      The funds used in the session
+	 * @param weight
+	 *                      The weight of the items and actual weight on the scale
+	 *                      during the session
+	 *                      
+	 * @param PrintReceipt 
+	 * 						The PrintReceipt behavior
 	 */
 	public void setup(HashMap<BarcodedProduct, Integer> barcodedItems, Funds funds, Weight weight, PrintReceipt receiptPrinter) {
 		this.barcodedItems = barcodedItems;
@@ -142,7 +165,6 @@ public class Session {
 		this.receiptPrinter = receiptPrinter;
 		this.receiptPrinter.register(new PrinterListener());
 	}
-
 	/**
 	 * Sets the session to have started, allowing customer to interact with station
 	 */
