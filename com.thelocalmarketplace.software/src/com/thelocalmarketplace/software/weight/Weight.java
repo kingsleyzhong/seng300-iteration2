@@ -73,7 +73,6 @@ public class Weight {
 	    }
 	}
 	
-
 	public class innerListener implements ElectronicScaleListener {
 
 		@Override
@@ -103,7 +102,9 @@ public class Weight {
 		@Override
 		public void theMassOnTheScaleHasChanged(IElectronicScale scale, Mass mass) {
 			actualWeight = mass;
+			// check if a weight discrepancy has occurred
 			checkDiscrepancy();
+			
 			
 		}
 

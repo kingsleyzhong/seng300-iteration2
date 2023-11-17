@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 
 import com.jjjwelectronics.Mass;
+import com.jjjwelectronics.Mass.MassDifference;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.software.exceptions.CartEmptyException;
 import com.thelocalmarketplace.software.funds.Funds;
@@ -40,13 +41,31 @@ public class Session {
 	private Funds funds;
 	private Weight weight;
 
+	/*
+	 * Maximum expected weight of added bag(s)
+	 * Eventually this should be able to be changed?
+	 * 
+	 */
+	private Mass MAXBAGWEIGHT = new Mass(500 + Mass.MICROGRAMS_PER_GRAM); // 500g ~ 1lb??
+	private Mass ActualMassBeforeAddBag = Mass.ZERO; 
+	
+	
+	
 	private class WeightDiscrepancyListener implements WeightListener {
 
 		/**
 		 * Upon a weightDiscrepancy, session should freeze
+		 * 
+		 * If the Customer has declared their intention to add bags to the scale, then checks
+		 * the bags instead.
 		 */
 		@Override
 		public void notifyDiscrepancy() {
+			// Only needed when the customer wants to add their own bags (this is how Session knows the bags' weight)
+			if(sessionState == SessionState.ADDING_BAGS) {
+				checkBags();
+				return;
+			}
 			block();
 		}
 
@@ -72,6 +91,7 @@ public class Session {
 		}
 
 	}
+	
 
 	/**
 	 * Constructor for the session method. Requires to be installed on self-checkout
@@ -82,6 +102,28 @@ public class Session {
 		sessionState = SessionState.PRE_SESSION;
 	}
 
+	/*
+	 * Constructor for session that also allows the MAX BAG WEIGHT to be set 
+	 * 
+	 * @params 
+	 * 	expectedBagWeight: double representing the expected weight of a bag (in grams)
+	 */
+	public Session(double expectedBagWeight) {
+		MAXBAGWEIGHT = new Mass(expectedBagWeight);
+		sessionState = SessionState.PRE_SESSION;
+	}
+	
+	/*
+	 * Constructor for session that also allows the MAX BAG WEIGHT to be set 
+	 * 
+	 * @params 
+	 * 	expectedBagWeight: double representing the expected weight of a bag (in grams)
+	 */
+	public Session(int expectedBagWeight) {
+		MAXBAGWEIGHT = new Mass(expectedBagWeight * Mass.MICROGRAMS_PER_GRAM);
+		sessionState = SessionState.PRE_SESSION;
+	}
+	
 	/**
 	 * Setup method for the session used in installing logic on the system
 	 * Initializes private variables to the ones passed. Initially has the session
@@ -132,6 +174,7 @@ public class Session {
 			sessionState = SessionState.BLOCKED;
 		}
 	}
+	
 
 	/**
 	 * Resumes the session, allowing the customer to continue interaction
@@ -157,6 +200,89 @@ public class Session {
 		}
 	}
 
+	/*
+	 * The customer indicates they want to add a bag by calling addBags 
+	 * Changes the state of the Session to "ADDING_BAGS"
+	 * System is now waiting for bags to be added to the bagging area.
+	 * 
+	 */
+	public void addBags() {
+		// can only occur during an active session
+		// this prevents the user from adding bags while already adding bags
+		if(this.getState() == SessionState.IN_SESSION){
+			this.sessionState = SessionState.ADDING_BAGS;// change the state to the add bags state
+
+			// get the weight of the scale before adding the bag
+			ActualMassBeforeAddBag = this.getWeight().getActualWeight();
+					
+			// signal customer to add bag to the bagging area (somehow) (GUI problem)
+		}
+		// else: nothing changes about the Session's state
+	}
+	
+	/*
+	 *  Runs when a customer has signaled their desire to add their own bags to the bagging area,
+	 *  and then a change in the bagging area was recorded.
+	 *  
+	 *  Compares the weight on the scale to the the weight before adding bags to determine if bags were added
+	 *  and that the bags are below the specified maximum bag weight (MAXBAGWEIGHT). 
+	 *  
+	 *  If the weight change was negative -> notifies unexpected change in the bagging area
+	 *  									and blocks the system. Expected weight is not updated.
+	 *  If the bags are too heavy -> notifies attendant and customer. Blocks the system
+	 *  Else: bags were accepted. Expected weight is updated to include the bag weight. Session returns to normal runtime state.
+	 *  
+	 */
+	private void checkBags() {
+		//get the weight of the scale after the bag was added
+		Mass ActualMassAfterAddingBag = this.getWeight().getActualWeight();
+		
+		// check that the weight change was caused by adding weight
+		if(ActualMassAfterAddingBag.compareTo(ActualMassBeforeAddBag)  < 0 ){
+			// unexpected change in the bagging area
+			// signal problem to the customer
+			// do not update the expected weight
+			
+			// cancel the interaction
+			this.block();//blocks the system
+			return;
+		}
+	
+		// store the bags weight
+		// weight of the bag is the difference between the weight on the scale after and before adding the bags
+		// this should work, this should never be negative
+		Mass actualBagWeight = ActualMassAfterAddingBag.difference(ActualMassBeforeAddBag).abs();
+				
+		// check if the updated weight is to heavy for just a bag (Throw exception??)
+		// if weight > expected weight of a bag
+		if(actualBagWeight.compareTo(MAXBAGWEIGHT) >= 0) {
+			bagsTooHeavy(); 
+			return;
+		}
+		else {
+			// else: the bag added is within the allowed weight range
+			// update the expected weight on the scale
+			this.weight.update(actualBagWeight);
+
+		}
+		// returns the Session to the normal runtime state
+		this.resume();
+	}
+	
+	
+	/*
+	 * Occurs when the bags the Customer added to the bagging area are above the maximum allowed bag weight 
+	 * (set by MAXBAGWEIGHT, able to be configured). 
+	 * 
+	 * Currently sorta useless, but an Attendant would be able to override this to allow the bags to be used,
+	 * or would remove the overweight items from the bagging area. 
+	 */
+	public void bagsTooHeavy() {
+		// notifies attendant 
+		// block the system
+		this.block();		
+	}
+	
 	/**
 	 * Static getter for session state
 	 * 
