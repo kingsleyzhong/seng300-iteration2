@@ -35,7 +35,7 @@ import com.thelocalmarketplace.software.weight.WeightListener;
  *
  */
 public class Session {
-	protected static SessionState sessionState;
+	private static SessionState sessionState;
 	private HashMap<BarcodedProduct, Integer> barcodedItems;
 	private Funds funds;
 	private Weight weight;
