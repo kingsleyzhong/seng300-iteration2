@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 
 import com.jjjwelectronics.Mass;
-import com.jjjwelectronics.Mass.MassDifference;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.software.exceptions.CartEmptyException;
 import com.thelocalmarketplace.software.funds.Funds;
@@ -41,12 +40,9 @@ public class Session {
 	private Funds funds;
 	private Weight weight;
 
-	/*
-	 * Maximum expected weight of added bag(s)
-	 * Eventually this should be able to be changed?
-	 * 
-	 */
-	private Mass MAXBAGWEIGHT = new Mass(500 + Mass.MICROGRAMS_PER_GRAM); // 500g ~ 1lb??
+
+	private Mass MAXBAGWEIGHT = new Mass(500 * Mass.MICROGRAMS_PER_GRAM); // maximum weight of a bag for this system
+																		  // unless configured, set to 500g ~ 1lb
 	private Mass ActualMassBeforeAddBag = Mass.ZERO; 
 	
 	
@@ -102,25 +98,26 @@ public class Session {
 		sessionState = SessionState.PRE_SESSION;
 	}
 
-	/*
-	 * Constructor for session that also allows the MAX BAG WEIGHT to be set 
+	/**
+	 * Constructor for session that also allows the MAX BAG WEIGHT to be defined 
 	 * 
-	 * @params 
-	 * 	expectedBagWeight: double representing the expected weight of a bag (in grams)
+	 * @params maxBagWeight 
+	 * 				double representing the expected weight of a bag (in grams)
 	 */
-	public Session(double expectedBagWeight) {
-		MAXBAGWEIGHT = new Mass(expectedBagWeight);
+	public Session(double maxBagWeight) {
+		configureMAXBAGWEIGHT(maxBagWeight);
 		sessionState = SessionState.PRE_SESSION;
+
 	}
 	
-	/*
-	 * Constructor for session that also allows the MAX BAG WEIGHT to be set 
+	/**
+	 * Constructor for session that also allows the MAX BAG WEIGHT to be defined 
 	 * 
-	 * @params 
-	 * 	expectedBagWeight: double representing the expected weight of a bag (in grams)
+	 * @param maxBagWeight
+	 * 						 long representing the expected weight of a bag (in micrograms)
 	 */
-	public Session(int expectedBagWeight) {
-		MAXBAGWEIGHT = new Mass(expectedBagWeight * Mass.MICROGRAMS_PER_GRAM);
+	public Session(long maxBagWeight) {
+		configureMAXBAGWEIGHT(maxBagWeight);
 		sessionState = SessionState.PRE_SESSION;
 	}
 	
@@ -200,7 +197,7 @@ public class Session {
 		}
 	}
 
-	/*
+	/**
 	 * The customer indicates they want to add a bag by calling addBags 
 	 * Changes the state of the Session to "ADDING_BAGS"
 	 * System is now waiting for bags to be added to the bagging area.
@@ -209,8 +206,8 @@ public class Session {
 	public void addBags() {
 		// can only occur during an active session
 		// this prevents the user from adding bags while already adding bags
-		if(this.getState() == SessionState.IN_SESSION){
-			this.sessionState = SessionState.ADDING_BAGS;// change the state to the add bags state
+		if(sessionState == SessionState.IN_SESSION){
+			Session.sessionState = SessionState.ADDING_BAGS;// change the state to the add bags state
 
 			// get the weight of the scale before adding the bag
 			ActualMassBeforeAddBag = this.getWeight().getActualWeight();
@@ -269,18 +266,66 @@ public class Session {
 		this.resume();
 	}
 	
+	/*
+	 * Allows customer to signal they no longer wish to add bags. 
+	 * Will not remove already added bags, but will return the session to normal runtime behavior. 
+	 */
+	public void cancelAddBags() {
+		// resumes normal functioning only when in the adding bags state
+		if(Session.sessionState == SessionState.ADDING_BAGS) {
+			this.resume();// changes the state
+		}
+		// else: does nothing
+		
+	}
 	
 	/*
 	 * Occurs when the bags the Customer added to the bagging area are above the maximum allowed bag weight 
 	 * (set by MAXBAGWEIGHT, able to be configured). 
 	 * 
-	 * Currently sorta useless, but an Attendant would be able to override this to allow the bags to be used,
-	 * or would remove the overweight items from the bagging area. 
+	 * Currently sorta useless without an attendant or any way to contact an attendant
+	 * 
+	 * Once blocked this could be overrides the same as any other blocked state
 	 */
-	public void bagsTooHeavy() {
+	private void bagsTooHeavy() {
 		// notifies attendant 
 		// block the system
 		this.block();		
+	}
+	
+
+	/**
+	 * Returns the maximum bag weight for the system in grams (this one is secure)
+	 */
+	public double get_MAXBAGWEIGHT_inGrams() {
+		return this.MAXBAGWEIGHT.inGrams().doubleValue();
+	}
+	
+	/**
+	 * Returns the maximum bag weight for the system in grams (this one is secure)
+	 */
+	public long get_MAXBAGWEIGHT_inMicrograms() {
+		return this.MAXBAGWEIGHT.inMicrograms().longValue();
+	}
+	
+	/**
+	 * Sets the maximum bag weight for this session 
+	 * 
+	 * @params 
+	 * 	maxBagWeight: double representing the maximum weight of a bag (in grams)
+	 */
+	public void configureMAXBAGWEIGHT(double maxBagWeight) {
+		MAXBAGWEIGHT = new Mass(maxBagWeight);
+
+	}
+	/**
+	 * Sets the maximum bag weight for this session 
+	 * 
+	 * @params 
+	 * 	maxBagWeight: long representing the maximum weight of a bag (in micrograms)
+	 */
+	public void configureMAXBAGWEIGHT(long maxBagWeight) {
+		MAXBAGWEIGHT = new Mass(maxBagWeight);
 	}
 	
 	/**
