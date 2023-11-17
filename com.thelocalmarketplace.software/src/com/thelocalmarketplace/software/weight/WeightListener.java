@@ -31,8 +31,4 @@ public interface WeightListener {
 	 */
 	void notifyDiscrepancyFixed();
 	
-	/**
-	 * Signals an event in which the weight on the scale has changed
-	 */
-	void notifyWeightChanged();
 }

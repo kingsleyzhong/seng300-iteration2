@@ -84,14 +84,6 @@ public class Weight {
 	    }
 	}
 	
-	/*
-	 * Notifies all registered listeners that there has been a change in the actual weight on the scale
-	 */
-	private void notifyMassChanged() {
-        for(WeightListener l : listeners) {
-            l.notifyWeightChanged(); }
-	}
-	
 	public class innerListener implements ElectronicScaleListener {
 
 		@Override
@@ -121,10 +113,6 @@ public class Weight {
 		@Override
 		public void theMassOnTheScaleHasChanged(IElectronicScale scale, Mass mass) {
 			actualWeight = mass;
-			
-			// notify listeners
-			notifyMassChanged();
-			
 			// check if a weight discrepancy has occurred
 			checkDiscrepancy();
 			

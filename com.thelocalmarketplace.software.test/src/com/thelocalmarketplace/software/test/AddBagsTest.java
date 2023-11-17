@@ -32,7 +32,10 @@ import junit.framework.Assert;
 import powerutility.PowerGrid;
 
 /*
- * Testing for the Funds class
+ * Testing for methods related to the AddBags use case
+ * 	- method Session.addBags()
+ * 	- method Session.checkBags()
+ * 	- method Session.bagsTooHeavy()
  * 
  * Project iteration 2 group members:
  * Aj Sallh : 30023811
@@ -81,9 +84,7 @@ public class AddBagsTest {
 	public void setup() {
     	
 		// set up the self checkout station
-		scs.resetConfigurationToDefaults();
-    	scsb.resetConfigurationToDefaults();
-    	
+		scsb.resetConfigurationToDefaults();
     	
     	scsb = new SelfCheckoutStationBronze();
     	
@@ -107,8 +108,8 @@ public class AddBagsTest {
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         
         // create "bags"
-        bagMass = new Mass(100 * Mass.MICROGRAMS_PER_GRAM);// bag of mass 6g < BAG MASS LIMIT
-        overweightBagMass = new Mass(BAG_MASS_LIMIT + 2 * Mass.MICROGRAMS_PER_GRAM);// mass > BAG MASS LIMIT
+        bagMass = new Mass(100 * Mass.MICROGRAMS_PER_GRAM);// bag of mass 100g < BAG MASS LIMIT
+        overweightBagMass = new Mass((BAG_MASS_LIMIT + 2) * Mass.MICROGRAMS_PER_GRAM);// mass > BAG MASS LIMIT
         weightLimitBagMass = new Mass(BAG_MASS_LIMIT * Mass.MICROGRAMS_PER_GRAM);// mass equal to the limited size of a bag in the session software
        
         bag = new BagStub(bagMass);
@@ -156,17 +157,32 @@ public class AddBagsTest {
 		Mass expectedMassAfter = weight.getExpectedWeight();
 				
 		// compare the masses to see they have updated
-		System.out.println("Before: " +expectedMassBefore.toString() + "\nAfter: "+ expectedMassAfter.toString());
 		assertTrue(expectedMassAfter.compareTo(expectedMassBefore) == 0);
 	}
+	
+	/*
+	 * Tests that calling addBags() updates the state of the Session to reflect this
+	 * 
+	 * Expected behavior: Session.sessionState == ADDING_BAGS
+	 */
+	@Test
+	public void test_addBags_updatesSessionState() {
+		// start session:
+		session.start();
+		
+		// call addBags
+		session.addBags();
+		
+		// the system is in the adding bags state
+		assertTrue(session.getState() == SessionState.ADDING_BAGS); 
+	}
 
-	
-	
+
 	/*
 	 * Tests that calling addBag() and then adding the bag to the bagging area does not result in
 	 * any issues.
 	 * 
-	 * Expected Behaviour: the expected weight of session is updated to include the bag's weight
+	 * Expected Behavior: the expected weight of session is updated to include the bag's weight
 	 */
 	@Test
 	public void test_addBags_addingBagsUnblocksSession() {
@@ -197,7 +213,7 @@ public class AddBagsTest {
 	 * Tests that calling addBag() and then adding the bag to the bagging area does not result in
 	 * any issues.
 	 * 
-	 * Expected Behaviour: the expected weight of session is updated to include the bag's weight
+	 * Expected behavior: the expected weight of session is updated to include the bag's weight
 	 */
 	@Test
 	public void test_addBags_updatesExpectedWeight() {
@@ -261,19 +277,6 @@ public class AddBagsTest {
 	}
 
 	
-	// Customer indicates they want to add bag then adds nothing
-	// --> causes a weight discrepancy
-	/*
-	 * Tests that not adding the bag to the bagging area causes the session to be blocked 
-	 * 
-	 */
-/*
-	@Test
-	public void test_addBags_NotAddingBagsCausesWeightDiscrepancy() {
-		
-	}
-*/
-	
 	// Customer indicates they want to add bag then removes something from scale
 	// --> doesnt update expected weight
 	@Test
@@ -319,15 +322,13 @@ public class AddBagsTest {
 	 * 
 	 */
 	@Test
-	public void test_addBags_overweightBag_doesntUnblockSession() {
+	public void test_addBags_overweightBag_blockSession() {
 		// start session:
 		session.start();
 
 		
 		// call addBags
 		session.addBags();
-		System.out.println(session.getState().toString());
-
 		
 		try {
 			java.util.concurrent.TimeUnit.MILLISECONDS.sleep(timeTill);
@@ -340,7 +341,6 @@ public class AddBagsTest {
 		scsb.baggingArea.addAnItem(overweightBag);
 																
 		// compare the masses to see they have not updated
-		System.out.println(session.getState().toString());
 		assertTrue(session.getState() == SessionState.BLOCKED);
 	}
 
@@ -378,8 +378,4 @@ public class AddBagsTest {
 	// Customer indicates they want to add bag then cancels
 	// not implemented
 
-	
-	
-	
-	
 }

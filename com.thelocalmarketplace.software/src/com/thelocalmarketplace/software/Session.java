@@ -47,8 +47,6 @@ public class Session {
 	 * 
 	 */
 	private Mass MAXBAGWEIGHT = new Mass(500 + Mass.MICROGRAMS_PER_GRAM); // 500g ~ 1lb??
-	private boolean addingBags = false; // When true, Customer wants to add a bag to the scale (overrides normal weight discrepancy behavior) 
-								// When false, Customer doesn't want to add a bag to the scale
 	private Mass ActualMassBeforeAddBag = Mass.ZERO; 
 	
 	
@@ -57,9 +55,17 @@ public class Session {
 
 		/**
 		 * Upon a weightDiscrepancy, session should freeze
+		 * 
+		 * If the Customer has declared their intention to add bags to the scale, then checks
+		 * the bags instead.
 		 */
 		@Override
 		public void notifyDiscrepancy() {
+			// Only needed when the customer wants to add their own bags (this is how Session knows the bags' weight)
+			if(sessionState == SessionState.ADDING_BAGS) {
+				checkBags();
+				return;
+			}
 			block();
 		}
 
@@ -69,19 +75,6 @@ public class Session {
 		@Override
 		public void notifyDiscrepancyFixed() {
 			resume();
-		}
-
-		/*
-		 * Runs when there has been a change to the weight on the scale.
-		 * If the Customer has declared their intention to add bags to the scale, then checks
-		 * the bags.
-		 */
-		@Override
-		public void notifyWeightChanged() {
-			// if the customer
-			if(addingBags = true) {
-				checkBags();
-			}
 		}
 
 	}
@@ -209,24 +202,19 @@ public class Session {
 	 * 
 	 */
 	public void addBags() {
-		// can only occur during an active session:
+		// can only occur during an active session
+		// this prevents the user from adding bags while already adding bags
 		if(this.getState() == SessionState.IN_SESSION){
-			
-			// declare that the customer wants to add a bag to the scale
-			addingBags = true;
-			
+			this.sessionState = SessionState.ADDING_BAGS;// change the state to the add bags state
 			// put the self checkout into block
 			// idk if this is a good idea
-			this.block();
 		
 			// get the weight of the scale before adding the bag
 			ActualMassBeforeAddBag = this.getWeight().getActualWeight();
 					
 			// signal customer to add bag to the bagging area (somehow) (GUI problem)
 		}
-		// else: session is not active; doesnt do anything
-		addingBags = false;
-
+		// else: nothing changes about the Session's state
 	}
 	
 	/*
@@ -253,7 +241,7 @@ public class Session {
 		
 			// do not update the expected weight
 			// cancel the interaction
-			addingBags = false;
+			this.resume();// resume normal session behavior
 			return;
 		}
 	
@@ -266,20 +254,18 @@ public class Session {
 		// check if the updated weight is to heavy for just a bag (Throw exception??)
 		// if weight > expected weight of a bag
 		if(actualBagWeight.compareTo(MAXBAGWEIGHT) >= 0) {
-			System.out.println("Bag weight: " + actualBagWeight.toString() + "\nMax Bag Weight: " + MAXBAGWEIGHT.toString());
 			bagsTooHeavy(); 
+			return;
 		}
 		else {
 			// else: the bag added is within the allowed weight range
 		
 			// update the expected weight on the scale
 			this.weight.update(actualBagWeight);
-		
-			// unblock the session
-			this.resume(); 
+
 		}
-		// signals that the bags have been added; the customer no longer wishes to add bags
-		addingBags = false;
+		// returns the Session to the normal runtime state
+		this.resume();
 	}
 	
 	
@@ -294,6 +280,13 @@ public class Session {
 	public void bagsTooHeavy() {
 		// this is an attendant method
 		// not sure what to put here
+		
+		// block the system
+		this.block();
+		
+		// signal the attendent (somehow)
+		//System.out.println("Bag is too heavy ");
+		
 	}
 	
 	/**

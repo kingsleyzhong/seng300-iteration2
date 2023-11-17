@@ -62,11 +62,6 @@ public class WeightTest {
             discrepancyNotified = false;
         }
 
-
-		@Override
-		public void notifyWeightChanged() {
-			// 
-		}
     }
 	
 	
