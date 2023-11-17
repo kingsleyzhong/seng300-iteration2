@@ -286,6 +286,7 @@ public class RemoveItemTests {
         Mass actual = itemWeight.getExpectedWeight();
         Mass expected = new Mass(100.0);
         assertEquals(expected, actual);
+        //assertEquals(session.getWeight(), product.getExpectedWeight());
     	
     }
     
