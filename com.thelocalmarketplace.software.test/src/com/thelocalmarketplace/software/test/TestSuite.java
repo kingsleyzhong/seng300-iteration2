@@ -26,7 +26,12 @@ import org.junit.runners.Suite;
 	SessionTest.class,
 	ItemAddedRuleTest.class,
 	FundsTest.class,
-	WeightTest.class
+	WeightTest.class,
+	AddBagsTest_Bronze.class,
+	AddBagsTest_Silver.class,
+	AddBagsTest_Gold.class,
+	AddBulkyItemTest.class,
+	RemoveItemTests.class
 })
 
 public class TestSuite {

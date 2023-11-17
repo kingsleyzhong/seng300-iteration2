@@ -9,6 +9,7 @@ import com.tdc.IComponentObserver;
 import com.tdc.coin.CoinValidator;
 import com.tdc.coin.CoinValidatorObserver;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
+import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import ca.ucalgary.seng300.simulation.NullPointerSimulationException;
 
@@ -116,6 +117,18 @@ public class Funds {
         this.itemsPrice = this.itemsPrice.add(price);
         calculateAmountDue();
     }
+    
+    /**
+     * Updates the total items price after an item has been removed.
+     * 
+     * @param price The price to be added (in cents)
+     */
+    public void removeItemPrice(BigDecimal price) {
+    	this.itemsPrice = this.itemsPrice.subtract(price);
+    	
+    	
+    	calculateAmountDue();
+    }
 
     /**
      * Sets the pay mode.
@@ -149,9 +162,14 @@ public class Funds {
         this.amountDue = this.itemsPrice.subtract(this.paid);
         
         // To account for any rounding errors, checks if less that 0.0005 rather than just 0
-        if (amountDue.intValue() <= 0.0005) {
-			for(FundsListener l : listeners)
-				l.notifyPaid();
+        if (Session.getState().inPay())
+        {
+	        if (amountDue.intValue() <= 0.0005) {
+				for(FundsListener l : listeners)
+					l.notifyPaid();
+	        }
+        	
+        	
         }
     }
 
