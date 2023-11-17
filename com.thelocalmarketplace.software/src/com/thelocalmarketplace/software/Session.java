@@ -41,7 +41,7 @@ public class Session {
 	private Weight weight;
 
 
-	private Mass MAXBAGWEIGHT = new Mass(500 + Mass.MICROGRAMS_PER_GRAM); // maximum weight of a bag for this system
+	private Mass MAXBAGWEIGHT = new Mass(500 * Mass.MICROGRAMS_PER_GRAM); // maximum weight of a bag for this system
 																		  // unless configured, set to 500g ~ 1lb
 	private Mass ActualMassBeforeAddBag = Mass.ZERO; 
 	
@@ -207,7 +207,7 @@ public class Session {
 		// can only occur during an active session
 		// this prevents the user from adding bags while already adding bags
 		if(sessionState == SessionState.IN_SESSION){
-			this.sessionState = SessionState.ADDING_BAGS;// change the state to the add bags state
+			Session.sessionState = SessionState.ADDING_BAGS;// change the state to the add bags state
 
 			// get the weight of the scale before adding the bag
 			ActualMassBeforeAddBag = this.getWeight().getActualWeight();
@@ -272,7 +272,7 @@ public class Session {
 	 */
 	public void cancelAddBags() {
 		// resumes normal functioning only when in the adding bags state
-		if(this.sessionState == SessionState.ADDING_BAGS) {
+		if(Session.sessionState == SessionState.ADDING_BAGS) {
 			this.resume();// changes the state
 		}
 		// else: does nothing
