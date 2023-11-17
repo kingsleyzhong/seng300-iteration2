@@ -2,12 +2,31 @@ package com.thelocalmarketplace.software.funds;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import java.util.Set;
+import java.util.TreeMap;
 
 import com.jjjwelectronics.IllegalDigitException;
+import com.tdc.AbstractComponent;
+import com.tdc.CashOverloadException;
+import com.tdc.DisabledException;
 import com.tdc.IComponent;
 import com.tdc.IComponentObserver;
+import com.tdc.NoCashAvailableException;
+import com.tdc.banknote.IBanknoteDispenser;
+import com.tdc.coin.AbstractCoinDispenser;
+import com.tdc.coin.CoinDispenserBronze;
 import com.tdc.coin.CoinValidator;
 import com.tdc.coin.CoinValidatorObserver;
+import com.tdc.coin.ICoinDispenser;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.SessionState;
@@ -39,6 +58,8 @@ public class Funds {
     private PayByCashController cashController;
     
     //private PayByCardController cardController;
+    
+    private AbstractSelfCheckoutStation scs;
 
 
     /**
@@ -57,6 +78,8 @@ public class Funds {
         this.cashController = new PayByCashController(scs);
         
         //this.cardController = new PayByCardController(scs);
+        
+        this.scs = scs;
     }
        
 
@@ -64,8 +87,11 @@ public class Funds {
      * Updates the total items price.
      * 
      * @param price The price to be added (in cents)
+     * @throws DisabledException 
+     * @throws NoCashAvailableException 
+     * @throws CashOverloadException 
      */
-    public void update(BigDecimal price) {
+    public void update(BigDecimal price) throws CashOverloadException, NoCashAvailableException, DisabledException {
         if (price.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalDigitException("Price should be positive.");
         }
@@ -100,44 +126,123 @@ public class Funds {
 
     /**
      * Calculates the amount due by subtracting the paid amount from the total items price.
+     * @throws DisabledException 
+     * @throws NoCashAvailableException 
+     * @throws CashOverloadException 
      */
-    private void calculateAmountDue() {
+    public void calculateAmountDue() throws CashOverloadException, NoCashAvailableException, DisabledException {
     	
     	if (Session.getState() == SessionState.PAY_BY_CASH) {
     		this.paid = cashController.getCashPaid();
     	}
     	
     	if (Session.getState() == SessionState.PAY_BY_CARD) {
-    		//this.paid = cardController.getCardPaid();
+    		
+    		//Boolean paidStatus = cardController.getPaidStatus(); 
+ 
+    		//if (paidStatus == True) {
+    		//  this.paid = this.amountDue
+    		//}
+    		
     	}
-   
+
         this.amountDue = this.itemsPrice.subtract(this.paid);
                 
         // To account for any rounding errors, checks if less that 0.0005 rather than just 0
         if (amountDue.intValue() <= 0.0005) {
 			for(FundsListener l : listeners)
 				l.notifyPaid();
-			
+		
+		//Return change if amount needed to be returned is greater than a cent
+		if (amountDue.intValue() <= -1) {
 			returnChange();
+		}
+			
 			
         }
     }
     
-	public void returnChange() {
+	private void returnChange() throws CashOverloadException, NoCashAvailableException, DisabledException {
+	
+		int change = (this.amountDue.subtract(this.paid)).abs().intValue();
 		
-		
-		BigDecimal change = (this.amountDue.subtract(this.paid)).abs();
-		
-		
-		//check if coin dispensers have enough change 
-		//how? idk yet
-		//if false --> return error, block session
-		
-		//return change by maximizing the largest denomination, this will minimize the number of cash they will receive
-		//or could use walker's code idk yet
+		changeHelper(change);
 		
 	}
+		
+		//check if coin dispensers have enough change 
+		//how? idk yet		
+		
+		//if false --> return error, block session
+		
+		//Get denominations from banknote and coin --> put in a list
+		//List should be sorted from Highest Value to Lowest Value
+		
+		//for each iteration:
+		
+			//numOfTypeChange = change%denomination       
+		
+			//if (denomination.coinDispenser.size() >= numOfTypeChange) 				
+			//	for numOfTypeChange 
+			//		denomination.coinDispenser.emit()
+			//		change - denomination
+			//else
+			//	skip
+		
+		private void changeHelper(int changeDue) throws CashOverloadException, NoCashAvailableException, DisabledException {
+			if(changeDue < 0)
+				throw new InternalError("Change due is negative, which should not happen");
 
+						
+			Map<BigDecimal, ICoinDispenser>coinMap = scs.coinDispensers;
+			Map<BigDecimal, IBanknoteDispenser>banknoteMap = scs.banknoteDispensers;
+			
+			//Going off A HEAVY ASSUMPTION that generally banknotes will carry a much higher value than coins, so the banknotes will get 
+			//dispensed first
+			
+			
+			//Going through each banknoteDispenser by denomination
+			for (BigDecimal denomination : banknoteMap.keySet()) {
+				
+				//Getting the number of change from a specific that can "fit" into the changeDue
+				int denominationNum = changeDue / denomination.intValue();
+
+				//Checking to see if there is enough bills in the dispenser
+				if (scs.banknoteDispensers.get(denomination).size() >= denominationNum) {
+					
+					for (int i = 0; i < denominationNum; i++) {
+
+						scs.banknoteDispensers.get(denomination).emit();
+						
+						changeDue = changeDue - denomination.intValue();	
+						
+						System.out.println(changeDue);
+					}				
+				}
+			}
+			
+			//Going through each coinDispenser by denomination
+			for (BigDecimal denomination : coinMap.keySet()) {
+				
+				//Getting the number of change from a specific that can "fit" into the changeDue
+				int denominationNum = changeDue / denomination.intValue();
+				
+
+				//Checking to see if there is enough bills in the dispenser
+				if (scs.coinDispensers.get(denomination).size() >= denominationNum) {
+					
+					for (int i = 0; i < denominationNum; i++) {
+
+						scs.coinDispensers.get(denomination).emit();
+						
+						changeDue = changeDue - denomination.intValue();	
+					}				
+				}
+			}
+			
+		}
+
+		
     /**
      * Methods for adding funds listeners to the funds
      */
