@@ -8,6 +8,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.thelocalmarketplace.software"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/com.thelocalmarketplace.hardware_0.2.1"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/com.thelocalmarketplace.hardware_0.2.2"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

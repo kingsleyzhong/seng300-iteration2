@@ -51,9 +51,13 @@ import java.util.Locale;
  * Subeg CHAHAL : 30196531
  */
 public class SessionTest {
-    private SelfCheckoutStationBronze scs = new SelfCheckoutStationBronze();
-    private SelfCheckoutStationSilver scss = new SelfCheckoutStationSilver();
-    private SelfCheckoutStationGold scsg = new SelfCheckoutStationGold();
+//    private SelfCheckoutStationBronze scs = new SelfCheckoutStationBronze();
+//    private SelfCheckoutStationSilver scss = new SelfCheckoutStationSilver();
+//    private SelfCheckoutStationGold scsg = new SelfCheckoutStationGold();
+
+    private SelfCheckoutStationBronze scs;
+    private SelfCheckoutStationSilver scss;
+    private SelfCheckoutStationGold scsg;
 
     private Session session;
     private BarcodedProduct product;
@@ -72,6 +76,10 @@ public class SessionTest {
     @Before
     public void setUp() {
     	AbstractSelfCheckoutStation.resetConfigurationToDefaults();
+
+        scs = new SelfCheckoutStationBronze();
+        scss = new SelfCheckoutStationSilver();
+        scsg = new SelfCheckoutStationGold();
     	
         session = new Session();
         num = 1;

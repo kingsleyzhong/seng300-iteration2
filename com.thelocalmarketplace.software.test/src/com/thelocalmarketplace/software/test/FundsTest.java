@@ -26,7 +26,7 @@ import com.thelocalmarketplace.software.funds.FundsListener;
 import ca.ucalgary.seng300.simulation.SimulationException;
 import powerutility.PowerGrid;
 
-/**
+/*
  * Testing for the Funds class
  * 
  * Project iteration 2 group members:
