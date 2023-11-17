@@ -10,11 +10,15 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.jjjwelectronics.IllegalDigitException;
+import com.tdc.coin.CoinDispenserBronze;
+import com.tdc.coin.CoinDispenserGold;
 import com.tdc.coin.CoinValidator;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
+import com.thelocalmarketplace.software.SelfCheckoutStationLogic;
+import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.funds.FundsListener;
@@ -42,16 +46,20 @@ public class FundsTest {
 	private SelfCheckoutStationBronze scs;
 	private SelfCheckoutStationSilver scss;
 	private SelfCheckoutStationGold scsg;
+	private Session session;
+	private Session sessions;
+	private Session sessiong;
 	private Funds fund;
 	private Funds funds;
 	private Funds fundg;
 	private CoinValidator validator;
 	private CoinValidator validatorSilver;
 	private CoinValidator validatorGold;
-	private BigDecimal value;
+	private CoinDispenserBronze dispenser;
+	private CoinDispenserGold dispenserGold;
+	private BigDecimal amountPaid;
 	private BigDecimal price;
 
-	// Test
 	@Before
 	public void setUp() {
 		AbstractSelfCheckoutStation.resetConfigurationToDefaults();
@@ -62,94 +70,96 @@ public class FundsTest {
 		fund = new Funds(scs);
 		fund.setPay(true);
 		validator = scs.coinValidator;
+		session = new Session();
+		SelfCheckoutStationLogic.installOn(scs, session);
 
 		scss = new SelfCheckoutStationSilver();
 		scss.plugIn(PowerGrid.instance());
 		scss.turnOn();
 		funds = new Funds(scss);
 		validatorSilver = scss.coinValidator;
+		sessions = new Session();
+		SelfCheckoutStationLogic.installOn(scss, sessions);
 
 		scsg = new SelfCheckoutStationGold();
 		scsg.plugIn(PowerGrid.instance());
 		scs.turnOn();
 		fundg = new Funds(scsg);
 		validatorGold = scsg.coinValidator;
+		sessiong = new Session();
+		SelfCheckoutStationLogic.installOn(scsg, sessiong);
 
 		price = BigDecimal.valueOf(5.00);
+		amountPaid = BigDecimal.valueOf(0.00);
 	}
 
 	@Test (expected = IllegalArgumentException.class)
-	public void testNullSelfCheckoutStationInConstructor()
+	public void testNullSelfCheckoutStation()
 	{
-		scs = null;
-		fund = new Funds(scs);
+		fund = new Funds(null);
 	}
 	
-	
-	/*
-	 * @Test (expected = IllegalArgumentException.class)
-	 * public void testFundsNullSCS() {
-	 * fund = new Funds(null);
-	 * }
-	 */
+	@Test
+	public void testUpdateValidPrice() {
+		fund.update(price);
+		assertEquals(price, fund.getItemsPrice());
+		assertEquals(price, fund.getAmountDue());
+	}
 
-//	@Test(expected = InvalidActionException.class)
-//	public void testCoinPayInactive() {
-//		fund.setPay(false);
-//		value = BigDecimal.valueOf(1.00);
-//		fund.new InnerListener().validCoinDetected(validator, value);
-//	}
-//
-//	@Test
-//	public void testValidCoinPayActive() {
-//		value = BigDecimal.valueOf(5.00);
-//		fund.new InnerListener().validCoinDetected(validator, value);
-//		assertEquals(value, fund.getPaid());
-//	}
-//
-//	@Test(expected = IllegalArgumentException.class)
-//	public void testInvalidCoin() {
-//		value = BigDecimal.valueOf(-1);
-//		fund.new InnerListener().validCoinDetected(validator, value);
-//
-//	}
-//
-//	@Test
-//	public void testUpdateValidPrice() {
-//		fund.update(price);
-//		assertEquals(price, fund.getItemsPrice());
-//		assertEquals(price, fund.getAmountDue());
-//	}
-//
-//	@Test(expected = IllegalDigitException.class)
-//	public void testUpdateInvalidPrice() {
-//		fund.update(BigDecimal.valueOf(-3.00));
-//	}
-//
-//	@Test
-//	public void turnOnPay() {
-//		fund.setPay(true);
-//		assertTrue(fund.isPay());
-//	}
-//
-//	@Test
-//	public void ListenForPaid() {
+	@Test(expected = IllegalDigitException.class)
+	public void testUpdateInvalidPriceZero() {
+		fund.update(BigDecimal.valueOf(0.00));
+	}
+	
+	@Test(expected = IllegalDigitException.class)
+	public void testUpdateInvalidPriceNegative() {
+		fund.update(BigDecimal.valueOf(-1.00));
+	}
+
+	@Test
+	public void testTurnOnPay() {
+		fund.setPay(true);
+		assertTrue(fund.isPay());
+	}
+	
+	@Test
+	public void testTurnOffPay() {
+		fund.setPay(false);
+		assertFalse(fund.isPay());
+	}
+
+	@Test
+	public void testAmountPaidFull() {
 //		FundListenerStub stub = new FundListenerStub();
 //		fund.register(stub);
 //		fund.update(price);
-//		value = new BigDecimal(5);
-//		fund.new InnerListener().validCoinDetected(validator, value);
+//		amountPaid = BigDecimal.valueOf(5.00); 
+//		fund.new InnerListener().validCoinDetected(validator, amountPaid);
 //		assertTrue("Paid event called", stub.getEvents().contains("Paid"));
-//	}
-//
-//	@Test(expected = SimulationException.class)
-//	public void invalidListener() {
-//		FundListenerStub stub = null;
-//		fund.register(stub);
-//	}
-//
-//	@Test
-//	public void unRegisterListener() {
+	}
+	
+	@Test
+	public void testAmountPaidPartial() {
+		
+	}
+	
+	@Test
+	public void testReturnInsufficientChange() {
+		
+	}
+	
+	@Test
+	public void testReturnChange() {
+		
+	}
+
+	@Test(expected = SimulationException.class)
+	public void testRegisterInvalidListener() {
+		fund.register(null);
+	}
+
+	@Test
+	public void testUnregisterListener() {
 //		FundListenerStub stub = new FundListenerStub();
 //		fund.register(stub);
 //		fund.deregister(stub);
@@ -157,10 +167,10 @@ public class FundsTest {
 //		value = new BigDecimal(5);
 //		fund.new InnerListener().validCoinDetected(validator, value);
 //		assertFalse("Paid event called", stub.getEvents().contains("Paid"));
-//	}
-//
-//	@Test
-//	public void deRegisterAllListeners() {
+	}
+
+	@Test
+	public void testUnregisterAllListeners() {
 //		FundListenerStub stub = new FundListenerStub();
 //		FundListenerStub stub2 = new FundListenerStub();
 //		fund.register(stub);
@@ -171,17 +181,15 @@ public class FundsTest {
 //		fund.new InnerListener().validCoinDetected(validator, value);
 //		assertFalse("Paid event called", stub.getEvents().contains("Paid"));
 //		assertFalse("Paid event called", stub2.getEvents().contains("Paid"));
-//	}
-//
-//	@Test
-//	public void forCoverage() {
-//		scs.plugIn(PowerGrid.instance());
-//		scs.turnOn();
-//		scs.coinValidator.disable();
-//		scs.coinValidator.enable();
-//		scs.coinValidator.disactivate();
-//		scs.coinValidator.activate();
-//	}
+	}
+
+	@Test
+	public void testEnable() {
+		scs.coinValidator.disable();
+		scs.coinValidator.enable();
+		scs.coinValidator.disactivate();
+		scs.coinValidator.activate();
+	}
 
 	class FundListenerStub implements FundsListener {
 		ArrayList<String> events;
