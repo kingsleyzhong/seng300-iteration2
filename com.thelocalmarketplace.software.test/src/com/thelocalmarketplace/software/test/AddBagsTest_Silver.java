@@ -36,6 +36,7 @@ import powerutility.PowerGrid;
  * 	- method Session.addBags()
  * 	- method Session.checkBags()
  * 	- method Session.bagsTooHeavy()
+ * - method Session.cancelAddBags()
  * 
  * Project iteration 2 group members:
  * Aj Sallh : 30023811
@@ -419,9 +420,139 @@ public class AddBagsTest_Silver{
 		// compare the masses to see they have not updated
 		assertTrue(expectedMassAfter.compareTo(expectedMassBefore) == 0);
 	}
+
+	/*
+	 * Tests calling cancelAddBags(). When in the addBags state, this method should cancel the interaction
+	 * and return the system to the normal runtime state (IN_SESSION)
+	 * 
+	 * Expected behavior: State is changed to SessionState.In_SESSION
+	 */
+	@Test
+	public void test_cancelAddBags_updatesState() {
+		// start session:
+		session.start();	
+				
+		// call addBags
+		session.addBags();
+		
+		// call cancelAddBags()
+		session.cancelAddBags();
+																
+		// check state to make sure the system has updates
+		assertTrue(session.getState() == SessionState.IN_SESSION);
+	}
+
+	/*
+	 * Tests calling cancelAddBags(). When in the addBags state, this method should cancel the interaction, meaning
+	 * any changes in the bagging area result in a weight discrepancy. 
+	 *
+	 * Expected behavior: Expected Weight of the session is not updated
+	 */
+	@Test
+	public void test_cancelAddBags_doesntUpdateExpectedWeight() {
+		// start session:
+		session.start();
+
+		// save the expected Mass before adding the bag
+		Mass expectedMassBefore = weight.getExpectedWeight();
+		
+		// call addBags
+		session.addBags();
+
+		// call cancelAddBags()
+		session.cancelAddBags();
+		
+		// add the heavy bag to the bagging area
+		scs.baggingArea.addAnItem(bag);
+																
+		// check the expected weight after the interaction				
+		Mass expectedMassAfter = weight.getExpectedWeight();
+								
+		// compare the masses to see they have not updated
+		assertTrue(expectedMassAfter.compareTo(expectedMassBefore) == 0);
+	}
 	
+	/*
+	 * Tests calling cancelAddBags(). When not in the addBags state, this method should do nothing
+	 * 
+	 * Expected behavior: State is unchanged and remains in the PRE_SESSION state
+	 */
+	@Test
+	public void test_cancelAddBags_doesntUpdatesState_PRE_SESSION() {
+		// dont start session
+		
+		// call cancelAddBags
+		session.cancelAddBags();
+																										
+		// check the state
+		assertTrue(session.getState() == SessionState.PRE_SESSION);
+	}
+
+	/*
+	 * Tests calling cancelAddBags(). If the method is called and then a bag is added to the bagging area,
+	 * the session should enter a blocked state (caused by a weight discrepancy)
+	 * 
+	 * Expected behavior: State is SessionState.BLOCKED 
+	 */
+	@Test
+	public void test_cancelAddBags_blocksSystem() {
+		// start session:
+		session.start();
+		
+		// call addBags
+		session.addBags();
+
+		// call cancelAddBags()
+		session.cancelAddBags();
+		
+		// add the heavy bag to the bagging area
+		scs.baggingArea.addAnItem(bag);																										
+
+		// check that the session is blocked
+		assertTrue(session.getState() == SessionState.BLOCKED);
+	}
+
+
+	/**
+	 * Tests that Session.configureMAXBAGWEIGHT updates the maxBagWeight in the expected way
+	 * Tests using a double (representing the desired maximum bag weight in grams)
+	 */
+	@Test
+	public void test_configureMAXBAGWEIGHT_byDouble() {
+		double newMAXBAGWEIGHT = 6.78; // 6.79g
+		// create a Mass using this
+		Mass expectedMaxBagWeight = new Mass(newMAXBAGWEIGHT);
+		
+		// create a new Session with this as the max bag weight
+		Session newSession = new Session(newMAXBAGWEIGHT);
+		
+		// create a Mass using the max weight weight value from session
+		Mass actualMaxBagWeight = new Mass(newSession.get_MAXBAGWEIGHT_inGrams());
+		
+		// compare the two Masses
+		assertTrue(actualMaxBagWeight.compareTo(expectedMaxBagWeight) == 0 );		
+	}
 	
-	// Customer indicates they want to add bag then cancels
-	// not implemented
+	/**
+	 * Tests that Session.configureMAXBAGWEIGHT updates the maxBagWeight in the expected way
+	 * Tests using a long (representing the desired maximum bag weight in micrograms)
+	 */
+	@Test
+	public void test_configureMAXBAGWEIGHT_byLong() {
+		long newMAXBAGWEIGHT = 678; // 679g
+		// create a Mass using this
+		Mass expectedMaxBagWeight = new Mass(newMAXBAGWEIGHT);
+		
+		// create a new Session with this as the max bag weight
+		Session newSession = new Session(newMAXBAGWEIGHT);
+		
+		// create a Mass using the max weight weight value from session
+		Mass actualMaxBagWeight = new Mass(newSession.get_MAXBAGWEIGHT_inMicrograms());
+		
+		// compare the two Masses
+		assertTrue(actualMaxBagWeight.compareTo(expectedMaxBagWeight) == 0 );		
+	}
+
 
 }
+
