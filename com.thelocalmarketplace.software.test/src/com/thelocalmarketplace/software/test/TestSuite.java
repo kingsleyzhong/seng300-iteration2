@@ -30,7 +30,8 @@ import org.junit.runners.Suite;
 	AddBagsTest_Bronze.class,
 	AddBagsTest_Silver.class,
 	AddBagsTest_Gold.class,
-	AddBulkyItemTest.class
+	AddBulkyItemTest.class,
+	RemoveItemTests.class
 })
 
 public class TestSuite {

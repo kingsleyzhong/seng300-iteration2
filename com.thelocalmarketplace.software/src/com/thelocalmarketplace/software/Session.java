@@ -10,6 +10,7 @@ import com.jjjwelectronics.scanner.BarcodedItem;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.software.exceptions.CartEmptyException;
+import com.thelocalmarketplace.software.exceptions.ProductNotFoundException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.funds.FundsListener;
 import com.thelocalmarketplace.software.weight.Weight;
@@ -373,11 +374,37 @@ public class Session {
 		this.weight.update(mass);
 		funds.update(itemPrice);
 	}
-
+	
+	/**
+	 * Removes a selected product from the hashMap of barcoded items.
+	 * Updates the weight and price of the products.
+	 * 
+	 * @param product
+	 *                The product to be removed from the HashMap.
+	 */
+	public void removeItem(BarcodedProduct product) {
+		double weight = product.getExpectedWeight();
+		long price = product.getPrice(); 
+		Mass mass = new Mass(weight);
+		BigDecimal ItemPrice = new BigDecimal(price);
+		
+		if (barcodedItems.containsKey(product) && barcodedItems.get(product) > 1 ) {
+			barcodedItems.replace(product, barcodedItems.get(product)-1);
+			this.weight.removeItemWeightUpdate(mass);
+			funds.removeItemPrice(ItemPrice);
+		} else if (barcodedItems.containsKey(product) && barcodedItems.get(product) == 1 ) { 
+			funds.removeItemPrice(ItemPrice);
+			this.weight.removeItemWeightUpdate(mass);
+			barcodedItems.remove(product);
+		} else {
+			throw new ProductNotFoundException("Item not found");
+		} 
+	} 
+ 
 	public HashMap<BarcodedProduct, Integer> getBarcodedItems() {
 		return barcodedItems;
 	}
-
+   
 	public Funds getFunds() {
 		return funds;
 	}

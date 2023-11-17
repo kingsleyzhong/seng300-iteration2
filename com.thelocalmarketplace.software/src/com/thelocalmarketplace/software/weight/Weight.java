@@ -1,10 +1,12 @@
 package com.thelocalmarketplace.software.weight;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 
 import com.jjjwelectronics.IDevice;
 import com.jjjwelectronics.IDeviceListener;
 import com.jjjwelectronics.Mass;
+import com.jjjwelectronics.Mass.MassDifference;
 import com.jjjwelectronics.scale.ElectronicScaleListener;
 import com.jjjwelectronics.scale.IElectronicScale;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
@@ -66,6 +68,30 @@ public class Weight {
 
 	public Mass getLastWeightAdded() {
 		return this.lastWeightAdded;
+	}
+
+	/*
+	 * This method will change the expected weight after the item is removed
+	 * 
+	 * 
+	 * 
+	 */
+
+	public void removeItemWeightUpdate(Mass massToSubtract) {
+		// Figure this part out
+
+		// first we make mass to subtract a negative
+		// BigInteger negative_mass =
+		// BigInteger.valueOf(massToSubtract.inMicrograms().multiply(null));
+		// BigInteger conversion = BigInteger.valueOf(-1);
+
+		BigInteger NewValue = this.expectedWeight.inMicrograms().subtract(massToSubtract.inMicrograms());
+
+		// Mass negativemass = new
+		// Mass(massToSubtract.inMicrograms().multiply(conversion));
+
+		this.expectedWeight = new Mass(NewValue);
+
 	}
 
 	/*
