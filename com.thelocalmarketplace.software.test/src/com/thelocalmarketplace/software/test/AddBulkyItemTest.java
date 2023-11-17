@@ -461,6 +461,10 @@ public class AddBulkyItemTest {
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         session.addItem(product);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
         session.addBulkyItem();
         scs.plugIn(PowerGrid.instance());
         scs.turnOn();
@@ -485,6 +489,10 @@ public class AddBulkyItemTest {
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weightSilver);
         session.addItem(product);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
         session.addBulkyItem();
         scss.plugIn(PowerGrid.instance());
         scss.turnOn();
@@ -509,6 +517,10 @@ public class AddBulkyItemTest {
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weightGold);
         session.addItem(product);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
         session.addBulkyItem();
         scsg.plugIn(PowerGrid.instance());
         scsg.turnOn();
