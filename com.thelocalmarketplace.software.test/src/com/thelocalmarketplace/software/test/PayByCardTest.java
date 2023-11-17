@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Currency;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ import com.thelocalmarketplace.software.SelfCheckoutStationLogic;
 import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.SessionState;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
+import com.thelocalmarketplace.software.funds.CardIssuerDatabase;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.funds.FundsListener;
 import com.thelocalmarketplace.software.funds.SupportedCardIssuers;
@@ -62,7 +64,7 @@ public class PayByCardTest {
 	private Session session2;
 	private Session session3;
 	private static SupportedCardIssuers supportedCards;
-	private ArrayList <CardIssuer> supportedCardsClasses;
+	private ArrayList <CardIssuer> supportedCardsClasses = new ArrayList <CardIssuer>();
 	private CardIssuer ci1;
 	private CardIssuer ci2;
 	private CardIssuer ci3;
@@ -71,8 +73,21 @@ public class PayByCardTest {
 	private Card viva;
 	private Card cdnDep;
 	private Card debit;
+	private TestFunds fund;
+	private TestFunds funds;
+	private TestFunds fundg;
+	
 	
     // Will need to stub funds
+	
+	private class TestFunds extends Funds{
+		public double amountDue;
+		
+		public TestFunds(AbstractSelfCheckoutStation scs) {
+			super(scs);
+		}
+		
+	}
 	
 	@Before
 	public void setup() {
@@ -81,25 +96,26 @@ public class PayByCardTest {
 		scs = new SelfCheckoutStationBronze();
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
-		fund = new Funds(scs);
-		SelfCheckoutStationLogic.installOn(scs, session);
+		fund = new TestFunds(scs);
+//		SelfCheckoutStationLogic.installOn(scs, session);
 
 		scss = new SelfCheckoutStationSilver();
 		scss.plugIn(PowerGrid.instance());
 		scss.turnOn();
-		funds = new Funds(scss);
-		SelfCheckoutStationLogic.installOn(scss, session2);
+		funds = new TestFunds(scss);
+//		SelfCheckoutStationLogic.installOn(scss, session2);
 
 		scsg = new SelfCheckoutStationGold();
 		scsg.plugIn(PowerGrid.instance());
 		scsg.turnOn();
-		fundg = new Funds(scsg);
-		SelfCheckoutStationLogic.installOn(scsg, session3);  
+		fundg = new TestFunds(scsg);
+//		SelfCheckoutStationLogic.installOn(scsg, session3);  
 
-		CardIssuer ci1 = new CardIssuer(SupportedCardIssuers.ONE.getIssuer(), 0);
+		CardIssuer ci1 = new CardIssuer(SupportedCardIssuers.ONE.getIssuer(), 1);
 		CardIssuer ci2 = new CardIssuer(SupportedCardIssuers.TWO.getIssuer(), 5);
-		CardIssuer ci3 = new CardIssuer(SupportedCardIssuers.THREE.getIssuer(), 1);
+		CardIssuer ci3 = new CardIssuer(SupportedCardIssuers.THREE.getIssuer(), 99);
 		CardIssuer ci4 = new CardIssuer(SupportedCardIssuers.FOUR.getIssuer(), 2);
+		
 		supportedCardsClasses.add(ci1);
 		supportedCardsClasses.add(ci2);
 		supportedCardsClasses.add(ci3);
@@ -107,7 +123,7 @@ public class PayByCardTest {
 
 		int index = 0;
 		for(SupportedCardIssuers supportedCards : SupportedCardIssuers.values()) {
-			funds.cardController.addBanks(supportedCards.getIssuer(), supportedCardsClasses.get(index));
+			CardIssuerDatabase.CARD_ISSUER_DATABASE.put(supportedCards.getIssuer(), supportedCardsClasses.get(index));
 			index ++;
 		}
 		
@@ -116,10 +132,14 @@ public class PayByCardTest {
 		Card cdnDep = new Card(SupportedCardIssuers.THREE.getIssuer(), "1111111111111111", "Not A Real Person", "420");
 		Card debit = new Card(SupportedCardIssuers.FOUR.getIssuer(), "5160617843321186", "Brent ", "911");
 		
-		ci1.addCardData(disCard.number, disCard.cardholder, null, disCard.cvv, 10000);
-		ci2.addCardData(viva.number, viva.cardholder, null, viva.cvv, 7500);
-		ci3.addCardData("0", cdnDep.cardholder, null, cdnDep.cvv, 0);
-		ci4.addCardData(debit.number, debit.cardholder, null, debit.cvv, 2);
+		Calendar exp = Calendar.getInstance();
+		exp.set(Calendar.YEAR, 2025);
+		exp.set(Calendar.MONTH, 7);
+		
+		ci1.addCardData(disCard.number, disCard.cardholder, exp, disCard.cvv, 10000);
+		ci2.addCardData(viva.number, viva.cardholder, exp, viva.cvv, 7500);
+		ci3.addCardData("0", cdnDep.cardholder, exp, cdnDep.cvv, 1);
+		ci4.addCardData(debit.number, debit.cardholder, exp, debit.cvv, 2);
 	}
 	
 	@Test (expected = InvalidActionException.class)

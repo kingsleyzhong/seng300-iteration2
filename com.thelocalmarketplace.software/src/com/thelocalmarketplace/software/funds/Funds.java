@@ -40,7 +40,6 @@ public class Funds {
     private boolean isPay;   // Flag indicating if the session is in pay mode
     private PayByCashController cashController;
     private PayByCard cardController;
-	public HashMap <String, CardIssuer> supportedCardsNames;
     
     //private PayByCardController cardController;
 
@@ -139,19 +138,6 @@ public class Funds {
 		//return change by maximizing the largest denomination, this will minimize the number of cash they will receive
 		//or could use walker's code idk yet
 		
-	}
-    /**
-     * Method for registering supported CardIssuer(s) name
-     */
-	public void addBanks(String bankName, CardIssuer cardIssuer) {
-		supportedCardsNames.put(bankName, cardIssuer);
-	}
-	
-	/**
-	 * Returns the private field HashMap that stores CardIssuer(s) and their names
-	 */
-	public HashMap<String, CardIssuer> getCards() {
-		return supportedCardsNames;
 	}
 	
     /**

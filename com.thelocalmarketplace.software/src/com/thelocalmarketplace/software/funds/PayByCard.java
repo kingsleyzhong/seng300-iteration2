@@ -34,7 +34,6 @@ public class PayByCard {
 	
 	private Card card;
 	private double amountDue;
-	private HashMap <String, CardIssuer> supportedCardsNames;
 	
 	public PayByCard(AbstractSelfCheckoutStation scs, Funds funds) {
 		InnerListener cardListener = new InnerListener();
@@ -89,13 +88,6 @@ public class PayByCard {
 	}
 
     /**
-     * Method for registering supported CardIssuer(s) name
-     */
-	public void addBanks(String bankName, CardIssuer cardIssuer) {
-		supportedCardsNames.put(bankName, cardIssuer);
-	}
-
-    /**
      * Facilitates all communication with CardIssuer(s) required for billing/posting 
      */
 	public boolean getTransactionFromBank() {
@@ -103,7 +95,7 @@ public class PayByCard {
 			// We need to retrieve the funds
 			// We determine the type of card, check the database for validity, then attempt 		
 			if (card.kind == SupportedCardIssuers.ONE.getIssuer()) {
-				long holdNumber = bankList.get(SupportedCardIssuers.ONE.getIssuer()).authorizeHold(card.number, 1);
+				long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).authorizeHold(card.number, 1);
 				
 				if (holdNumber == -1L) {
 					// There are not enough available holds
@@ -112,20 +104,20 @@ public class PayByCard {
 					// Maxed holds
 					return false;
 				} else {	
-					boolean post = bankList.get(SupportedCardIssuers.ONE.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
+					boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
 					if (!post) {
 						// This failed for some reason
 						// Credit limit
 						return false;
 					} else {
 						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-						bankList.get(SupportedCardIssuers.ONE.getIssuer()).releaseHold(card.number, 1);
+						CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).releaseHold(card.number, 1);
 					}
 					return true;		
 				}
 								
 			} else if (card.kind == SupportedCardIssuers.THREE.getIssuer()) {
-				long holdNumber = bankList.get(SupportedCardIssuers.THREE.getIssuer()).authorizeHold(card.number, 1);
+				long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).authorizeHold(card.number, 1);
 				
 				if (holdNumber == -1L) {
 					// There are not enough available holds
@@ -134,20 +126,20 @@ public class PayByCard {
 					// Maxed holds
 					return false;
 				} else {	
-					boolean post = bankList.get(SupportedCardIssuers.THREE.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
+					boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
 					if (!post) {
 						// This failed for some reason
 						// Credit limit
 						return false;
 					} else {
 						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-						bankList.get(SupportedCardIssuers.THREE.getIssuer()).releaseHold(card.number, 1);
+						CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).releaseHold(card.number, 1);
 					}
 					return true;		
 				}
 				
 			} else if (card.kind == SupportedCardIssuers.FOUR.getIssuer()) {
-				long holdNumber = bankList.get(SupportedCardIssuers.FOUR.getIssuer()).authorizeHold(card.number, 1);
+				long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).authorizeHold(card.number, 1);
 				
 				if (holdNumber == -1L) {
 					// There are not enough available holds
@@ -156,14 +148,14 @@ public class PayByCard {
 					// Maxed holds
 					return false;
 				} else {	
-					boolean post = bankList.get(SupportedCardIssuers.FOUR.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
+					boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
 					if (!post) {
 						// This failed for some reason
 						// Credit limit
 						return false;
 					} else {
 						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-						bankList.get(SupportedCardIssuers.FOUR.getIssuer()).releaseHold(card.number, 1);
+						CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).releaseHold(card.number, 1);
 					}
 					return true;		
 				}
