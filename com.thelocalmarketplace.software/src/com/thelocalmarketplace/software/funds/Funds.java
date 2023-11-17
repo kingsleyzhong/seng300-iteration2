@@ -40,7 +40,7 @@ public class Funds {
     private boolean isPay;   // Flag indicating if the session is in pay mode
     private PayByCashController cashController;
     private PayByCard cardController;
-	private ArrayList <String> supportedCardsNames;
+	public HashMap <String, CardIssuer> supportedCardsNames;
     
     //private PayByCardController cardController;
 
@@ -143,14 +143,15 @@ public class Funds {
     /**
      * Method for registering supported CardIssuer(s) name
      */
-	public void addBanks(String bankName) {
-		supportedCardsNames.add(bankName);
+	public void addBanks(String bankName, CardIssuer cardIssuer) {
+		supportedCardsNames.put(bankName, cardIssuer);
 	}
-    /**
-     * Method for retrieving a supported CardIssuer(s) name
-     */	
-	public String retrieveBanks(int index) {
-		return supportedCardsNames.get(index);
+	
+	/**
+	 * Returns the private field HashMap that stores CardIssuer(s) and their names
+	 */
+	public HashMap<String, CardIssuer> getCards() {
+		return supportedCardsNames;
 	}
 	
     /**

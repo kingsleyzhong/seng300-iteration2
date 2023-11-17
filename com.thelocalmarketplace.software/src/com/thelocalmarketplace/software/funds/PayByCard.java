@@ -34,13 +34,12 @@ public class PayByCard {
 	
 	private Card card;
 	private double amountDue;
-	private HashMap <String, CardIssuer> bankList;
+	private HashMap <String, CardIssuer> supportedCardsNames;
 	
 	public PayByCard(AbstractSelfCheckoutStation scs, Funds funds) {
 		InnerListener cardListener = new InnerListener();
 		
 		amountDue = funds.getAmountDue().doubleValue();
-		bankList.putAll(funds.banks);
 	}
 	
 	private class InnerListener implements CardReaderListener {
@@ -88,7 +87,17 @@ public class PayByCard {
 				
 		}
 	}
-	
+
+    /**
+     * Method for registering supported CardIssuer(s) name
+     */
+	public void addBanks(String bankName, CardIssuer cardIssuer) {
+		supportedCardsNames.put(bankName, cardIssuer);
+	}
+
+    /**
+     * Facilitates all communication with CardIssuer(s) required for billing/posting 
+     */
 	public boolean getTransactionFromBank() {
 		if (Session.getState() == SessionState.PAY_BY_CARD) {
 			// We need to retrieve the funds

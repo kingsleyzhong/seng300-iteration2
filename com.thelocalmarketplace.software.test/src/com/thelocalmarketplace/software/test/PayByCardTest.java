@@ -55,16 +55,14 @@ public class PayByCardTest {
 	private SelfCheckoutStationBronze scs;
 	private SelfCheckoutStationSilver scss;
 	private SelfCheckoutStationGold scsg;
-    private Funds fund;
     private CoinValidator validator;
     private BigDecimal value;
     private BigDecimal price;
 	private Session session;
 	private Session session2;
 	private Session session3;
-	private HashMap <String, CardIssuer> bankList;
 	private static SupportedCardIssuers supportedCards;
-//	private ArrayList <String> supportedCardsNames;
+	private ArrayList <CardIssuer> supportedCardsClasses;
 	private CardIssuer ci1;
 	private CardIssuer ci2;
 	private CardIssuer ci3;
@@ -74,7 +72,8 @@ public class PayByCardTest {
 	private Card cdnDep;
 	private Card debit;
 	
-    
+    // Will need to stub funds
+	
 	@Before
 	public void setup() {
 		AbstractSelfCheckoutStation.resetConfigurationToDefaults();
@@ -82,34 +81,40 @@ public class PayByCardTest {
 		scs = new SelfCheckoutStationBronze();
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
-		session = new Session();
+		fund = new Funds(scs);
 		SelfCheckoutStationLogic.installOn(scs, session);
 
 		scss = new SelfCheckoutStationSilver();
 		scss.plugIn(PowerGrid.instance());
 		scss.turnOn();
-		session2 = new Session();
+		funds = new Funds(scss);
 		SelfCheckoutStationLogic.installOn(scss, session2);
 
 		scsg = new SelfCheckoutStationGold();
 		scsg.plugIn(PowerGrid.instance());
 		scsg.turnOn();
-		session3 = new Session();
+		fundg = new Funds(scsg);
 		SelfCheckoutStationLogic.installOn(scsg, session3);  
-		
+
+		CardIssuer ci1 = new CardIssuer(SupportedCardIssuers.ONE.getIssuer(), 0);
+		CardIssuer ci2 = new CardIssuer(SupportedCardIssuers.TWO.getIssuer(), 5);
+		CardIssuer ci3 = new CardIssuer(SupportedCardIssuers.THREE.getIssuer(), 1);
+		CardIssuer ci4 = new CardIssuer(SupportedCardIssuers.FOUR.getIssuer(), 2);
+		supportedCardsClasses.add(ci1);
+		supportedCardsClasses.add(ci2);
+		supportedCardsClasses.add(ci3);
+		supportedCardsClasses.add(ci4);
+
+		int index = 0;
 		for(SupportedCardIssuers supportedCards : SupportedCardIssuers.values()) {
-			fund.addBanks(supportedCards.getIssuer());
+			funds.cardController.addBanks(supportedCards.getIssuer(), supportedCardsClasses.get(index));
+			index ++;
 		}
 		
-		CardIssuer ci1 = new CardIssuer(fund.retrieveBanks(0), 0);
-		CardIssuer ci2 = new CardIssuer(fund.retrieveBanks(1), 5);
-		CardIssuer ci3 = new CardIssuer(fund.retrieveBanks(2), 1);
-		CardIssuer ci4 = new CardIssuer(fund.retrieveBanks(3), 2);
-		
-		Card disCard = new Card(fund.retrieveBanks(0), "5299334598001547", "Brandon Chan", "666");
-		Card viva = new Card(fund.retrieveBanks(0), "4504389022574000", "Dorris Giles", "343");
-		Card cdnDep = new Card(fund.retrieveBanks(0), "1111111111111111", "Not A Real Person", "420");
-		Card debit = new Card(fund.retrieveBanks(0), "5160617843321186", "Brent ", "911");
+		Card disCard = new Card(SupportedCardIssuers.ONE.getIssuer(), "5299334598001547", "Brandon Chan", "666");
+		Card viva = new Card(SupportedCardIssuers.TWO.getIssuer(), "4504389022574000", "Dorris Giles", "343");
+		Card cdnDep = new Card(SupportedCardIssuers.THREE.getIssuer(), "1111111111111111", "Not A Real Person", "420");
+		Card debit = new Card(SupportedCardIssuers.FOUR.getIssuer(), "5160617843321186", "Brent ", "911");
 		
 		ci1.addCardData(disCard.number, disCard.cardholder, null, disCard.cvv, 10000);
 		ci2.addCardData(viva.number, viva.cardholder, null, viva.cvv, 7500);
