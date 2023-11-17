@@ -130,7 +130,7 @@ public class Funds {
      * @throws NoCashAvailableException 
      * @throws CashOverloadException 
      */
-    public void calculateAmountDue() throws CashOverloadException, NoCashAvailableException, DisabledException {
+    private void calculateAmountDue() throws CashOverloadException, NoCashAvailableException, DisabledException {
     	
     	if (Session.getState() == SessionState.PAY_BY_CASH) {
     		this.paid = cashController.getCashPaid();
