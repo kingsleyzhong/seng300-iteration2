@@ -12,7 +12,6 @@ import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.hardware.external.ProductDatabases;
 import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.SessionState;
-import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import ca.ucalgary.seng300.simulation.InvalidArgumentSimulationException;
 
 /**
@@ -75,7 +74,7 @@ public class ItemAddedRule {
 					throw new InvalidArgumentSimulationException("Not in database");
 				}
 			} else {
-				throw new InvalidActionException("Session is not on or is frozen");
+				// silently ignore
 			}
 		}
 
