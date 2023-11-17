@@ -197,7 +197,7 @@ public class Session {
 		}
 	}
 
-	/*
+	/**
 	 * The customer indicates they want to add a bag by calling addBags 
 	 * Changes the state of the Session to "ADDING_BAGS"
 	 * System is now waiting for bags to be added to the bagging area.
