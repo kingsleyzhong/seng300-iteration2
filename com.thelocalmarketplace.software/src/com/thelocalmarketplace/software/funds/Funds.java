@@ -161,7 +161,13 @@ public class Funds {
 			
         }
     }
-    
+ 
+	/*** 
+	 * Calculates the change needed 
+	 * @throws CashOverloadException
+	 * @throws NoCashAvailableException
+	 * @throws DisabledException
+	 */
 	private void returnChange() throws CashOverloadException, NoCashAvailableException, DisabledException {
 	
 		int change = (this.amountDue.subtract(this.paid)).abs().intValue();
@@ -170,25 +176,13 @@ public class Funds {
 		
 	}
 		
-		//check if coin dispensers have enough change 
-		//how? idk yet		
-		
-		//if false --> return error, block session
-		
-		//Get denominations from banknote and coin --> put in a list
-		//List should be sorted from Highest Value to Lowest Value
-		
-		//for each iteration:
-		
-			//numOfTypeChange = change%denomination       
-		
-			//if (denomination.coinDispenser.size() >= numOfTypeChange) 				
-			//	for numOfTypeChange 
-			//		denomination.coinDispenser.emit()
-			//		change - denomination
-			//else
-			//	skip
-		
+	/*** 
+	 * Returns the change back to customer 		
+	 * @param changeDue
+	 * @throws CashOverloadException
+	 * @throws NoCashAvailableException
+	 * @throws DisabledException
+	 */
 		private void changeHelper(int changeDue) throws CashOverloadException, NoCashAvailableException, DisabledException {
 			if(changeDue < 0)
 				throw new InternalError("Change due is negative, which should not happen");
@@ -196,9 +190,6 @@ public class Funds {
 						
 			Map<BigDecimal, ICoinDispenser>coinMap = scs.coinDispensers;
 			Map<BigDecimal, IBanknoteDispenser>banknoteMap = scs.banknoteDispensers;
-			
-			//Going off A HEAVY ASSUMPTION that generally banknotes will carry a much higher value than coins, so the banknotes will get 
-			//dispensed first so that this somewhat shitty method will return a somewhat minimized amount of change
 			
 			
 			//Going through each banknoteDispenser by denomination
@@ -237,6 +228,12 @@ public class Funds {
 						changeDue = changeDue - denomination.intValue();	
 					}				
 				}
+			}
+			
+			//If there is still remaining change left, then the machine does not have enough change yet
+			if (changeDue >= 0.0005) {
+				throw new NoCashAvailableException();
+				
 			}
 			
 		}
