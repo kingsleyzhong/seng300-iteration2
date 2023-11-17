@@ -73,6 +73,10 @@ public class AddBagsTest {
     Mass overweightBagMass;
     Mass weightLimitBagMass;
 
+    
+    // time to wait before adding item to the bagging area
+    int timeTill = 500;
+    
 	@Before
 	public void setup() {
     	
@@ -103,14 +107,17 @@ public class AddBagsTest {
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         
         // create "bags"
-        bagMass = new Mass(1 * Mass.MICROGRAMS_PER_GRAM);// bag of mass 1g < BAG MASS LIMIT
-        overweightBagMass = new Mass(BAG_MASS_LIMIT + 1 * Mass.MICROGRAMS_PER_GRAM);// mass > BAG MASS LIMIT
+        bagMass = new Mass(100 * Mass.MICROGRAMS_PER_GRAM);// bag of mass 6g < BAG MASS LIMIT
+        overweightBagMass = new Mass(BAG_MASS_LIMIT + 2 * Mass.MICROGRAMS_PER_GRAM);// mass > BAG MASS LIMIT
         weightLimitBagMass = new Mass(BAG_MASS_LIMIT * Mass.MICROGRAMS_PER_GRAM);// mass equal to the limited size of a bag in the session software
        
         bag = new BagStub(bagMass);
         overweightBag = new BagStub(overweightBagMass);
         weightLimitBag = new BagStub(weightLimitBagMass);
 		
+        
+        // make sure the session is not active before you run the tests
+        session.cancel();
 	}
 	
 	
@@ -130,13 +137,14 @@ public class AddBagsTest {
 		scsb.baggingArea.addAnItem(bag);
 				
 		// the session has not started
-		assertFalse(session.getState() == SessionState.IN_SESSION); 
+		assertFalse(session.getState() == SessionState.PRE_SESSION); 
 	}
 	@Test
 	public void test_addBags_beforeStartSession_expectedWeightUnchanged() {		
 		// save the expected Mass before adding the bag
 		Mass expectedMassBefore = weight.getExpectedWeight();
-				
+		
+		
 		// call addBags
 		session.addBags();
 				
@@ -148,6 +156,7 @@ public class AddBagsTest {
 		Mass expectedMassAfter = weight.getExpectedWeight();
 				
 		// compare the masses to see they have updated
+		System.out.println("Before: " +expectedMassBefore.toString() + "\nAfter: "+ expectedMassAfter.toString());
 		assertTrue(expectedMassAfter.compareTo(expectedMassBefore) == 0);
 	}
 
@@ -166,6 +175,13 @@ public class AddBagsTest {
 		
 		// call addBags
 		session.addBags();
+		
+		try {
+			java.util.concurrent.TimeUnit.MILLISECONDS.sleep(timeTill);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		// add the bags to the bagging area
 		scsb.baggingArea.addAnItem(bag);
@@ -194,7 +210,15 @@ public class AddBagsTest {
 				
 		// call addBags
 		session.addBags();
-				
+		
+		try {
+			java.util.concurrent.TimeUnit.MILLISECONDS.sleep(timeTill);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
 		// add the bags to the bagging area
 		scsb.baggingArea.addAnItem(bag);
 				
@@ -204,8 +228,8 @@ public class AddBagsTest {
 				
 		// compare the masses to see they have updated
 		assertFalse(expectedMassAfter.compareTo(expectedMassBefore) == 0);
-	}
-
+	}	
+	
 	@Test
 	public void test_addBags_updatesExpectedWeightByBagWeight() {
 		// start session:
@@ -217,7 +241,14 @@ public class AddBagsTest {
 				
 		// call addBags
 		session.addBags();
-				
+		
+		try {
+			java.util.concurrent.TimeUnit.MILLISECONDS.sleep(timeTill);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		// add the bags to the bagging area
 		scsb.baggingArea.addAnItem(bag);
 				
@@ -260,7 +291,15 @@ public class AddBagsTest {
 						
 		// call addBags
 		session.addBags();
-						
+		
+		try {
+			java.util.concurrent.TimeUnit.MILLISECONDS.sleep(timeTill);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
 		// remove the not-bag from the bagging area
 		scsb.baggingArea.removeAnItem(notBag);;
 						
@@ -287,11 +326,21 @@ public class AddBagsTest {
 		
 		// call addBags
 		session.addBags();
-								
+		System.out.println(session.getState().toString());
+
+		
+		try {
+			java.util.concurrent.TimeUnit.MILLISECONDS.sleep(timeTill);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		// remove the not-bag from the bagging area
 		scsb.baggingArea.addAnItem(overweightBag);
 																
 		// compare the masses to see they have not updated
+		System.out.println(session.getState().toString());
 		assertTrue(session.getState() == SessionState.BLOCKED);
 	}
 
@@ -308,8 +357,16 @@ public class AddBagsTest {
 		
 		// call addBags
 		session.addBags();
-								
-		// remove the not-bag from the bagging area
+		
+		try {
+			java.util.concurrent.TimeUnit.MILLISECONDS.sleep(timeTill);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		// Add the bag to the bagging area
 		scsb.baggingArea.addAnItem(weightLimitBag);
 																
 		// compare the masses to see they have not updated

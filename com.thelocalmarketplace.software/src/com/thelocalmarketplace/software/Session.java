@@ -47,7 +47,10 @@ public class Session {
 	 * 
 	 */
 	private Mass MAXBAGWEIGHT = new Mass(500 + Mass.MICROGRAMS_PER_GRAM); // 500g ~ 1lb??
-	private boolean addBagOverride = false; // override to allow a bag to be added that is over the mass limit
+	private boolean addingBags = false; // When true, Customer wants to add a bag to the scale (overrides normal weight discrepancy behavior) 
+								// When false, Customer doesn't want to add a bag to the scale
+	private Mass ActualMassBeforeAddBag = Mass.ZERO; 
+	
 	
 	
 	private class WeightDiscrepancyListener implements WeightListener {
@@ -68,6 +71,19 @@ public class Session {
 			resume();
 		}
 
+		/*
+		 * Runs when there has been a change to the weight on the scale.
+		 * If the Customer has declared their intention to add bags to the scale, then checks
+		 * the bags.
+		 */
+		@Override
+		public void notifyWeightChanged() {
+			// if the customer
+			if(addingBags = true) {
+				checkBags();
+			}
+		}
+
 	}
 
 	private class PayListener implements FundsListener {
@@ -82,6 +98,7 @@ public class Session {
 		}
 
 	}
+	
 
 	/**
 	 * Constructor for the session method. Requires to be installed on self-checkout
@@ -99,7 +116,7 @@ public class Session {
 	 * 	expectedBagWeight: double representing the expected weight of a bag in grams
 	 */
 	public Session(double expectedBagWeight) {
-		MAXBAGWEIGHT = new Mass(expectedBagWeight);
+		MAXBAGWEIGHT = new Mass(expectedBagWeight * Mass.MICROGRAMS_PER_GRAM);
 		sessionState = SessionState.PRE_SESSION;
 	}
 	
@@ -183,81 +200,96 @@ public class Session {
 	 * The customer indicates they want to add a bag by calling addbags 
 	 * Assumes the customer will add their bags to the bagging area when prompted
 	 * 
+	 * 
 	 * After bags are added to the scale, the system adjusts the expected weight to account for the bags
 	 * 
 	 * If the weight of the bag(s) exceeds some defined limit (MAXBAGWEIGHT) then the system will signal that the bags are too heavy,
 	 * and alert the attendant
 	 * 
+	 * 
 	 */
 	public void addBags() {
-		// can only occure during an active session:
-		if(this.getState() == SessionState.IN_SESSION) {
+		// can only occur during an active session:
+		if(this.getState() == SessionState.IN_SESSION){
+			
+			// declare that the customer wants to add a bag to the scale
+			addingBags = true;
+			
 			// put the self checkout into block
 			// idk if this is a good idea
 			this.block();
 		
-			//get the weight of the scale before adding the bag
-			Weight WeightBeforeAddBag = this.getWeight();
+			// get the weight of the scale before adding the bag
+			ActualMassBeforeAddBag = this.getWeight().getActualWeight();
+					
+			// signal customer to add bag to the bagging area (somehow) (GUI problem)
+		}
+		// else: session is not active; doesnt do anything
+		addingBags = false;
+
+	}
+	
+	/*
+	 *  Runs when a customer has signaled their desire to add their own bags to the bagging area,
+	 *  and then has added said bags to the bagging area causing a change in the Mass measured by the scale.
+	 *  
+	 *  Compares the weight on the scale to the the weight before adding bags to determine if bags were added
+	 *  (negative weight changes caused by removing items are ignored) and that the bags are below the specified
+	 *  maximum bag weight (MAXBAGWEIGHT). 
+	 *  
+	 *  If the weight change was negative -> weight discrepancy continues, must be resolved another way
+	 *  If the bags are too heavy -> bags too heavy occurs, attendant could override this
+	 *  Else: bags were accepted. Expected weight is updated to include the bag weight.
+	 *  
+	 */
+	private void checkBags() {
+		//get the weight of the scale after the bag was added
+		Mass ActualMassAfterAddingBag = this.getWeight().getActualWeight();
+	
+		// check that the weight change was caused by adding weight
+		if(ActualMassAfterAddingBag.compareTo(ActualMassBeforeAddBag)  <= 0 ){
+			// unexpected change in the bagging area
+			// signal problem to the customer
 		
-			System.out.println("Before adding: " + WeightBeforeAddBag.toString());
-			
-			// signal custome to add bag to the bagging area (somehow)
+			// do not update the expected weight
+			// cancel the interaction
+			addingBags = false;
+			return;
+		}
+	
+		// store the bags weight
+		// weight of the bag is the difference between the weight on the scale after and before adding the bags
+		// this should work, this should never be negative
+		Mass actualBagWeight = ActualMassAfterAddingBag.difference(ActualMassBeforeAddBag).abs();
+
 		
-			//then the customer adds the bag(s)
-			while(this.getWeight().equals(WeightBeforeAddBag)) {
-				// customer adds bag(s)
-				
-				// after some amount of time the system should signal the Customer again
-				
-				// for iteration 2 I am assuming that the customer will always add bags
-				// when the GUI exists a cancel button would allow the user
-				return; // this is broken help
-			}
-		
-			//get the weight of the scale after the bag was added
-			Weight WeightAfterAddingBag = this.getWeight();
-			System.out.println("Weight after: " + WeightAfterAddingBag.toString());
-			
-			// check that the weight change was caused by adding weight
-			if(WeightAfterAddingBag.getActualWeight().compareTo(WeightBeforeAddBag.getActualWeight())  <= 0 ){
-				// unexpected change in the bagging area
-				// signal problem to the customer
-				
-				// do not update the expected weight
-				
-				// frees
-				
-				// cancel the interaction
-				this.sessionState = SessionState.IN_SESSION;
-				
-			}
-			
-			// check if the updated weight is to heavy for just a bag (Throw exception??)
-			// if weight > expected weight of a bag
-			if(WeightAfterAddingBag.getActualWeight().compareTo(MAXBAGWEIGHT) >= 0) {
-				bagsTooHeavy(); 
-			}
+		// check if the updated weight is to heavy for just a bag (Throw exception??)
+		// if weight > expected weight of a bag
+		if(actualBagWeight.compareTo(MAXBAGWEIGHT) >= 0) {
+			System.out.println("Bag weight: " + actualBagWeight.toString() + "\nMax Bag Weight: " + MAXBAGWEIGHT.toString());
+			bagsTooHeavy(); 
+		}
+		else {
 			// else: the bag added is within the allowed weight range
-			// store the bags weight
-			// weight of the bag is the difference between the weight on the scale after and before adding the bags
-			// this should work, this should never be negative
-			Mass actualBagWeight = WeightAfterAddingBag.getActualWeight().difference(WeightBeforeAddBag.getActualWeight()).abs();
 		
 			// update the expected weight on the scale
 			this.weight.update(actualBagWeight);
 		
 			// unblock the session
-			this.start(); 
-		
+			this.resume(); 
 		}
-		// else: doesnt do anything
-		
+		// signals that the bags have been added; the customer no longer wishes to add bags
+		addingBags = false;
 	}
 	
+	
 	/*
+	 * Occurs when the bags the Customer added to the bagging area are above the maximum allowed bag weight 
+	 * (set by MAXBAGWEIGHT, able to be configured). 
 	 * 
-	 * 
-	 * 
+	 * Currently sorta useless, but an Attendant would be able to override this to allow the bags to be used,
+	 * or would remove the overweight items from the bagging area. 
+	 * In either case, this method would result in no weight discrepency and 
 	 */
 	public void bagsTooHeavy() {
 		// this is an attendant method
