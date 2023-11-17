@@ -2,6 +2,7 @@ package com.thelocalmarketplace.software;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.Map;
 
 import com.jjjwelectronics.Mass;
 import com.jjjwelectronics.scanner.BarcodedItem;
@@ -13,6 +14,8 @@ import com.thelocalmarketplace.software.exceptions.CartEmptyException;
 import com.thelocalmarketplace.software.exceptions.ProductNotFoundException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.funds.FundsListener;
+import com.thelocalmarketplace.software.receipt.PrintReceipt;
+import com.thelocalmarketplace.software.receipt.PrintReceiptListener;
 import com.thelocalmarketplace.software.weight.Weight;
 import com.thelocalmarketplace.software.weight.WeightListener;
 
@@ -46,6 +49,7 @@ public class Session {
 	private HashMap<BarcodedProduct, Integer> barcodedItems;
 	private Funds funds;
 	private Weight weight;
+	private PrintReceipt receiptPrinter; // Code added
 
 	private Mass MAXBAGWEIGHT = new Mass(500 * Mass.MICROGRAMS_PER_GRAM); // maximum weight of a bag for this system
 																			// unless configured, set to 500g ~ 1lb
@@ -93,6 +97,37 @@ public class Session {
 		}
 
 	}
+	
+	// Code added
+	private class PrinterListener implements PrintReceiptListener {
+
+		@Override
+		public void notifiyOutOfPaper() {
+			block();
+		}
+
+		@Override
+		public void notifiyOutOfInk() {
+			block();
+		}
+
+		@Override
+		public void notifiyPaperRefilled() {
+			resume();
+		}
+
+		@Override
+		public void notifiyInkRefilled() {
+			resume();
+		}
+
+		@Override
+		public void notifiyReceiptPrinted() {
+			// Should notifyPaid() not wait until receipt is successfully printed to change to PRE_SESSION?
+			sessionState = SessionState.PRE_SESSION;
+		}
+		
+	}
 
 	/**
 	 * Constructor for the session method. Requires to be installed on self-checkout
@@ -130,10 +165,9 @@ public class Session {
 	/**
 	 * Setup method for the session used in installing logic on the system
 	 * Initializes private variables to the ones passed. Initially has the session
-	 * off, session unfrozen, and pay not
-	 * enabled.
-	 *
-	 * @param barcodedItems
+	 * off, session unfrozen, and pay not enabled.
+	 * 
+	 * @param BarcodedItems
 	 *                      A hashMap of barcoded products and their associated
 	 *                      quantity in shopping cart
 	 * @param funds
@@ -149,7 +183,33 @@ public class Session {
 		this.weight.register(new WeightDiscrepancyListener());
 		this.funds.register(new PayListener());
 	}
-
+	/**
+	 * Setup method for the session used in installing logic on the system
+	 * Initializes private variables to the ones passed. Initially has the session
+	 * off, session unfrozen, and pay not enabled.
+	 * 
+	 * @param BarcodedItems
+	 *                      A hashMap of barcoded products and their associated
+	 *                      quantity in shopping cart
+	 * @param funds
+	 *                      The funds used in the session
+	 * @param weight
+	 *                      The weight of the items and actual weight on the scale
+	 *                      during the session
+	 *                      
+	 * @param PrintReceipt 
+	 * 						The PrintReceipt behavior
+	 */
+	public void setup(HashMap<BarcodedProduct, Integer> barcodedItems, Funds funds, Weight weight, PrintReceipt receiptPrinter) {
+		this.barcodedItems = barcodedItems;
+		this.funds = funds;
+		this.weight = weight;
+		this.weight.register(new WeightDiscrepancyListener());
+		this.funds.register(new PayListener());
+		// Code added
+		this.receiptPrinter = receiptPrinter;
+		this.receiptPrinter.register(new PrinterListener());
+	}
 	/**
 	 * Sets the session to have started, allowing customer to interact with station
 	 */
@@ -411,6 +471,19 @@ public class Session {
 
 	public Weight getWeight() {
 		return weight;
+	}
+	
+	// Code added
+	public void printReceipt() {
+		String formattedReceipt = "";
+		for (Map.Entry<BarcodedProduct, Integer> item : barcodedItems.entrySet()) {
+			BarcodedProduct product = item.getKey();
+			int numberOfProduct = item.getValue().intValue();
+			// barcoded item does not store the price for items which need to be weighted
+			long overallPrice = product.getPrice()*numberOfProduct;
+			formattedReceipt = formattedReceipt.concat("Item: " + product.getDescription() + " Amount: " + numberOfProduct + " Price: " + overallPrice + "\n");
+		}
+		receiptPrinter.printReceipt(formattedReceipt);
 	}
 
 	// Handle Bulky Item Use Case

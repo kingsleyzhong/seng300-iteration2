@@ -26,6 +26,7 @@ import com.thelocalmarketplace.hardware.external.ProductDatabases;
 import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import com.thelocalmarketplace.software.funds.Funds;
+import com.thelocalmarketplace.software.receipt.PrintReceipt;
 import com.thelocalmarketplace.software.rules.ItemAddedRule;
 import com.thelocalmarketplace.software.weight.Weight;
 import ca.ucalgary.seng300.simulation.InvalidArgumentSimulationException;
@@ -68,6 +69,11 @@ public class ItemAddedRuleTest {
     private Weight weightSilver;
     private Weight weightGold;
     
+    // Code added
+    private PrintReceipt receiptBronze;
+    private PrintReceipt receiptSilver;
+    private PrintReceipt receiptGold;
+    
     private ScannerListenerStub listener;
 
     @Before
@@ -106,9 +112,14 @@ public class ItemAddedRuleTest {
         weightGold = new Weight(scsg);
         fundsGold = new Funds(scsg);
         
-        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze);
-        session2.setup(new HashMap<BarcodedProduct, Integer>(), fundsSilver, weightSilver);
-        session3.setup(new HashMap<BarcodedProduct, Integer>(), fundsGold, weightGold);
+        // Code added
+        receiptBronze = new PrintReceipt(scsb);
+        receiptSilver = new PrintReceipt(scsb);
+        receiptGold = new PrintReceipt(scsb);
+        
+        session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze, receiptBronze);
+        session2.setup(new HashMap<BarcodedProduct, Integer>(), fundsSilver, weightSilver, receiptSilver);
+        session3.setup(new HashMap<BarcodedProduct, Integer>(), fundsGold, weightGold, receiptGold);
         
         listener = new ScannerListenerStub();
         
