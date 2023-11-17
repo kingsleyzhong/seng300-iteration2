@@ -8,7 +8,6 @@ import com.jjjwelectronics.scanner.BarcodedItem;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.software.exceptions.CartEmptyException;
-import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.funds.FundsListener;
 import com.thelocalmarketplace.software.weight.Weight;
@@ -363,80 +362,8 @@ public class Session {
 		BigDecimal itemPrice = new BigDecimal(price);
 		this.weight.update(mass);
 		funds.update(itemPrice);
-
-		if (this.getWeight().isDiscrepancy()) {
-			this.setCallAssistant(true);
-		}
 	}
 
-	private boolean callBulkyItem = true;
-	public boolean callAssistant = false;
-
-	/**
-	 * Subtracts the weight of the bulky item from the total expected weight
-	 * of the system
-	 * Can only call if there is a weight discrepancy
-	 *
-	 * If called when there is no weight discrepancy, then nothing happens
-	 */
-	public void addBulkyItem() {
-		if (Session.getState() != SessionState.BLOCKED) {
-			this.callBulkyItem = false;
-			return;
-		}
-
-		this.callAssistant = true;
-		Mass bulkyItemWeight = this.weight.getLastWeightAdded();
-		this.weight.subtract(bulkyItemWeight);
-	}
-
-	/**
-	 * method for calling assistant for weight discrepancy
-	 * If customer adds item but does not place it in the bagging area
-	 */
-	public void assistantHelpNoItemInBaggingArea() {
-			this.addBulkyItem();
-			this.setCallAssistant(false);
-	}
-
-	/**
-	 * method for calling assistant for weight discrepancy
-	 * If customer calls addBulkyItem but places the item in the bagging area anyways
-	 */
-	public void assistantHelpNoCallAddBulkyItem(AbstractSelfCheckoutStation sc, BarcodedItem item) {
-			sc.baggingArea.removeAnItem(item);
-			this.setCallAssistant(false);
-	}
-
-	/**
-	 * method to determine if assistant is needed or not
-	 */
-	public void setCallAssistant(boolean bool) {
-		this.callAssistant = bool;
-	}
-
-	/**
-	 * method to check if assistant is needed or not
-	 */
-	public boolean getCallAssistant() {
-		return this.callAssistant;
-	}
-
-	/**
-	 * method to check if addBulkyItem() can be called or not
-	 * @return boolean callBulkyItem
-	 * true if addBulkyItem() can be called
-	 * false if addBulkyItem() cannot be called
-	 */
-	public boolean getCallAddBulkyItem() {
-		return this.callBulkyItem;
-	}
-
-	/**
-	 * determines if customer can call bulky item or not
-	 * customer cannot call bulky item if there is a weight discrepancy
-	 * @return boolean value representing callBulkyItem
-	 */
 	public HashMap<BarcodedProduct, Integer> getBarcodedItems() {
 		return barcodedItems;
 	}
@@ -449,4 +376,136 @@ public class Session {
 		return weight;
 	}
 
+
+
+
+
+	// Handle Bulky Item Use Case
+	private boolean bulkyItemCalled;
+	private boolean callAssistantForWeightDiscrepancy;
+	private boolean informAssistantBulkyItemCalled;
+	private boolean requestApproved;
+
+	/**
+	 * method to reset all states regarding handling bulky item
+	 */
+	public void reset() {
+		this.bulkyItemCalled = false;
+		this.callAssistantForWeightDiscrepancy = false;
+		this.informAssistantBulkyItemCalled = false;
+		this.requestApproved = false;
+	}
+
+	/**
+	 * method that records if customer calls handle bulky item (to the system and to the assistant)
+	 */
+	public void bulkyItemCalled() {
+		if (Session.getState() != SessionState.BLOCKED) {
+			return;
+		}
+
+		this.bulkyItemCalled = true;
+		// assistant is also informed
+		this.informAssistantBulkyItemCalled = true;
+	}
+
+	/**
+	 * method to allow assistant to approve customer request for bulky item
+	 */
+	public void assistantApprove() {
+		if (this.informAssistantBulkyItemCalled) {
+			this.requestApproved = true;
+		}
+	}
+
+	/**
+	 * Subtracts the weight of the bulky item from the total expected weight
+	 * of the system
+	 * notifies that the event has happened
+	 *
+	 * Only get called if assistant approves request or if assistant itself calls it
+	 * If called when there is no weight discrepancy, then nothing happens
+	 */
+	public void addBulkyItem() {
+		// nothing happens if there is no weight discrepancy
+
+		// customer calls add bulky item themselves
+		if (this.bulkyItemCalled) {
+			// block session
+			this.block();
+
+			if (this.requestApproved) {
+				// subtract the bulky item weight from total weight if assistant has approved
+				Mass bulkyItemWeight = this.weight.getLastWeightAdded();
+				this.weight.subtract(bulkyItemWeight);
+			} else {
+				// assistant has not approved the request
+				return;
+			}
+
+			// resume session
+			this.resume();
+		}
+
+		// attendant calls add bulky item
+		else if (this.callAssistantForWeightDiscrepancy) {
+			this.block();
+
+			Mass bulkyItemWeight = this.weight.getLastWeightAdded();
+			this.weight.subtract(bulkyItemWeight);
+
+			this.resume();
+		}
+
+		else
+			return;
+	}
+
+	public void cancelBulkyItem() {
+		if (this.bulkyItemCalled)
+			this.bulkyItemCalled = false;
+		else
+			return;
+	}
+
+	/**
+	 * method that allows attendant to fix weight discrepancy by calling add Bulky Item
+	 */
+	public void attendantFixWeightDiscrepancy() {
+		if (this.callAssistantForWeightDiscrepancy) {
+			this.addBulkyItem();
+			this.reset();
+		}
+	}
+
+	/**
+	 * method that allows attendant to fix weight discrepancy by removing item from bagging area
+	 */
+	public void attendantFixWeightDiscrepancy(AbstractSelfCheckoutStation sc, BarcodedItem item) {
+		if (this.callAssistantForWeightDiscrepancy) {
+			sc.baggingArea.removeAnItem(item);
+			this.reset();
+		}
+	}
+
+	/**
+	 * notifies that the customer has called assistant for weight discrepancy
+	 */
+	public void callAssistantForWeightDiscrepancy() {
+		// if there is weight discrepancy, call attendant for assistance
+		if (weight.isDiscrepancy())
+			this.callAssistantForWeightDiscrepancy = true;
+	}
+
+	/**
+	 * method to get if the request from customer has been approved
+	 */
+	public boolean getRequestApproved() {
+		return this.requestApproved;
+	}
+
+	/**
+	 * method to get if bulky item has been called by customer
+	 */
+	public boolean getBulkyItemCalled() { return this.bulkyItemCalled; }
 }

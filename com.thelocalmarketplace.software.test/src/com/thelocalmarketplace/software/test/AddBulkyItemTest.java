@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
- * Unit Test class for Add Bulky Item
+ * Unit Test class for Add Bulky Item Use Case
  *
  * Project iteration 2 group members:
  * Aj Sallh : 30023811
@@ -50,9 +50,6 @@ public class AddBulkyItemTest {
     private SelfCheckoutStationGold scsg;
 
     private Session session;
-    private Session sessionBronze;
-    private Session sessionSilver;
-    private Session sessionGold;
     private BarcodedProduct product;
     private BarcodedProduct product2;
     private BarcodedItem item;
@@ -66,7 +63,6 @@ public class AddBulkyItemTest {
 
     private Funds funds;
     private Weight weight;
-    private Weight weightBronze;
     private Weight weightSilver;
     private Weight weightGold;
 
@@ -84,9 +80,6 @@ public class AddBulkyItemTest {
         scsg.handheldScanner.register(listener);
 
         session = new Session();
-        sessionBronze = new Session();
-        sessionSilver = new Session();
-        sessionGold = new Session();
 
         num = 1;
         numeral = Numeral.valueOf(num);
@@ -99,23 +92,25 @@ public class AddBulkyItemTest {
         item = new BarcodedItem(barcode, new Mass(100.0));
 
         weight = new Weight(scs);
-        weightBronze = new Weight(scs);
         weightSilver = new Weight(scss);
         weightGold = new Weight(scsg);
     }
 
     /**
      * test case for adding bulky item successfully
-     * Scenario: add an item, call addBulkyItem
+     * Scenario: add an item, customer call addBulkyItem, assistant approves
      */
     @Test
     public void testAddBulkyItem() {
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         session.addItem(product);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
+        // customer calls add bulky item
         session.addBulkyItem();
-        scs.plugIn(PowerGrid.instance());
-        scs.turnOn();
 
         Weight itemWeight = session.getWeight();
         Mass actual = itemWeight.getExpectedWeight();
@@ -125,8 +120,27 @@ public class AddBulkyItemTest {
     }
 
     /**
+     * test case for handling bulky item
+     * tests if the system properly signals the attendant that a no bagging request is in progress
+     * and if the attendant signals to the system that request is approved
+     */
+    @Test
+    public void testAddBulkyItemAttendantCall() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
+        session.addBulkyItem();
+        assertTrue("Bulky Item request has been approved.", session.getRequestApproved());
+        assertEquals("No discrepancy", Session.getState(), SessionState.IN_SESSION);
+    }
+
+    /**
      * test case for adding two items and call addBulkyItem
-     * Scenario: add items, call addBulkyItem
+     * Scenario: add items, customer call addBulkyItem, attendant approves
      */
     @Test
     public void testAddTwoBulkyItemAndInSession() {
@@ -134,9 +148,11 @@ public class AddBulkyItemTest {
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         session.addItem(product);
         session.addItem(product2);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
         session.addBulkyItem();
-        scs.plugIn(PowerGrid.instance());
-        scs.turnOn();
 
         Weight itemWeight = session.getWeight();
         Mass actual = itemWeight.getExpectedWeight();
@@ -146,7 +162,7 @@ public class AddBulkyItemTest {
 
     /**
      * test case for adding two same items and call addBulkyItem
-     * Scenario: add items, call addBulkyItem
+     * Scenario: add items, customer call addBulkyItem, attendant approves
      */
     @Test
     public void testAddTwoSameBulkyItem() {
@@ -154,9 +170,11 @@ public class AddBulkyItemTest {
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         session.addItem(product);
         session.addItem(product);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
         session.addBulkyItem();
-        scs.plugIn(PowerGrid.instance());
-        scs.turnOn();
 
         Weight itemWeight = session.getWeight();
         Mass actual = itemWeight.getExpectedWeight();
@@ -173,12 +191,16 @@ public class AddBulkyItemTest {
         scs.plugIn(PowerGrid.instance());
         scs.turnOn();
         session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weightBronze);
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
 
         while (!listener.barcodesScanned.contains(item.getBarcode())) {
             scs.handheldScanner.scan(item);
         }
 
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
         session.addBulkyItem();
         Weight itemWeight = session.getWeight();
         Mass actual = itemWeight.getExpectedWeight();
@@ -201,6 +223,10 @@ public class AddBulkyItemTest {
             scss.handheldScanner.scan(item);
         }
 
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
         session.addBulkyItem();
         Weight itemWeight = session.getWeight();
         Mass actual = itemWeight.getExpectedWeight();
@@ -223,6 +249,10 @@ public class AddBulkyItemTest {
             scsg.handheldScanner.scan(item);
         }
 
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
         session.addBulkyItem();
         Weight itemWeight = session.getWeight();
         Mass actual = itemWeight.getExpectedWeight();
@@ -231,8 +261,8 @@ public class AddBulkyItemTest {
     }
 
     /**
-     * test case for causing weight discrepancy 1
-     * scenario: add item, call addBulkyItem(), then place the bulky item in the bagging area anyways
+     * test case for causing weight discrepancy 1 using bronze station
+     * scenario: add item, customer call addBulkyItem, attendant approves, then place the bulky item in the bagging area anyways
      *
      * This will cause a weight discrepancy, which can have 3 options for fixing the issue
      *      1. customer removes the item
@@ -240,35 +270,144 @@ public class AddBulkyItemTest {
      *      3. attendant signals the system of weight discrepancy approval
      */
     @Test
-    public void testBulkyItemWeightDiscrepancy() {
+    public void testBulkyItemWeightDiscrepancyBronze() {
         scs.plugIn(PowerGrid.instance());
         scs.turnOn();
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         session.addItem(product);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
         session.addBulkyItem();
         scs.baggingArea.addAnItem(new BarcodedItem(barcode, new Mass(100.0)));
         assertEquals("Discrepancy must have occurred", Session.getState(), SessionState.BLOCKED);
     }
 
     /**
-     * test case for fixing weight discrepancy 1
-     * scenario: add item, call addBulkyItem(), then place the bulky item in the bagging area anyways,
+     * test case for causing weight discrepancy 1 using silver station
+     * scenario: add item, customer call addBulkyItem, attendant approves, then place the bulky item in the bagging area anyways
+     *
+     * This will cause a weight discrepancy, which can have 3 options for fixing the issue
+     *      1. customer removes the item
+     *      2. customer signals the system for AddBulkyItem
+     *      3. attendant signals the system of weight discrepancy approval
+     */
+    @Test
+    public void testBulkyItemWeightDiscrepancySilver() {
+        scss.plugIn(PowerGrid.instance());
+        scss.turnOn();
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weightSilver);
+        session.addItem(product);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
+        session.addBulkyItem();
+        scss.baggingArea.addAnItem(new BarcodedItem(barcode, new Mass(100.0)));
+        assertEquals("Discrepancy must have occurred", Session.getState(), SessionState.BLOCKED);
+    }
+
+
+    /**
+     * test case for causing weight discrepancy 1 using gold station
+     * scenario: add item, customer call addBulkyItem, attendant approves, then place the bulky item in the bagging area anyways
+     *
+     * This will cause a weight discrepancy, which can have 3 options for fixing the issue
+     *      1. customer removes the item
+     *      2. customer signals the system for AddBulkyItem
+     *      3. attendant signals the system of weight discrepancy approval
+     */
+    @Test
+    public void testBulkyItemWeightDiscrepancyGold() {
+        scsg.plugIn(PowerGrid.instance());
+        scsg.turnOn();
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weightGold);
+        session.addItem(product);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
+        session.addBulkyItem();
+        scsg.baggingArea.addAnItem(new BarcodedItem(barcode, new Mass(100.0)));
+        assertEquals("Discrepancy must have occurred", Session.getState(), SessionState.BLOCKED);
+    }
+
+    /**
+     * test case for fixing weight discrepancy 1 using bronze station
+     * scenario: add item, customer call addBulkyItem, attendant approves, then place the bulky item in the bagging area anyways,
      *           but then remove the item from the bagging area to fix weight discrepancy
      *
      * weight discrepancy fixed using option 1
      */
     @Test
-    public void testBulkyItemWeightDiscrepancyResolved() {
+    public void testBulkyItemWeightDiscrepancyResolvedBronze() {
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         session.addItem(product);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
         session.addBulkyItem();
         scs.plugIn(PowerGrid.instance());
         scs.turnOn();
         BarcodedItem item = new BarcodedItem(barcode, new Mass(100.0));
         scs.baggingArea.addAnItem(item);
         scs.baggingArea.removeAnItem(item);
+        assertEquals("Discrepancy resolved", Session.getState(), SessionState.IN_SESSION);
+    }
+
+    /**
+     * test case for fixing weight discrepancy 1 using silver station
+     * scenario: add item, customer call addBulkyItem, attendant approves, then place the bulky item in the bagging area anyways,
+     *           but then remove the item from the bagging area to fix weight discrepancy
+     *
+     * weight discrepancy fixed using option 1
+     */
+    @Test
+    public void testBulkyItemWeightDiscrepancyResolvedSilver() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
+        session.addBulkyItem();
+        scss.plugIn(PowerGrid.instance());
+        scss.turnOn();
+        BarcodedItem item = new BarcodedItem(barcode, new Mass(100.0));
+        scss.baggingArea.addAnItem(item);
+        scss.baggingArea.removeAnItem(item);
+        assertEquals("Discrepancy resolved", Session.getState(), SessionState.IN_SESSION);
+    }
+
+    /**
+     * test case for fixing weight discrepancy 1 using gold station
+     * scenario: add item, customer call addBulkyItem, attendant approves, then place the bulky item in the bagging area anyways,
+     *           but then remove the item from the bagging area to fix weight discrepancy
+     *
+     * weight discrepancy fixed using option 1
+     */
+    @Test
+    public void testBulkyItemWeightDiscrepancyResolvedGold() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
+        session.addBulkyItem();
+        scsg.plugIn(PowerGrid.instance());
+        scsg.turnOn();
+        BarcodedItem item = new BarcodedItem(barcode, new Mass(100.0));
+        scsg.baggingArea.addAnItem(item);
+        scsg.baggingArea.removeAnItem(item);
         assertEquals("Discrepancy resolved", Session.getState(), SessionState.IN_SESSION);
     }
 
@@ -284,8 +423,6 @@ public class AddBulkyItemTest {
      */
     @Test
     public void testAddItemButNotCallBulkyItem() {
-        scs.plugIn(PowerGrid.instance());
-        scs.turnOn();
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         session.addItem(product);
@@ -301,73 +438,125 @@ public class AddBulkyItemTest {
      */
     @Test
     public void testAddItemButNotCallBulkyItemFixed() {
-        scs.plugIn(PowerGrid.instance());
-        scs.turnOn();
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         session.addItem(product);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
         session.addBulkyItem();
         assertEquals("Discrepancy is fixed", Session.getState(), SessionState.IN_SESSION);
     }
 
     /**
-     * test case for fixing weight discrepancy by calling attendant 1
+     * test case for fixing weight discrepancy 1 by calling attendant using bronze station
      * scenario: add item, call addBulkyItem(), then place the bulky item in the bagging area anyways,
      * fix: by calling attendant
      *
      * weight discrepancy fixed using option 3 (call attendant)
      */
     @Test
-    public void testBulkyItemWeightDiscrepancyCallAttendant() {
+    public void testAttendantRemoveItemBronze() {
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         session.addItem(product);
         session.addBulkyItem();
         scs.plugIn(PowerGrid.instance());
         scs.turnOn();
-        BarcodedItem item = new BarcodedItem(barcode, new Mass(100.0));
         scs.baggingArea.addAnItem(item);
-        assertTrue(session.getCallAssistant());
-        session.assistantHelpNoCallAddBulkyItem(scs, item);
+        // customer calls bulky item but still places it in the bagging area; weight discrepancy
+        // customer calls assistant for help
+        session.callAssistantForWeightDiscrepancy();
+        // assistant fixes weight discrepancy
+        session.attendantFixWeightDiscrepancy(scs, item);
         assertEquals("Discrepancy resolved", Session.getState(), SessionState.IN_SESSION);
     }
 
     /**
-     * test case for fixing weight discrepancy by calling attendant 2
+     * test case for fixing weight discrepancy 1 by calling attendant using silver station
+     * scenario: add item, call addBulkyItem(), then place the bulky item in the bagging area anyways,
+     * fix: by calling attendant
+     *
+     * weight discrepancy fixed using option 3 (call attendant)
+     */
+    @Test
+    public void testAttendantRemoveItemSilver() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weightSilver);
+        session.addItem(product);
+        session.addBulkyItem();
+        scss.plugIn(PowerGrid.instance());
+        scss.turnOn();
+        scss.baggingArea.addAnItem(item);
+        // customer calls bulky item but still places it in the bagging area; weight discrepancy
+        // customer calls assistant for help
+        session.callAssistantForWeightDiscrepancy();
+        // assistant fixes weight discrepancy
+        session.attendantFixWeightDiscrepancy(scss, item);
+        assertEquals("Discrepancy resolved", Session.getState(), SessionState.IN_SESSION);
+    }
+
+    /**
+     * test case for fixing weight discrepancy 1 by calling attendant using gold station
+     * scenario: add item, call addBulkyItem(), then place the bulky item in the bagging area anyways,
+     * fix: by calling attendant
+     *
+     * weight discrepancy fixed using option 3 (call attendant)
+     */
+    @Test
+    public void testAttendantRemoveItemGold() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weightGold);
+        session.addItem(product);
+        session.addBulkyItem();
+        scsg.plugIn(PowerGrid.instance());
+        scsg.turnOn();
+        scsg.baggingArea.addAnItem(item);
+        // customer calls bulky item but still places it in the bagging area; weight discrepancy
+        // customer calls assistant for help
+        session.callAssistantForWeightDiscrepancy();
+        // assistant fixes weight discrepancy
+        session.attendantFixWeightDiscrepancy(scsg, item);
+        assertEquals("Discrepancy resolved", Session.getState(), SessionState.IN_SESSION);
+    }
+
+    /**
+     * test case for fixing weight discrepancy 2 by calling attendant
      * scenario: add item, do not call addBulkyItem(), and not place the item in the bagging area,
      * fix: by calling attendant
      *
      * weight discrepancy fixed using option 3 (call attendant)
      */
     @Test
-    public void testAddItemButNotCallBulkyItemCallAttendant() {
-        scs.plugIn(PowerGrid.instance());
-        scs.turnOn();
+    public void testAttendantCallBulkyItem() {
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         session.addItem(product);
-        assertTrue(session.getCallAssistant());
-        session.assistantHelpNoItemInBaggingArea();
+        // customer has scanned a product but did not place it in the bagging area; weight discrepancy
+        // customer calls assistant for help
+        session.callAssistantForWeightDiscrepancy();
+        // assistant fixes weight discrepancy
+        session.attendantFixWeightDiscrepancy();
         assertEquals("Discrepancy is fixed", Session.getState(), SessionState.IN_SESSION);
     }
 
     /**
-     * test case for calling AddBulkyItem() when there is no weight discrepancy
+     * test case to check bulky item cancelled by customer
      */
     @Test
-    public void testCallAddBulkyItemWithoutWeightDiscrepancy() {
-        scs.plugIn(PowerGrid.instance());
-        scs.turnOn();
+    public void testCancelBulkyItem() {
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
         session.addItem(product);
-        BarcodedItem item = new BarcodedItem(barcode, new Mass(100.0));
-        scs.baggingArea.addAnItem(item);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
         session.addBulkyItem();
-        assertFalse("Cannot call AddBulkyItem if there is no weight discrepancy", session.getCallAddBulkyItem());
+        session.cancelBulkyItem();
+        assertFalse("Bulky item is cancelled", session.getBulkyItemCalled());
     }
-
-
 
     public class ScannerListenerStub implements BarcodeScannerListener {
         public ArrayList<Barcode> barcodesScanned;
