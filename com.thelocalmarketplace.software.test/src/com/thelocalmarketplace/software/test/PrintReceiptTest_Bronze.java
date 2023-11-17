@@ -14,9 +14,6 @@ import com.jjjwelectronics.scanner.Barcode;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
-import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
-import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
-import com.thelocalmarketplace.software.SelfCheckoutStationLogic;
 import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.SessionState;
 import com.thelocalmarketplace.software.funds.Funds;
@@ -26,14 +23,10 @@ import com.thelocalmarketplace.software.weight.Weight;
 
 import powerutility.PowerGrid;
 
-public class PrintReceiptTest {
+public class PrintReceiptTest_Bronze {
 	private SelfCheckoutStationBronze scsb;
-	private SelfCheckoutStationSilver scss;
-	private SelfCheckoutStationGold scsg;
 	
-    private Session session1;
-    private Session session2;
-    private Session session3;
+    private Session session;
     
     private BarcodedProduct product;
     private BarcodedProduct product2;
@@ -44,18 +37,8 @@ public class PrintReceiptTest {
     private Barcode barcode2;
 
     private Funds fundsBronze;
-    private Funds fundsSilver;
-    private Funds fundsGold;
-    
-    
     private Weight weightBronze;
-    private Weight weightSilver;
-    private Weight weightGold;
-    
-    // Code added
     private PrintReceipt receiptPrinterBronze;
-    private PrintReceipt receiptPrinterSilver;
-    private PrintReceipt receiptPrinterGold;
 
     @Before
     public void setUp() {
@@ -65,11 +48,7 @@ public class PrintReceiptTest {
     	PowerGrid.engageUninterruptiblePowerSource();
     	scsb.plugIn(PowerGrid.instance());
     	scsb.turnOn();
-    	session1 = new Session();
-    	//SelfCheckoutStationLogic.installOn(scsb, session1);
-    	
-    	SelfCheckoutStationSilver scss = new SelfCheckoutStationSilver();
-    	SelfCheckoutStationGold scsg = new SelfCheckoutStationGold();
+    	session = new Session();
     	
         num = 1;
         numeral = Numeral.valueOf(num);
@@ -82,24 +61,21 @@ public class PrintReceiptTest {
         fundsBronze = new Funds(scsb);
         weightBronze = new Weight(scsb);
         receiptPrinterBronze = new PrintReceipt(scsb);
-        
-        fundsSilver = new Funds(scss);
-        weightSilver = new Weight(scss);
-        receiptPrinterSilver = new PrintReceipt(scss);
-        
-        fundsGold = new Funds(scsg);
-        weightGold = new Weight(scsg);
-        receiptPrinterGold = new PrintReceipt(scsg);
+    }
+    
+    @Test (expected = IllegalArgumentException.class)
+    public void testNullStation() {
+    	receiptPrinterBronze = new PrintReceipt(null);
     }
     
     @Test
     public void testOneItemPrintReceipt() throws OverloadedDevice {
     	scsb.printer.addPaper(512);
     	scsb.printer.addInk(1024);
-    	session1.start();
-    	session1.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze, receiptPrinterBronze);
-    	session1.addItem(product);
-        session1.printReceipt();
+    	session.start();
+    	session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze, receiptPrinterBronze);
+    	session.addItem(product);
+    	session.printReceipt();
         scsb.printer.cutPaper();
         String testReceipt = scsb.printer.removeReceipt();
         assertTrue(testReceipt.contains("Item: Sample Product Amount: 1 Price: 10\n"));
@@ -109,11 +85,11 @@ public class PrintReceiptTest {
     public void testTwoItemPrintReceipt() throws OverloadedDevice {
     	scsb.printer.addPaper(512);
     	scsb.printer.addInk(1024);
-    	session1.start();
-    	session1.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze, receiptPrinterBronze);
-    	session1.addItem(product);
-    	session1.addItem(product2);
-        session1.printReceipt();
+    	session.start();
+    	session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze, receiptPrinterBronze);
+    	session.addItem(product);
+    	session.addItem(product2);
+    	session.printReceipt();
         scsb.printer.cutPaper();
         String testReceipt = scsb.printer.removeReceipt();
         assertTrue(testReceipt.contains("Item: Sample Product Amount: 1 Price: 10\n"));
@@ -124,42 +100,43 @@ public class PrintReceiptTest {
     public void testPrintReceiptOutOffPaper() throws OverloadedDevice {
     	scsb.printer.addPaper(2);
     	scsb.printer.addInk(1024);
-    	session1.start();
-    	session1.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze, receiptPrinterBronze);
-    	session1.addItem(product2);
-        session1.printReceipt();
-        scsb.printer.cutPaper();
-        String testReceipt = scsb.printer.removeReceipt();
-        assertEquals(testReceipt, "\nItem: Sample Product 2 Amount: 1 Price: 15\n");
+    	session.start();
+    	assertTrue(Session.getState() == SessionState.IN_SESSION);
+    	session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze, receiptPrinterBronze);
+    	session.addItem(product);
+    	session.addItem(product2);
+    	session.printReceipt();
+        assertTrue(Session.getState() == SessionState.BLOCKED);
     }
-
 
     @Test
     public void testPrintReceiptOutOffInk() throws OverloadedDevice {
     	scsb.printer.addPaper(512);
     	scsb.printer.addInk(20);
-    	session1.start();
-    	session1.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze, receiptPrinterBronze);
-    	session1.addItem(product);
-        session1.printReceipt();
+    	session.start();
+    	assertTrue(Session.getState() == SessionState.IN_SESSION);
+    	session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze, receiptPrinterBronze);
+    	session.addItem(product);
+    	session.printReceipt();
         scsb.printer.cutPaper();
         String testReceipt = scsb.printer.removeReceipt();
         assertEquals(testReceipt, "\nItem: Sample Product Am");
+        assertTrue(Session.getState() == SessionState.BLOCKED);
     }
     
     @Test
     public void testPrintReceiptReloadPaper() throws OverloadedDevice {
     	scsb.printer.addPaper(1);
     	scsb.printer.addInk(1024);
-    	session1.start();
-    	session1.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze, receiptPrinterBronze);
-    	session1.addItem(product);
-    	session1.addItem(product2);
-        session1.printReceipt();
+    	session.start();
+    	session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze, receiptPrinterBronze);
+    	session.addItem(product);
+    	session.addItem(product2);
+    	session.printReceipt();
         scsb.printer.cutPaper();
         scsb.printer.removeReceipt();
         scsb.printer.addPaper(512);
-        session1.printReceipt();
+        session.printReceipt();
         scsb.printer.cutPaper();
         String testReceipt = scsb.printer.removeReceipt();
         assertTrue(testReceipt.contains("Item: Sample Product Amount: 1 Price: 10\n"));
@@ -170,15 +147,15 @@ public class PrintReceiptTest {
     public void testPrintReceiptReloadInk() throws OverloadedDevice {
     	scsb.printer.addPaper(512);
     	scsb.printer.addInk(20);
-    	session1.start();
-    	session1.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze, receiptPrinterBronze);
-    	session1.addItem(product);
-    	session1.addItem(product2);
-        session1.printReceipt();
+    	session.start();
+    	session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze, receiptPrinterBronze);
+    	session.addItem(product);
+    	session.addItem(product2);
+    	session.printReceipt();
         scsb.printer.cutPaper();
         scsb.printer.removeReceipt();
         scsb.printer.addInk(1024);
-        session1.printReceipt();
+        session.printReceipt();
         scsb.printer.cutPaper();
         String testReceipt = scsb.printer.removeReceipt();
         assertTrue(testReceipt.contains("Item: Sample Product Amount: 1 Price: 10\n"));
@@ -191,10 +168,10 @@ public class PrintReceiptTest {
     	receiptPrinterBronze.register(stub);
     	scsb.printer.addPaper(512);
     	scsb.printer.addInk(1024);
-    	session1.start();
-    	session1.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze, receiptPrinterBronze);
-    	session1.addItem(product);
-        session1.printReceipt();
+    	session.start();
+    	session.setup(new HashMap<BarcodedProduct, Integer>(), fundsBronze, weightBronze, receiptPrinterBronze);
+    	session.addItem(product);
+    	session.printReceipt();
         scsb.printer.cutPaper();
         String testReceipt = scsb.printer.removeReceipt();
         assertTrue(testReceipt.contains("Item: Sample Product Amount: 1 Price: 10\n"));
@@ -216,7 +193,6 @@ public class PrintReceiptTest {
     	assertTrue(receiptPrinterBronze.listeners.isEmpty());
     }
     
-    
 	// Stub listener
 	private class PrinterListener implements PrintReceiptListener {
 		public boolean block = false; //Flag for running our of ink, set to false in default
@@ -224,28 +200,27 @@ public class PrintReceiptTest {
 
 		@Override
 		public void notifiyOutOfPaper() {
-			block = false;
+			block = true;
 		}
 
 		@Override
 		public void notifiyOutOfInk() {
-			block = false;
+			block = true;
 		}
 
 		@Override
 		public void notifiyPaperRefilled() {
-			block = true;
+			block = false;
 		}
 
 		@Override
 		public void notifiyInkRefilled() {
-			block = true;
+			block = false;
 		}
 
 		@Override
 		public void notifiyReceiptPrinted() {
 			success = true;
 		}
-		
 	}
 }
