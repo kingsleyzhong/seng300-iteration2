@@ -198,7 +198,7 @@ public class Funds {
 			Map<BigDecimal, IBanknoteDispenser>banknoteMap = scs.banknoteDispensers;
 			
 			//Going off A HEAVY ASSUMPTION that generally banknotes will carry a much higher value than coins, so the banknotes will get 
-			//dispensed first
+			//dispensed first so that this somewhat shitty method will return a somewhat minimized amount of change
 			
 			
 			//Going through each banknoteDispenser by denomination
@@ -216,7 +216,6 @@ public class Funds {
 						
 						changeDue = changeDue - denomination.intValue();	
 						
-						System.out.println(changeDue);
 					}				
 				}
 			}
