@@ -1,8 +1,6 @@
 package StubClasses;
 
 /*
- * Testing for the Funds class
- * 
  * Project iteration 2 group members:
  * Aj Sallh : 30023811
  * Anthony Kostal-Vazquez : 30048301
