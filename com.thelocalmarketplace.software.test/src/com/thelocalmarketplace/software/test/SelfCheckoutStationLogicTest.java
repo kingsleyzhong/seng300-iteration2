@@ -36,10 +36,10 @@ public class SelfCheckoutStationLogicTest {
 
     @Before
     public void setUp() {
-    	// updated to Hardware 2.2
-    	scsb.resetConfigurationToDefaults();
-    	scss.resetConfigurationToDefaults();
-    	scsg.resetConfigurationToDefaults();
+    	// updated to Hardware 2.2 and fixed to make it a static call
+    	SelfCheckoutStationBronze.resetConfigurationToDefaults();
+    	SelfCheckoutStationSilver.resetConfigurationToDefaults();
+    	SelfCheckoutStationGold.resetConfigurationToDefaults();
     	
         scsb = new SelfCheckoutStationBronze();
         scss = new SelfCheckoutStationSilver();
