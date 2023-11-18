@@ -10,6 +10,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.jjjwelectronics.IllegalDigitException;
+import com.tdc.CashOverloadException;
+import com.tdc.DisabledException;
+import com.tdc.NoCashAvailableException;
+import com.tdc.banknote.BanknoteDispenserBronze;
 import com.tdc.coin.CoinDispenserBronze;
 import com.tdc.coin.CoinDispenserGold;
 import com.tdc.coin.CoinValidator;
@@ -19,9 +23,11 @@ import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
 import com.thelocalmarketplace.software.SelfCheckoutStationLogic;
 import com.thelocalmarketplace.software.Session;
+import com.thelocalmarketplace.software.SessionState;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.funds.FundsListener;
+import com.thelocalmarketplace.software.funds.PayByCashController;
 
 import ca.ucalgary.seng300.simulation.SimulationException;
 import powerutility.PowerGrid;
@@ -43,11 +49,12 @@ import powerutility.PowerGrid;
  */
 
 public class FundsTest_Bronze {
+	
 	private SelfCheckoutStationBronze scs;
-	private Session session;
-	private Funds fund;
 	private CoinValidator validator;
-	private CoinDispenserBronze dispenser;
+	private PayByCashController cashControllerBronze;
+//	private PayByCardController cardControllerBronze;
+	private Funds funds;
 	private BigDecimal amountPaid;
 	private BigDecimal price;
 
@@ -58,49 +65,52 @@ public class FundsTest_Bronze {
 		scs = new SelfCheckoutStationBronze();
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
-		fund = new Funds(scs);
-		fund.setPay(true);
+		
 		validator = scs.coinValidator;
-		session = new Session();
-		SelfCheckoutStationLogic.installOn(scs, session);
+		
+		funds = new Funds(scs);
+		funds.setPay(true);
+		
+		cashControllerBronze = new PayByCashController(scs, funds);
 
 		price = BigDecimal.valueOf(5.00);
 		amountPaid = BigDecimal.valueOf(0.00);
 	}
-
+	
 	@Test (expected = IllegalArgumentException.class)
-	public void testNullSelfCheckoutStation()
-	{
-		fund = new Funds(null);
+	public void testNullSelfCheckoutStationBronze() {
+		scs = null;
+		funds = new Funds(scs);
 	}
 	
 	@Test
-	public void testUpdateValidPrice() {
-		fund.update(price);
-		assertEquals(price, fund.getItemsPrice());
-		assertEquals(price, fund.getAmountDue());
+	public void testUpdateValidPrice() throws CashOverloadException, NoCashAvailableException, DisabledException {
+		
+		funds.update(price);
+		assertEquals(price, funds.getItemsPrice());
+		assertEquals(price, funds.getAmountDue());
 	}
 
 	@Test(expected = IllegalDigitException.class)
-	public void testUpdateInvalidPriceZero() {
-		fund.update(BigDecimal.valueOf(0.00));
+	public void testUpdateInvalidPriceZero() throws CashOverloadException, NoCashAvailableException, DisabledException {
+		funds.update(BigDecimal.valueOf(0.00));
 	}
 	
 	@Test(expected = IllegalDigitException.class)
-	public void testUpdateInvalidPriceNegative() {
-		fund.update(BigDecimal.valueOf(-1.00));
+	public void testUpdateInvalidPriceNegative() throws CashOverloadException, NoCashAvailableException, DisabledException {
+		funds.update(BigDecimal.valueOf(-1.00));
 	}
 
 	@Test
 	public void testTurnOnPay() {
-		fund.setPay(true);
-		assertTrue(fund.isPay());
+		funds.setPay(true);
+		assertTrue(funds.isPay());
 	}
 	
 	@Test
 	public void testTurnOffPay() {
-		fund.setPay(false);
-		assertFalse(fund.isPay());
+		funds.setPay(false);
+		assertFalse(funds.isPay());
 	}
 
 	@Test
@@ -130,7 +140,7 @@ public class FundsTest_Bronze {
 
 	@Test(expected = SimulationException.class)
 	public void testRegisterInvalidListener() {
-		fund.register(null);
+		funds.register(null);
 	}
 
 	@Test
@@ -165,24 +175,41 @@ public class FundsTest_Bronze {
 		scs.coinValidator.disactivate();
 		scs.coinValidator.activate();
 	}
+}
 
-	class FundListenerStub implements FundsListener {
-		ArrayList<String> events;
+class FundListenerStub implements FundsListener {
+	ArrayList<String> events;
 
-		public FundListenerStub() {
-			events = new ArrayList<String>();
-		}
+	public FundListenerStub() {
+		events = new ArrayList<String>();
+	}
 
-		@Override
-		public void notifyPaid() {
-			events.add("Paid");
-
-		}
-
-		public ArrayList<String> getEvents() {
-			return events;
-		}
+	@Override
+	public void notifyPaid() {
+		events.add("Paid");
 
 	}
+
+	public ArrayList<String> getEvents() {
+		return events;
+	}
+
 }
+
+class SessionSimulation extends Session {
+		
+	public void setPayByCash() {
+		sessionState = SessionState.PAY_BY_CASH;
+	}
+	
+	public void setPayByCard() {
+		sessionState = SessionState.PAY_BY_CARD;
+	}
+		
+	public void block() {
+		sessionState = SessionState.BLOCKED;
+	}
+}
+
+	
 
