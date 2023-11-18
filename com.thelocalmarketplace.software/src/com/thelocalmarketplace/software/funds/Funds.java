@@ -75,7 +75,7 @@ public class Funds {
 		this.paid = BigDecimal.ZERO;
 		this.amountDue = BigDecimal.ZERO;
 		this.isPay = false;
-		this.cashController = new PayByCashController(scs);
+		this.cashController = new PayByCashController(scs, this);
 
 		// this.cardController = new PayByCardController(scs);
 
@@ -133,20 +133,6 @@ public class Funds {
 	 */
 	private void calculateAmountDue() throws CashOverloadException, NoCashAvailableException, DisabledException {
 
-		if (Session.getState() == SessionState.PAY_BY_CASH) {
-			this.paid = cashController.getCashPaid();
-		}
-
-		if (Session.getState() == SessionState.PAY_BY_CARD) {
-
-			// Boolean paidStatus = cardController.getPaidStatus();
-
-			// if (paidStatus == True) {
-			// this.paid = this.amountDue
-			// }
-
-		}
-
 		this.amountDue = this.itemsPrice.subtract(this.paid);
 
 		// To account for any rounding errors, checks if less that 0.0005 rather than
@@ -162,6 +148,29 @@ public class Funds {
 
 		}
 	}
+	
+	
+	/***
+	 * Updates Payment based on the PayByCash and PayByCard Controllers
+	 * @return
+	 */
+	public void updatePaid()  {
+	
+		if (Session.getState() == SessionState.PAY_BY_CASH) {
+			this.paid = cashController.getCashPaid();
+		}
+	
+		if (Session.getState() == SessionState.PAY_BY_CARD) {
+	
+			// Boolean paidStatus = cardController.getPaidStatus();
+	
+			// if (paidStatus == True) {
+			// this.paid = this.amountDue
+			// }
+
+		}
+	}
+
 
 	/***
 	 * Calculates the change needed
