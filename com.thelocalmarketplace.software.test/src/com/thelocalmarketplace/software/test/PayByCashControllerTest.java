@@ -41,6 +41,8 @@ public class PayByCashControllerTest {
 	private BigDecimal value;
 	private BigDecimal price;
 	private Funds fundScs;
+	private Funds fundScss;
+	private Funds fundScsg;
 	
 /***
  * setting up
@@ -60,13 +62,13 @@ public class PayByCashControllerTest {
 		scss = new SelfCheckoutStationSilver();
 		scss.plugIn(PowerGrid.instance());
 		scss.turnOn();
-		Funds fundScss = new Funds(scss);
+		this.fundScss = new Funds(scss);
 		this.cashControllerSilver = new PayByCashController(scss, fundScss);
 		
 		scsg = new SelfCheckoutStationGold();
 		scsg.plugIn(PowerGrid.instance());
 		scsg.turnOn();
-		Funds fundScsg = new Funds(scsg);
+		this.fundScsg = new Funds(scsg);
 		this.cashControllerGold = new PayByCashController(scss, fundScsg);
 		
 		

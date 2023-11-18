@@ -6,11 +6,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -21,6 +19,7 @@ import com.tdc.DisabledException;
 import com.tdc.IComponent;
 import com.tdc.IComponentObserver;
 import com.tdc.NoCashAvailableException;
+import com.tdc.banknote.BanknoteDispenserBronze;
 import com.tdc.banknote.IBanknoteDispenser;
 import com.tdc.coin.AbstractCoinDispenser;
 import com.tdc.coin.CoinDispenserBronze;
@@ -181,8 +180,8 @@ public class Funds {
 	 */
 	private void returnChange() throws CashOverloadException, NoCashAvailableException, DisabledException {
 
-		int change = (this.amountDue.subtract(this.paid)).abs().intValue();
-
+		int change = (this.amountDue).abs().intValue();
+		
 		changeHelper(change);
 
 	}
@@ -196,50 +195,72 @@ public class Funds {
 	 * @throws DisabledException
 	 */
 	private void changeHelper(int changeDue) throws CashOverloadException, NoCashAvailableException, DisabledException {
-		if (changeDue < 0)
+		if (changeDue < 0) {
 			throw new InternalError("Change due is negative, which should not happen");
+		}
 
-		Map<BigDecimal, ICoinDispenser> coinMap = scs.coinDispensers;
-		Map<BigDecimal, IBanknoteDispenser> banknoteMap = scs.banknoteDispensers;
+		//Getting banknote denominations and sorting from descending order by value
+		Set<BigDecimal> banknoteType = scs.banknoteDispensers.keySet();
+		ArrayList banknoteList = new ArrayList(banknoteType);
+		Collections.sort(banknoteList);
+		Collections.reverse(banknoteList);
+		
+		//Getting coin denominations and sorting from descending order by value
+		Set<BigDecimal> coinType = scs.banknoteDispensers.keySet();
+		ArrayList coinList = new ArrayList(coinType);
+		Collections.sort(coinList);
+		Collections.reverse(coinList);
+				
 
 		// Going through each banknoteDispenser by denomination
-		for (BigDecimal denomination : banknoteMap.keySet()) {
+		Iterator itrBanknote = banknoteList.iterator();
+		
+		while (itrBanknote.hasNext()) {
 
 			// Getting the number of change from a specific that can "fit" into the
 			// changeDue
-			int denominationNum = changeDue / denomination.intValue();
+			BigDecimal banknoteDenomination = (BigDecimal) itrBanknote.next();
+			
+			int denominationNum = changeDue / banknoteDenomination.intValue();
 
 			// Checking to see if there is enough bills in the dispenser
-			if (scs.banknoteDispensers.get(denomination).size() >= denominationNum) {
+			if (scs.banknoteDispensers.get(banknoteDenomination).size() >= denominationNum) {
 
 				for (int i = 0; i < denominationNum; i++) {
 
-					scs.banknoteDispensers.get(denomination).emit();
+					scs.banknoteDispensers.get(banknoteDenomination).emit();
 
-					changeDue = changeDue - denomination.intValue();
-
+					changeDue = changeDue - banknoteDenomination.intValue();
+					
+					System.out.println(changeDue);
+					
 				}
 			}
 		}
 
 		// Going through each coinDispenser by denomination
-		for (BigDecimal denomination : coinMap.keySet()) {
+		Iterator itrCoin = coinList.iterator();
+		
+		while (itrCoin.hasNext()) {
 
 			// Getting the number of change from a specific that can "fit" into the
 			// changeDue
-			int denominationNum = changeDue / denomination.intValue();
+			BigDecimal coinDenomination = (BigDecimal) itrCoin.next();
+			
+			int denominationNum = changeDue / coinDenomination.intValue();
 
 			// Checking to see if there is enough bills in the dispenser
-			if (scs.coinDispensers.get(denomination).size() >= denominationNum) {
+			if (scs.coinDispensers.get(coinDenomination).size() >= denominationNum) {
 
 				for (int i = 0; i < denominationNum; i++) {
 
-					scs.coinDispensers.get(denomination).emit();
+					scs.coinDispensers.get(coinDenomination).emit();
 
-					changeDue = changeDue - denomination.intValue();
+					changeDue = changeDue - coinDenomination.intValue();
 				}
 			}
 		}
+	
 
 		// If there is still remaining change left, then the machine does not have
 		// enough change yet
