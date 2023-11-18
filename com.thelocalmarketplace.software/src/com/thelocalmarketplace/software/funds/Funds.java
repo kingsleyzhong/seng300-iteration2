@@ -56,6 +56,8 @@ public class Funds {
 	private BigDecimal amountDue; // Remaining amount to be paid (in cents)
 	private boolean isPay; // Flag indicating if the session is in pay mode
 	private PayByCashController cashController;
+	private PayByCard cardController;
+
 
 	// private PayByCardController cardController;
 
@@ -76,6 +78,7 @@ public class Funds {
 		this.amountDue = BigDecimal.ZERO;
 		this.isPay = false;
 		this.cashController = new PayByCashController(scs);
+        this.cardController = new PayByCard(scs, this);
 
 		// this.cardController = new PayByCardController(scs);
 
@@ -137,15 +140,9 @@ public class Funds {
 			this.paid = cashController.getCashPaid();
 		}
 
-		if (Session.getState() == SessionState.PAY_BY_CARD) {
-
-			// Boolean paidStatus = cardController.getPaidStatus();
-
-			// if (paidStatus == True) {
-			// this.paid = this.amountDue
-			// }
-
-		}
+    	if (Session.getState() == SessionState.PAY_BY_CARD) {
+    		if (cardController.getTransactionFromBank()) this.paid = amountDue;
+    	}
 
 		this.amountDue = this.itemsPrice.subtract(this.paid);
 
