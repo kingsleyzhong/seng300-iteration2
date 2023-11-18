@@ -44,19 +44,10 @@ import powerutility.PowerGrid;
 
 public class FundsTest_Bronze {
 	private SelfCheckoutStationBronze scs;
-	private SelfCheckoutStationSilver scss;
-	private SelfCheckoutStationGold scsg;
 	private Session session;
-	private Session sessions;
-	private Session sessiong;
 	private Funds fund;
-	private Funds funds;
-	private Funds fundg;
 	private CoinValidator validator;
-	private CoinValidator validatorSilver;
-	private CoinValidator validatorGold;
 	private CoinDispenserBronze dispenser;
-	private CoinDispenserGold dispenserGold;
 	private BigDecimal amountPaid;
 	private BigDecimal price;
 
@@ -72,22 +63,6 @@ public class FundsTest_Bronze {
 		validator = scs.coinValidator;
 		session = new Session();
 		SelfCheckoutStationLogic.installOn(scs, session);
-
-		scss = new SelfCheckoutStationSilver();
-		scss.plugIn(PowerGrid.instance());
-		scss.turnOn();
-		funds = new Funds(scss);
-		validatorSilver = scss.coinValidator;
-		sessions = new Session();
-		SelfCheckoutStationLogic.installOn(scss, sessions);
-
-		scsg = new SelfCheckoutStationGold();
-		scsg.plugIn(PowerGrid.instance());
-		scs.turnOn();
-		fundg = new Funds(scsg);
-		validatorGold = scsg.coinValidator;
-		sessiong = new Session();
-		SelfCheckoutStationLogic.installOn(scsg, sessiong);
 
 		price = BigDecimal.valueOf(5.00);
 		amountPaid = BigDecimal.valueOf(0.00);
