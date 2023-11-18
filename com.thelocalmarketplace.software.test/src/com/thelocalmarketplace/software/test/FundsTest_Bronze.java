@@ -53,7 +53,7 @@ public class FundsTest_Bronze {
 
 	@Before
 	public void setUp() {
-		AbstractSelfCheckoutStation.resetConfigurationToDefaults();
+		SelfCheckoutStationBronze.resetConfigurationToDefaults();
 		
 		scs = new SelfCheckoutStationBronze();
 		scs.plugIn(PowerGrid.instance());
