@@ -17,8 +17,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.jjjwelectronics.IllegalDigitException;
+import com.jjjwelectronics.Mass;
 import com.jjjwelectronics.card.Card;
 import com.jjjwelectronics.card.BlockedCardException;
+import com.tdc.CashOverloadException;
+import com.tdc.DisabledException;
+import com.tdc.NoCashAvailableException;
 import com.tdc.coin.CoinValidator;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
@@ -32,6 +36,7 @@ import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import com.thelocalmarketplace.software.funds.CardIssuerDatabase;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.funds.FundsListener;
+import com.thelocalmarketplace.software.funds.PayByCard;
 import com.thelocalmarketplace.software.funds.SupportedCardIssuers;
 
 import ca.ucalgary.seng300.simulation.SimulationException;
@@ -60,9 +65,6 @@ public class PayByCardTest {
     private CoinValidator validator;
     private BigDecimal value;
     private BigDecimal price;
-	private Session session;
-	private Session session2;
-	private Session session3;
 	private static SupportedCardIssuers supportedCards;
 	private ArrayList <CardIssuer> supportedCardsClasses = new ArrayList <CardIssuer>();
 	private CardIssuer ci1;
@@ -73,48 +75,65 @@ public class PayByCardTest {
 	private Card viva;
 	private Card cdnDep;
 	private Card debit;
-	private TestFunds fund;
-	private TestFunds funds;
-	private TestFunds fundg;
+	private Funds fund;
+	private Funds funds;
+	private Funds fundg;
+	private TestSession session;
 	
 	
-    // Will need to stub funds
-	
-	private class TestFunds extends Funds{
-		public double amountDue;
-		
-		public TestFunds(AbstractSelfCheckoutStation scs) {
-			super(scs);
+    // Will need to stub my toe really hard to distract myself with a worse pain than this one
+
+	private class TestSession extends Session{
+		private static SessionState sessionState;
+		public TestSession() {
 		}
-		
 	}
 	
+//	private class TestFunds extends Funds{
+//		public double amountDue;
+//		private PayByCard cardController;
+//		private AbstractSelfCheckoutStation scs;
+//		
+//		public TestFunds(AbstractSelfCheckoutStation scs) {
+//			super(scs);
+//			if (scs == null) {
+//				throw new IllegalArgumentException("SelfCheckoutStation should not be null.");
+//			}
+//	        this.cardController = new PayByCard(scs, this);
+//			this.scs = scs;
+//		}
+//	}
+	
 	@Before
-	public void setup() {
+	public void setp() {
 		AbstractSelfCheckoutStation.resetConfigurationToDefaults();
 		
+    	PowerGrid.engageUninterruptiblePowerSource();
+
+		session = new TestSession();
+    	
 		scs = new SelfCheckoutStationBronze();
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
-		fund = new TestFunds(scs);
+		fund = new Funds(scs);
 //		SelfCheckoutStationLogic.installOn(scs, session);
 
 		scss = new SelfCheckoutStationSilver();
 		scss.plugIn(PowerGrid.instance());
 		scss.turnOn();
-		funds = new TestFunds(scss);
+		funds = new Funds(scss);
 //		SelfCheckoutStationLogic.installOn(scss, session2);
 
 		scsg = new SelfCheckoutStationGold();
 		scsg.plugIn(PowerGrid.instance());
 		scsg.turnOn();
-		fundg = new TestFunds(scsg);
+		fundg = new Funds(scsg);
 //		SelfCheckoutStationLogic.installOn(scsg, session3);  
 
-		CardIssuer ci1 = new CardIssuer(SupportedCardIssuers.ONE.getIssuer(), 1);
-		CardIssuer ci2 = new CardIssuer(SupportedCardIssuers.TWO.getIssuer(), 5);
-		CardIssuer ci3 = new CardIssuer(SupportedCardIssuers.THREE.getIssuer(), 99);
-		CardIssuer ci4 = new CardIssuer(SupportedCardIssuers.FOUR.getIssuer(), 2);
+		ci1 = new CardIssuer(SupportedCardIssuers.ONE.getIssuer(), 1);
+		ci2 = new CardIssuer(SupportedCardIssuers.TWO.getIssuer(), 5);
+		ci3 = new CardIssuer(SupportedCardIssuers.THREE.getIssuer(), 99);
+		ci4 = new CardIssuer(SupportedCardIssuers.FOUR.getIssuer(), 2);
 		
 		supportedCardsClasses.add(ci1);
 		supportedCardsClasses.add(ci2);
@@ -127,14 +146,14 @@ public class PayByCardTest {
 			index ++;
 		}
 		
-		Card disCard = new Card(SupportedCardIssuers.ONE.getIssuer(), "5299334598001547", "Brandon Chan", "666");
-		Card viva = new Card(SupportedCardIssuers.TWO.getIssuer(), "4504389022574000", "Dorris Giles", "343");
-		Card cdnDep = new Card(SupportedCardIssuers.THREE.getIssuer(), "1111111111111111", "Not A Real Person", "420");
-		Card debit = new Card(SupportedCardIssuers.FOUR.getIssuer(), "5160617843321186", "Brent ", "911");
+		disCard = new Card(SupportedCardIssuers.ONE.getIssuer(), "5299334598001547", "Brandon Chan", "666");
+		viva = new Card(SupportedCardIssuers.TWO.getIssuer(), "4504389022574000", "Dorris Giles", "343");
+		cdnDep = new Card(SupportedCardIssuers.THREE.getIssuer(), "1111111111111111", "Not A Real Person", "420");
+		debit = new Card(SupportedCardIssuers.FOUR.getIssuer(), "5160617843321186", "Robehrt Lazar", "111");
 		
 		Calendar exp = Calendar.getInstance();
-		exp.set(Calendar.YEAR, 2025);
-		exp.set(Calendar.MONTH, 7);
+		exp.set(Calendar.YEAR, 2099);
+		exp.set(Calendar.MONTH, 12);
 		
 		ci1.addCardData(disCard.number, disCard.cardholder, exp, disCard.cvv, 10000);
 		ci2.addCardData(viva.number, viva.cardholder, exp, viva.cvv, 7500);
@@ -144,13 +163,19 @@ public class PayByCardTest {
 	
 	@Test (expected = InvalidActionException.class)
 	public void swipeIncorrectState() throws IOException{
+		session.sessionState = SessionState.PAY_BY_CASH;
 		scs.cardReader.swipe(viva);
 		// Swiping a card when the reader is not supposed to be in use (wrong session state
 		// Expect that aCardHasBeenSwiped throws InvalidActionException
 	}
 	
 	@Test (expected = IOException.class)
-	public void testInvalidCardNumber() throws IOException{
+	public void testInvalidCardNumber() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException{
+		session.sessionState = SessionState.PAY_BY_CARD;
+		long price = 100;
+		BigDecimal itemPrice = new BigDecimal(price);
+		funds.update(itemPrice);
+		funds.beginPayment();
 		scs.cardReader.swipe(cdnDep);
 		// The card numbers do not match and will decline a card if the card is blocked
 		// authorizeHold should return -1 
@@ -158,7 +183,12 @@ public class PayByCardTest {
 	}
 	
 	@Test (expected = BlockedCardException.class)
-	public void testBlockedCard() throws IOException {
+	public void testBlockedCard() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException {
+		session.sessionState = SessionState.PAY_BY_CARD;
+		long price = 100;
+		BigDecimal itemPrice = new BigDecimal(price);
+		funds.update(itemPrice);
+		funds.beginPayment();
 		ci4.block(debit.number);
 		scs.cardReader.swipe(debit);
 		// This will decline a card if the card is blocked

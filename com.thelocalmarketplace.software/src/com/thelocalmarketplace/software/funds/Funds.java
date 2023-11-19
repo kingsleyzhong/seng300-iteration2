@@ -125,6 +125,14 @@ public class Funds {
 	public boolean isPay() {
 		return isPay;
 	}
+	
+	public void beginPayment() throws CashOverloadException, NoCashAvailableException, DisabledException {
+		if (amountDue.compareTo(BigDecimal.ZERO) <= 0) {
+			throw new IllegalDigitException("Price should be positive.");
+		}
+		cardController.paidBool = false;
+		calculateAmountDue();		
+	}
 
 	/**
 	 * Calculates the amount due by subtracting the paid amount from the total items
@@ -140,8 +148,15 @@ public class Funds {
 			this.paid = cashController.getCashPaid();
 		}
 
+		// This is a bad idea but there must be a way to calculate the final amount due then allowing PayByCard to read it
+		// It then will need to see if PayByCard is successful then sets paid to due and then subtracts making due 0
+		// How do/can we call methods here within PayByCard is the problem 
     	if (Session.getState() == SessionState.PAY_BY_CARD) {
-    		if (cardController.getTransactionFromBank()) this.paid = amountDue;
+    		while (!cardController.paidBool && Session.getState() == SessionState.PAY_BY_CARD) {
+    			// Does anything go here?
+    		}
+    		if (Session.getState() == SessionState.PAY_BY_CARD) this.paid = amountDue;
+    		
     	}
 
 		this.amountDue = this.itemsPrice.subtract(this.paid);

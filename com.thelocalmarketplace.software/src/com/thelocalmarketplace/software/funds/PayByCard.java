@@ -33,10 +33,13 @@ import com.jjjwelectronics.card.*;
 public class PayByCard {
 	
 	private Card card;
+	private PayByCard cardController;
 	private double amountDue;
+	boolean paidBool;
 	
 	public PayByCard(AbstractSelfCheckoutStation scs, Funds funds) {
 		InnerListener cardListener = new InnerListener();
+		scs.cardReader.register(cardListener);
 		
 		amountDue = funds.getAmountDue().doubleValue();
 	}
@@ -82,15 +85,16 @@ public class PayByCard {
 
 		@Override
 		public void theDataFromACardHasBeenRead(CardData data) {	
-				Card card = new Card(data.getType(), data.getNumber(), data.getCardholder(), data.getCVV());
-				
+				card = new Card(data.getType(), data.getNumber(), data.getCardholder(), data.getCVV());
+				getTransactionFromBank(card);
 		}
 	}
 
+	
     /**
      * Facilitates all communication with CardIssuer(s) required for billing/posting 
      */
-	public boolean getTransactionFromBank() {
+	public void getTransactionFromBank(Card card) {
 		if (Session.getState() == SessionState.PAY_BY_CARD) {
 			// We need to retrieve the funds
 			// We determine the type of card, check the database for validity, then attempt 		
@@ -102,18 +106,18 @@ public class PayByCard {
 					// Invalid card
 					// Blocked card
 					// Maxed holds
-					return false;
+					return;
 				} else {	
 					boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
 					if (!post) {
 						// This failed for some reason
 						// Credit limit
-						return false;
+						return;
 					} else {
 						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
 						CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).releaseHold(card.number, 1);
 					}
-					return true;		
+					isPaid(paidBool);		
 				}
 								
 			} else if (card.kind == SupportedCardIssuers.THREE.getIssuer()) {
@@ -124,18 +128,18 @@ public class PayByCard {
 					// Invalid card
 					// Blocked card
 					// Maxed holds
-					return false;
+					return;
 				} else {	
 					boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
 					if (!post) {
 						// This failed for some reason
 						// Credit limit
-						return false;
+						return;
 					} else {
 						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
 						CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).releaseHold(card.number, 1);
 					}
-					return true;		
+					isPaid(paidBool);		
 				}
 				
 			} else if (card.kind == SupportedCardIssuers.FOUR.getIssuer()) {
@@ -146,18 +150,19 @@ public class PayByCard {
 					// Invalid card
 					// Blocked card
 					// Maxed holds
-					return false;
+					return;
 				} else {	
 					boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
 					if (!post) {
 						// This failed for some reason
 						// Credit limit
-						return false;
+						return;
 					} else {
 						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
 						CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).releaseHold(card.number, 1);
 					}
-					return true;		
+					isPaid(paidBool);
+					
 				}
 			} else {
 				throw new InvalidActionException("Card not recognized");
@@ -165,5 +170,8 @@ public class PayByCard {
 		} else {
 			throw new InvalidActionException("Not in Card Payment state");
 		}
+	}
+	private void isPaid(Boolean paidBool) {
+		paidBool = true;
 	}
 }
