@@ -275,6 +275,9 @@ public class Funds {
 	 * Methods for adding funds listeners to the funds
 	 */
 	public synchronized boolean deregister(FundsListener listener) {
+		if (listener == null)
+			throw new NullPointerSimulationException("listener");
+		
 		return listeners.remove(listener);
 	}
 
