@@ -150,24 +150,19 @@ public class Funds {
 	
 	
 	/***
-	 * Updates Payment based on the PayByCash and PayByCard Controllers
+	 * Updates Payment based on the PayByCash Controller
 	 * @return
+	 * @throws DisabledException 
+	 * @throws NoCashAvailableException 
+	 * @throws CashOverloadException 
 	 */
-	public void updatePaid()  {
+	public void updatePaid() throws CashOverloadException, NoCashAvailableException, DisabledException  {
 	
 		if (Session.getState() == SessionState.PAY_BY_CASH) {
 			this.paid = cashController.getCashPaid();
+			calculateAmountDue();
 		}
 	
-		if (Session.getState() == SessionState.PAY_BY_CARD) {
-	
-			// Boolean paidStatus = cardController.getPaidStatus();
-	
-			// if (paidStatus == True) {
-			// this.paid = this.amountDue
-			// }
-
-		}
 	}
 
 
