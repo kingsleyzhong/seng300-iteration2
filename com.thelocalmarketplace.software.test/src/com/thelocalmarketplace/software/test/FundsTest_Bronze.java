@@ -140,7 +140,13 @@ public class FundsTest_Bronze {
 
 	@Test(expected = SimulationException.class)
 	public void testRegisterInvalidListener() {
-		funds.register(null);
+		FundsListenerStub stub = null; 
+		funds.register(stub);
+	}
+	
+	 @Test(expected = SimulationException.class)
+	    public void testDeregisterInvalidListener() {
+		 funds.deregister(null);
 	}
 
 	@Test
@@ -177,10 +183,10 @@ public class FundsTest_Bronze {
 	}
 }
 
-class FundListenerStub implements FundsListener {
+class FundsListenerStub implements FundsListener {
 	ArrayList<String> events;
 
-	public FundListenerStub() {
+	public FundsListenerStub() {
 		events = new ArrayList<String>();
 	}
 
