@@ -13,6 +13,9 @@ import java.util.HashMap;
 import com.jjjwelectronics.IDevice;
 import com.jjjwelectronics.IDeviceListener;
 import com.jjjwelectronics.card.Card.CardData;
+import com.tdc.CashOverloadException;
+import com.tdc.DisabledException;
+import com.tdc.NoCashAvailableException;
 import com.jjjwelectronics.card.*;
 
 /**
@@ -36,12 +39,14 @@ public class PayByCard {
 	private PayByCard cardController;
 	private double amountDue;
 	boolean paidBool;
+	private Funds funds;
 	
 	public PayByCard(AbstractSelfCheckoutStation scs, Funds funds) {
 		InnerListener cardListener = new InnerListener();
 		scs.cardReader.register(cardListener);
 		
 		amountDue = funds.getAmountDue().doubleValue();
+		this.funds = funds;
 	}
 	
 	private class InnerListener implements CardReaderListener {
@@ -86,15 +91,29 @@ public class PayByCard {
 		@Override
 		public void theDataFromACardHasBeenRead(CardData data) {	
 				card = new Card(data.getType(), data.getNumber(), data.getCardholder(), data.getCVV());
-				getTransactionFromBank(card);
+				try {
+					getTransactionFromBank(card);
+				} catch (CashOverloadException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (NoCashAvailableException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (DisabledException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 		}
 	}
 
 	
     /**
      * Facilitates all communication with CardIssuer(s) required for billing/posting 
+     * @throws DisabledException 
+     * @throws NoCashAvailableException 
+     * @throws CashOverloadException 
      */
-	public void getTransactionFromBank(Card card) {
+	public void getTransactionFromBank(Card card) throws CashOverloadException, NoCashAvailableException, DisabledException {
 		if (Session.getState() == SessionState.PAY_BY_CARD) {
 			// We need to retrieve the funds
 			// We determine the type of card, check the database for validity, then attempt 		
@@ -117,7 +136,8 @@ public class PayByCard {
 						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
 						CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).releaseHold(card.number, 1);
 					}
-					isPaid(paidBool);		
+					paidBool = true;
+					funds.updatePaidCard(paidBool);
 				}
 								
 			} else if (card.kind == SupportedCardIssuers.THREE.getIssuer()) {
@@ -139,7 +159,8 @@ public class PayByCard {
 						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
 						CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).releaseHold(card.number, 1);
 					}
-					isPaid(paidBool);		
+					paidBool = true;
+					funds.updatePaidCard(paidBool);		
 				}
 				
 			} else if (card.kind == SupportedCardIssuers.FOUR.getIssuer()) {
@@ -161,17 +182,14 @@ public class PayByCard {
 						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
 						CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).releaseHold(card.number, 1);
 					}
-					isPaid(paidBool);
-					
+					paidBool = true;
+					funds.updatePaidCard(paidBool);
 				}
 			} else {
-				throw new InvalidActionException("Card not recognized");
+				throw new InvalidActionException("Declined");
 			}		
 		} else {
 			throw new InvalidActionException("Not in Card Payment state");
 		}
-	}
-	private void isPaid(Boolean paidBool) {
-		paidBool = true;
 	}
 }

@@ -148,17 +148,6 @@ public class Funds {
 			this.paid = cashController.getCashPaid();
 		}
 
-		// This is a bad idea but there must be a way to calculate the final amount due then allowing PayByCard to read it
-		// It then will need to see if PayByCard is successful then sets paid to due and then subtracts making due 0
-		// How do/can we call methods here within PayByCard is the problem 
-    	if (Session.getState() == SessionState.PAY_BY_CARD) {
-    		while (!cardController.paidBool && Session.getState() == SessionState.PAY_BY_CARD) {
-    			// Does anything go here?
-    		}
-    		if (Session.getState() == SessionState.PAY_BY_CARD) this.paid = amountDue;
-    		
-    	}
-
 		this.amountDue = this.itemsPrice.subtract(this.paid);
 
 		// To account for any rounding errors, checks if less that 0.0005 rather than
@@ -172,6 +161,13 @@ public class Funds {
 				returnChange();
 			}
 
+		}
+	}
+	
+	public void updatePaidCard(boolean paidBool) throws CashOverloadException, NoCashAvailableException, DisabledException {
+		if (paidBool) {
+			this.paid = amountDue;
+			calculateAmountDue();
 		}
 	}
 
