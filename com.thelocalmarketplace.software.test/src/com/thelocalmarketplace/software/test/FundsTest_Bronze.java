@@ -6,6 +6,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Currency;
+import java.util.Locale;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -14,6 +17,7 @@ import com.tdc.CashOverloadException;
 import com.tdc.DisabledException;
 import com.tdc.NoCashAvailableException;
 import com.tdc.banknote.BanknoteDispenserBronze;
+import com.tdc.coin.Coin;
 import com.tdc.coin.CoinDispenserBronze;
 import com.tdc.coin.CoinDispenserGold;
 import com.tdc.coin.CoinValidator;
@@ -66,15 +70,13 @@ public class FundsTest_Bronze {
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
 		
-		validator = scs.coinValidator;
-		
 		funds = new Funds(scs);
 		funds.setPay(true);
 		
 		cashControllerBronze = new PayByCashController(scs, funds);
 
 		price = BigDecimal.valueOf(5.00);
-		amountPaid = BigDecimal.valueOf(0.00);
+		amountPaid = BigDecimal.valueOf(5.00);
 	}
 	
 	@Test (expected = IllegalArgumentException.class)
@@ -85,7 +87,6 @@ public class FundsTest_Bronze {
 	
 	@Test
 	public void testUpdateValidPrice() throws CashOverloadException, NoCashAvailableException, DisabledException {
-		
 		funds.update(price);
 		assertEquals(price, funds.getItemsPrice());
 		assertEquals(price, funds.getAmountDue());
@@ -114,12 +115,20 @@ public class FundsTest_Bronze {
 	}
 
 	@Test
-	public void testAmountPaidFull() {
-//		FundListenerStub stub = new FundListenerStub();
-//		fund.register(stub);
-//		fund.update(price);
-//		amountPaid = BigDecimal.valueOf(5.00); 
-//		fund.new InnerListener().validCoinDetected(validator, amountPaid);
+	public void testAmountPaidFullCash() throws DisabledException, CashOverloadException, NoCashAvailableException {
+		
+		Currency currency = Currency.getInstance(Locale.CANADA);
+		Coin coinAmountPaid = new Coin(currency, amountPaid);
+
+//		FundsListenerStub stub = new FundsListenerStub();
+//		funds.register(stub);
+//		funds.update(price);
+		
+		SessionSimulation sampleSimulation = new SessionSimulation();
+		sampleSimulation.setPayByCash();
+		
+		scs.coinValidator.receive(coinAmountPaid);
+
 //		assertTrue("Paid event called", stub.getEvents().contains("Paid"));
 	}
 	
