@@ -140,6 +140,29 @@ public class PayByCard {
 					funds.updatePaidCard(paidBool);
 				}
 								
+			} else if (card.kind == SupportedCardIssuers.TWO.getIssuer()) {
+				long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).authorizeHold(card.number, 1);
+				
+				if (holdNumber == -1L) {
+					// There are not enough available holds
+					// Invalid card
+					// Blocked card
+					// Maxed holds
+					return;
+				} else {	
+					boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
+					if (!post) {
+						// This failed for some reason
+						// Credit limit
+						return;
+					} else {
+						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
+						CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).releaseHold(card.number, 1);
+					}
+					paidBool = true;
+					funds.updatePaidCard(paidBool);
+				}
+								
 			} else if (card.kind == SupportedCardIssuers.THREE.getIssuer()) {
 				long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).authorizeHold(card.number, 1);
 				

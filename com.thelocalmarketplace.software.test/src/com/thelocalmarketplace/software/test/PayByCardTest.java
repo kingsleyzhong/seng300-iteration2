@@ -85,27 +85,10 @@ public class PayByCardTest {
 
 	private class TestSession extends Session{
 		private static SessionState sessionState;
-		public TestSession() {
-		}
 	}
 	
-//	private class TestFunds extends Funds{
-//		public double amountDue;
-//		private PayByCard cardController;
-//		private AbstractSelfCheckoutStation scs;
-//		
-//		public TestFunds(AbstractSelfCheckoutStation scs) {
-//			super(scs);
-//			if (scs == null) {
-//				throw new IllegalArgumentException("SelfCheckoutStation should not be null.");
-//			}
-//	        this.cardController = new PayByCard(scs, this);
-//			this.scs = scs;
-//		}
-//	}
-	
 	@Before
-	public void setp() {
+	public void setup() {
 		AbstractSelfCheckoutStation.resetConfigurationToDefaults();
 		
     	PowerGrid.engageUninterruptiblePowerSource();
@@ -195,20 +178,41 @@ public class PayByCardTest {
 		// authorizeHold should return -1 
 	}
 	
+	// The following test works if we do not actually swipe a card
+	// PayByCard currently is not capable of doing anything with the -1 value; change this?
 	@Test
-	public void testHoldCountDecline() {
+	public void testHoldCountDecline() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException {
+		session.sessionState = SessionState.PAY_BY_CARD;
+		ci1.authorizeHold(disCard.number, 1);
+		long price = 100;
+		BigDecimal itemPrice = new BigDecimal(price);
+		funds.update(itemPrice);
+		funds.beginPayment();
+		assertEquals(-1, ci1.authorizeHold(disCard.number, 1));
 		// This will decline a card if it has run out of available holds
 		// authorizeHold should return -1 
 	}
 	
 	@Test
-	public void testAvailableBalanceDecline() {
+	public void testAvailableBalanceDecline() throws CashOverloadException, NoCashAvailableException, DisabledException, IOException {
+		session.sessionState = SessionState.PAY_BY_CARD;
+		long price = 1000000;
+		BigDecimal itemPrice = new BigDecimal(price);
+		funds.update(itemPrice);
+		funds.beginPayment();
+		scs.cardReader.swipe(viva);	
 		// This will decline a card if there is insufficient available balance 
 		// postTransaction should return false 
 	}
 
 	@Test
-	public void testSuccessfulPostingTransaction() {
+	public void testSuccessfulPostingTransaction() throws CashOverloadException, NoCashAvailableException, DisabledException, IOException {
+		session.sessionState = SessionState.PAY_BY_CARD;
+		long price = 100;
+		BigDecimal itemPrice = new BigDecimal(price);
+		funds.update(itemPrice);
+		funds.beginPayment();
+		scs.cardReader.swipe(viva);	
 		// This will post a successful charge on the given card
 		// postTransaction should return true 
 	}
