@@ -76,8 +76,8 @@ public class FundsTest_Bronze {
 		
 		this.cashControllerBronze = new PayByCashController(scs, funds);
 
-		price = BigDecimal.valueOf(5.00);
-		amountPaid = BigDecimal.valueOf(5.00);
+		price = BigDecimal.valueOf(1);
+		amountPaid = BigDecimal.valueOf(1);
 	}
 	
 	@Test (expected = IllegalArgumentException.class)
