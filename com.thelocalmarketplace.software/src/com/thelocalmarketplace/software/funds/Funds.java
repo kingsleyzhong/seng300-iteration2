@@ -56,9 +56,10 @@ public class Funds {
 	private boolean isPay; // Flag indicating if the session is in pay mode
 	private PayByCashController cashController;
 	private PayByCard cardController;
-
-	// private PayByCardController cardController;
-
+	
+	// Testing ONLY
+	public boolean payed;
+	public boolean successfulSwipe;
 	private AbstractSelfCheckoutStation scs;
 
 	/**
@@ -76,12 +77,12 @@ public class Funds {
 		this.paid = BigDecimal.ZERO;
 		this.amountDue = BigDecimal.ZERO;
 		this.isPay = false;
+		this.payed = false;
 		this.cashController = new PayByCashController(scs, this);
-
 		this.cardController = new PayByCard(scs, this);
 
 		// this.cardController = new PayByCardController(scs);
-
+		this.successfulSwipe = cardController.successfulSwipe;
 		this.scs = scs;
 	}
 
@@ -135,6 +136,7 @@ public class Funds {
 	}
 
 	public void beginPayment() {
+		
 		if (amountDue.compareTo(BigDecimal.ZERO) <= 0) {
 			throw new IllegalDigitException("Price should be positive.");
 		}
@@ -165,7 +167,7 @@ public class Funds {
 			if (amountDue.intValue() <= -1) {
 				returnChange();
 			}
-
+			payed = true;
 		}
 	}
 
@@ -298,6 +300,10 @@ public class Funds {
 			System.out.print("Not enough change available in the machine. Please get attendant");
 		}
 
+	}
+	
+	public boolean getSuccessfulSwipe() {
+		return cardController.successfulSwipe;
 	}
 
 	/**
