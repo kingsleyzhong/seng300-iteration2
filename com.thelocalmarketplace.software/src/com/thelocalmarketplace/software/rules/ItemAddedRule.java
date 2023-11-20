@@ -66,7 +66,7 @@ public class ItemAddedRule {
 			if (Session.getState() == SessionState.IN_SESSION) {
 				Map<Barcode, BarcodedProduct> database = ProductDatabases.BARCODED_PRODUCT_DATABASE;
 
-				// Checks if product is in database. Does nothing if not in database.
+				// Checks if product is in database. Throws exception if not in database.
 				if (database.containsKey(barcode)) {
 					BarcodedProduct product = database.get(barcode);
 					session.addItem(product);

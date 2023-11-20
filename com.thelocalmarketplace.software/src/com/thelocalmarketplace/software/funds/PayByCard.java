@@ -40,6 +40,7 @@ public class PayByCard {
 	private double amountDue;
 	boolean paidBool;
 	boolean successfulSwipe;
+	boolean posted;
 	private Funds funds;
 	private AbstractSelfCheckoutStation scs;
 	
@@ -89,9 +90,9 @@ public class PayByCard {
 		@Override
 		public void theDataFromACardHasBeenRead(CardData data) {	
 			card = new Card(data.getType(), data.getNumber(), data.getCardholder(), null);
-			if(Session.getState() != SessionState.PAY_BY_CARD) {
-				throw new InvalidActionException("Card reader not in use");
-			}
+//			if(Session.getState() != SessionState.PAY_BY_CARD) {
+//				throw new InvalidActionException("Card reader not in use");
+//			}
 				try {
 					getTransactionFromBank(card);
 				} catch (CashOverloadException e) {
@@ -138,6 +139,8 @@ public class PayByCard {
 				}
 				paidBool = true;
 				funds.updatePaidCard(paidBool);
+				successfulSwipe = false;
+				return;
 			}
 							
 		} else if (card.kind == SupportedCardIssuers.TWO.getIssuer()) {
@@ -161,6 +164,8 @@ public class PayByCard {
 				}
 				paidBool = true;
 				funds.updatePaidCard(paidBool);
+				successfulSwipe = false;
+				return;
 			}
 							
 		} else if (card.kind == SupportedCardIssuers.THREE.getIssuer()) {
@@ -184,6 +189,8 @@ public class PayByCard {
 				}
 				paidBool = true;
 				funds.updatePaidCard(paidBool);		
+				successfulSwipe = false;
+				return;
 			}
 			
 		} else if (card.kind == SupportedCardIssuers.FOUR.getIssuer()) {
@@ -207,9 +214,12 @@ public class PayByCard {
 				}
 				paidBool = true;
 				funds.updatePaidCard(paidBool);
+				successfulSwipe = false;
+				return;
 			}
 		} else {
 			throw new InvalidActionException("Declined");
-		}		
-	}
+		}
+	}	
 }
+
