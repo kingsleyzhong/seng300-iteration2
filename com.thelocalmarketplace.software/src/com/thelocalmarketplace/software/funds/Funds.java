@@ -123,7 +123,7 @@ public class Funds {
 		return isPay;
 	}
 
-	public void beginPayment() throws CashOverloadException, NoCashAvailableException, DisabledException {
+	public void beginPayment() {
 		if (amountDue.compareTo(BigDecimal.ZERO) <= 0) {
 			throw new IllegalDigitException("Price should be positive.");
 		}
@@ -160,13 +160,8 @@ public class Funds {
 
 	/***
 	 * Checks the status of a card payment
-	 * 
-	 * @throws CashOverloadException
-	 * @throws NoCashAvailableException
-	 * @throws DisabledException
 	 */
-	public void updatePaidCard(boolean paidBool)
-			throws CashOverloadException, NoCashAvailableException, DisabledException {
+	public void updatePaidCard(boolean paidBool) {
 		if (Session.getState() == SessionState.PAY_BY_CARD) {
 			if (paidBool) {
 				this.paid = amountDue;
