@@ -104,6 +104,26 @@ public class FundsTest_Bronze {
 	public void testUpdateInvalidPriceNegative() throws CashOverloadException, NoCashAvailableException, DisabledException {
 		funds.update(BigDecimal.valueOf(-1.00));
 	}
+	
+	@Test
+	public void testRemoveValidItemPrice() throws CashOverloadException, NoCashAvailableException, DisabledException {
+		funds.update(price);
+		funds.removeItemPrice(price);
+		assertEquals(BigDecimal.valueOf(0), funds.getItemsPrice());
+		assertEquals(BigDecimal.valueOf(0), funds.getAmountDue());
+	}
+	
+	@Test(expected = IllegalDigitException.class)
+	public void testRemoveInvalidItemPriceZero() throws CashOverloadException, NoCashAvailableException, DisabledException {
+		funds.update(price);
+		funds.removeItemPrice(BigDecimal.valueOf(0.00));
+	}
+	
+	@Test(expected = IllegalDigitException.class)
+	public void testRemoveInvalidItemPriceNegative() throws CashOverloadException, NoCashAvailableException, DisabledException {
+		funds.update(price);
+		funds.removeItemPrice(BigDecimal.valueOf(-1.00));
+	}
 
 	@Test
 	public void testTurnOnPay() {
@@ -135,7 +155,7 @@ public class FundsTest_Bronze {
 	}
 	
 	@Test
-	public void testAmountPaidPartial() {
+	public void testAmountPaidPartialCash() {
 		
 	}
 	

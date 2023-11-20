@@ -100,8 +100,11 @@ public class Funds {
 	 * @param price The price to be added (in cents)
 	 */
 	public void removeItemPrice(BigDecimal price) {
+		if (price.compareTo(BigDecimal.ZERO) <= 0) {
+			throw new IllegalDigitException("Price should be positive.");
+		}
+		
 		this.itemsPrice = this.itemsPrice.subtract(price);
-
 		calculateAmountDue();
 	}
 
