@@ -70,10 +70,11 @@ public class FundsTest_Bronze {
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
 		
-		funds = new Funds(scs);
+		Funds funds = new Funds(scs);
+		this.funds = funds;
 		funds.setPay(true);
 		
-		cashControllerBronze = new PayByCashController(scs, funds);
+		this.cashControllerBronze = new PayByCashController(scs, funds);
 
 		price = BigDecimal.valueOf(5.00);
 		amountPaid = BigDecimal.valueOf(5.00);
@@ -120,16 +121,16 @@ public class FundsTest_Bronze {
 		Currency currency = Currency.getInstance(Locale.CANADA);
 		Coin coinAmountPaid = new Coin(currency, amountPaid);
 
-//		FundsListenerStub stub = new FundsListenerStub();
-//		funds.register(stub);
-//		funds.update(price);
+		FundsListenerStub stub = new FundsListenerStub();
+		funds.register(stub);
+		funds.update(price);
 		
 		SessionSimulation sampleSimulation = new SessionSimulation();
 		sampleSimulation.setPayByCash();
 		
-		scs.coinValidator.receive(coinAmountPaid);
+		scs.coinSlot.receive(coinAmountPaid);
 
-//		assertTrue("Paid event called", stub.getEvents().contains("Paid"));
+		assertTrue("Paid event called", stub.getEvents().contains("Paid"));
 	}
 	
 	@Test
