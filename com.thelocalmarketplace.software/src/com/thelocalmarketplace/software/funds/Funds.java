@@ -30,6 +30,8 @@ import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.SessionState;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
+import com.thelocalmarketplace.software.exceptions.NotEnoughChangeException;
+
 import ca.ucalgary.seng300.simulation.NullPointerSimulationException;
 
 /**
@@ -75,9 +77,7 @@ public class Funds {
 		this.amountDue = BigDecimal.ZERO;
 		this.isPay = false;
 		this.cashController = new PayByCashController(scs, this);
-
 		this.cardController = new PayByCard(scs, this);
-
 		this.scs = scs;
 	}
 
@@ -133,7 +133,7 @@ public class Funds {
 		return isPay;
 	}
 
-	public void beginPayment() {
+	public void beginPayment() throws NoCashAvailableException {
 		if (amountDue.compareTo(BigDecimal.ZERO) <= 0) {
 			throw new IllegalDigitException("Price should be positive.");
 		}
@@ -144,6 +144,7 @@ public class Funds {
 	/**
 	 * Calculates the amount due by subtracting the paid amount from the total items
 	 * price.
+	 * @throws NoCashAvailableException 
 	 */
 	private void calculateAmountDue() {
 
@@ -185,11 +186,10 @@ public class Funds {
 	/***
 	 * Updates Payment based on the PayByCash Controller
 	 */
-	public void updatePaid() {
+	public void updatePaidCash() {
 
 		if (Session.getState() == SessionState.PAY_BY_CASH) {
 			this.paid = cashController.getCashPaid();
-
 			calculateAmountDue();
 
 		}
@@ -198,6 +198,7 @@ public class Funds {
 
 	/***
 	 * Calculates the change needed
+	 * @throws NoCashAvailableException 
 	 * 
 	 */
 	private void returnChange() {
@@ -205,6 +206,8 @@ public class Funds {
 		int changeDue = (this.amountDue).abs().intValue();
 
 		changeHelper(changeDue);
+	
+
 
 	}
 
@@ -212,8 +215,9 @@ public class Funds {
 	 * Returns the change back to customer
 	 * 
 	 * @param changeDue
+	 * @throws NoCashAvailableException 
 	 */
-	private void changeHelper(int changeDue) {
+	private void changeHelper(int changeDue){
 		if (changeDue < 0) {
 			throw new InternalError("Change due is negative, which should not happen");
 		}
@@ -281,7 +285,7 @@ public class Funds {
 					try {
 						scs.coinDispensers.get(coinDenomination).emit();
 					} catch (NoCashAvailableException e) {
-						System.out.println("There is no c available");
+						System.out.println("There is are no coins available");
 					} catch (DisabledException e) {
 						System.out.println("Machine is not turned on");
 					} catch (CashOverloadException e) {
@@ -294,7 +298,7 @@ public class Funds {
 		}
 
 		if (changeDue > 0.005) {
-			System.out.print("Not enough change available in the machine. Please get attendant");
+			throw new NotEnoughChangeException("Not enough change in the machine");
 		}
 
 	}
