@@ -151,7 +151,7 @@ public class SelfCheckoutStationSystemTest {
 	@Test(expected = InvalidActionException.class)
 	public void enterPayWhenCartEmpty() {
 		session.start();
-		session.pay();
+		session.payByCash();
 	}
 
 	@Test(expected = InvalidActionException.class)
@@ -165,7 +165,7 @@ public class SelfCheckoutStationSystemTest {
 		session.start();
 		scs.mainScanner.scan(item);
 		scs.baggingArea.addAnItem(item);
-		session.pay();
+		session.payByCash();
 		for (int i = 0; i < 10; i++) {
 			scs.coinSlot.receive(coin);
 		}
@@ -197,7 +197,7 @@ public class SelfCheckoutStationSystemTest {
 		session.start();
 		scs.mainScanner.scan(item);
 		scs.baggingArea.addAnItem(item);
-		session.pay();
+		session.payByCash();
 		scs.baggingArea.addAnItem(item2);
 		scs.coinSlot.receive(coin);
 	}
@@ -209,7 +209,7 @@ public class SelfCheckoutStationSystemTest {
 		session.start();
 		scs.mainScanner.scan(item);
 		scs.baggingArea.addAnItem(item);
-		session.pay();
+		session.payByCash();
 		scs.baggingArea.addAnItem(item2);
 		Funds funds = session.getFunds();
 		assertEquals(Session.getState(), SessionState.BLOCKED);
