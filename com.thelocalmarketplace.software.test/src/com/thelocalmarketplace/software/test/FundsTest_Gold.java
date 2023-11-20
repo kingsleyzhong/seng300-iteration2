@@ -42,48 +42,22 @@ import powerutility.PowerGrid;
  * Subeg CHAHAL : 30196531
  */
 
-public class FundsTest {
-	private SelfCheckoutStationBronze scs;
-	private SelfCheckoutStationSilver scss;
+public class FundsTest_Gold {
 	private SelfCheckoutStationGold scsg;
-	private Session session;
-	private Session sessions;
 	private Session sessiong;
-	private Funds fund;
-	private Funds funds;
 	private Funds fundg;
-	private CoinValidator validator;
-	private CoinValidator validatorSilver;
 	private CoinValidator validatorGold;
-	private CoinDispenserBronze dispenser;
 	private CoinDispenserGold dispenserGold;
 	private BigDecimal amountPaid;
 	private BigDecimal price;
 
 	@Before
 	public void setUp() {
-		AbstractSelfCheckoutStation.resetConfigurationToDefaults();
-		
-		scs = new SelfCheckoutStationBronze();
-		scs.plugIn(PowerGrid.instance());
-		scs.turnOn();
-		fund = new Funds(scs);
-		fund.setPay(true);
-		validator = scs.coinValidator;
-		session = new Session();
-		SelfCheckoutStationLogic.installOn(scs, session);
-
-		scss = new SelfCheckoutStationSilver();
-		scss.plugIn(PowerGrid.instance());
-		scss.turnOn();
-		funds = new Funds(scss);
-		validatorSilver = scss.coinValidator;
-		sessions = new Session();
-		SelfCheckoutStationLogic.installOn(scss, sessions);
+		SelfCheckoutStationGold.resetConfigurationToDefaults();
 
 		scsg = new SelfCheckoutStationGold();
 		scsg.plugIn(PowerGrid.instance());
-		scs.turnOn();
+		scsg.turnOn();
 		fundg = new Funds(scsg);
 		validatorGold = scsg.coinValidator;
 		sessiong = new Session();
@@ -96,36 +70,36 @@ public class FundsTest {
 	@Test (expected = IllegalArgumentException.class)
 	public void testNullSelfCheckoutStation()
 	{
-		fund = new Funds(null);
+		fundg = new Funds(null);
 	}
 	
 	@Test
 	public void testUpdateValidPrice() {
-		fund.update(price);
-		assertEquals(price, fund.getItemsPrice());
-		assertEquals(price, fund.getAmountDue());
+		fundg.update(price);
+		assertEquals(price, fundg.getItemsPrice());
+		assertEquals(price, fundg.getAmountDue());
 	}
 
 	@Test(expected = IllegalDigitException.class)
 	public void testUpdateInvalidPriceZero() {
-		fund.update(BigDecimal.valueOf(0.00));
+		fundg.update(BigDecimal.valueOf(0.00));
 	}
 	
 	@Test(expected = IllegalDigitException.class)
 	public void testUpdateInvalidPriceNegative() {
-		fund.update(BigDecimal.valueOf(-1.00));
+		fundg.update(BigDecimal.valueOf(-1.00));
 	}
 
 	@Test
 	public void testTurnOnPay() {
-		fund.setPay(true);
-		assertTrue(fund.isPay());
+		fundg.setPay(true);
+		assertTrue(fundg.isPay());
 	}
 	
 	@Test
 	public void testTurnOffPay() {
-		fund.setPay(false);
-		assertFalse(fund.isPay());
+		fundg.setPay(false);
+		assertFalse(fundg.isPay());
 	}
 
 	@Test
@@ -155,7 +129,7 @@ public class FundsTest {
 
 	@Test(expected = SimulationException.class)
 	public void testRegisterInvalidListener() {
-		fund.register(null);
+		fundg.register(null);
 	}
 
 	@Test
@@ -185,10 +159,10 @@ public class FundsTest {
 
 	@Test
 	public void testEnable() {
-		scs.coinValidator.disable();
-		scs.coinValidator.enable();
-		scs.coinValidator.disactivate();
-		scs.coinValidator.activate();
+		scsg.coinValidator.disable();
+		scsg.coinValidator.enable();
+		scsg.coinValidator.disactivate();
+		scsg.coinValidator.activate();
 	}
 
 	class FundListenerStub implements FundsListener {

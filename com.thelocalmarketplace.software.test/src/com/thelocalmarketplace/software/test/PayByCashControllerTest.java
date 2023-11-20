@@ -40,6 +40,9 @@ public class PayByCashControllerTest {
 	private PayByCashController cashControllerGold;
 	private BigDecimal value;
 	private BigDecimal price;
+	private Funds fundScs;
+	private Funds fundScss;
+	private Funds fundScsg;
 	
 /***
  * setting up
@@ -48,21 +51,25 @@ public class PayByCashControllerTest {
 	@Before
 	public void setUp() {
 		AbstractSelfCheckoutStation.resetConfigurationToDefaults();
-		
+				
 		scs = new SelfCheckoutStationBronze();
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
-		this.cashControllerBronze = new PayByCashController(scs);
+		Funds fundScs = new Funds(scs);
+		this.fundScs = fundScs;
+		this.cashControllerBronze = new PayByCashController(scs, fundScs);
 		
 		scss = new SelfCheckoutStationSilver();
 		scss.plugIn(PowerGrid.instance());
 		scss.turnOn();
-		this.cashControllerSilver = new PayByCashController(scss);
+		this.fundScss = new Funds(scss);
+		this.cashControllerSilver = new PayByCashController(scss, fundScss);
 		
 		scsg = new SelfCheckoutStationGold();
 		scsg.plugIn(PowerGrid.instance());
 		scsg.turnOn();
-		this.cashControllerGold = new PayByCashController(scss);
+		this.fundScsg = new Funds(scsg);
+		this.cashControllerGold = new PayByCashController(scss, fundScsg);
 		
 		
 	}
@@ -86,13 +93,14 @@ public class PayByCashControllerTest {
 		mockSession.pay();
 		
 		scs.coinValidator.receive(coin);
-		Assert.assertEquals(BigDecimal.ONE, cashControllerBronze.getCashPaid());	
+		Assert.assertEquals(BigDecimal.ONE, fundScs.getPaid());	
 		
 		scss.coinValidator.receive(coin);
 		Assert.assertEquals(BigDecimal.ONE, cashControllerSilver.getCashPaid());
 		
 		scsg.coinValidator.receive(coin);
 		Assert.assertEquals(BigDecimal.ONE, cashControllerGold.getCashPaid());
+		
 
 		
 	}

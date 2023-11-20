@@ -37,13 +37,15 @@ import ca.ucalgary.seng300.simulation.NullPointerSimulationException;
 public class PayByCashController {
 	
 	private BigDecimal cashPaid; //amount of cash that has been paid
+	private Funds fund;
 	
 /***
  * Constructor that begins the total paid in cash at 0
  * @param scs
+ * @param funds 
  * @param paid 
  */
-	public PayByCashController(AbstractSelfCheckoutStation scs) {
+	public PayByCashController(AbstractSelfCheckoutStation scs, Funds funds) {
 		
 		this.cashPaid = BigDecimal.ZERO;
 				
@@ -51,6 +53,9 @@ public class PayByCashController {
 		InnerBankNoteListener banknoteListener = new InnerBankNoteListener();
 		scs.coinValidator.attach(coinListener);
 		scs.banknoteValidator.attach(banknoteListener);
+		this.fund = funds;
+		
+		
 				
 	}
 	
@@ -90,7 +95,6 @@ public class PayByCashController {
 	            }
 				
 	            if (Session.getState() == SessionState.PAY_BY_CASH) {
-	            	
 	                updateCoin(value); 
 	            }
 	            
@@ -166,7 +170,8 @@ public class PayByCashController {
  */
 	private void updateCoin(BigDecimal value) {
 				
-		this.cashPaid = cashPaid.add(value);
+		this.cashPaid = this.cashPaid.add(value);				
+		this.fund.updatePaid();
 				
 	}
 	
@@ -175,9 +180,9 @@ public class PayByCashController {
  */
 	private void updateBankNote(BigDecimal denomination) {
 		
-		this.cashPaid = cashPaid.add(denomination);
+		this.cashPaid = this.cashPaid.add(denomination);
+		this.fund.updatePaid();
 	
-		
 	}
 
 /***
@@ -185,8 +190,9 @@ public class PayByCashController {
  * @return cashPaid
  */
 	public BigDecimal getCashPaid() {
-		
+				
 		return this.cashPaid;
+		
 		
 	}
 	
