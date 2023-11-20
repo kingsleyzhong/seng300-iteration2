@@ -20,6 +20,7 @@ import com.jjjwelectronics.IllegalDigitException;
 import com.jjjwelectronics.Mass;
 import com.jjjwelectronics.Numeral;
 import com.jjjwelectronics.card.Card;
+import com.jjjwelectronics.card.MagneticStripeFailureException;
 import com.jjjwelectronics.scanner.Barcode;
 import com.jjjwelectronics.card.BlockedCardException;
 import com.tdc.CashOverloadException;
@@ -42,9 +43,9 @@ import com.thelocalmarketplace.software.funds.FundsListener;
 import com.thelocalmarketplace.software.funds.PayByCard;
 import com.thelocalmarketplace.software.funds.SupportedCardIssuers;
 
-import StubClasses.FundsStub;
 import StubClasses.SessionStub;
 import ca.ucalgary.seng300.simulation.SimulationException;
+import powerutility.NoPowerException;
 import powerutility.PowerGrid;
 
 /**
@@ -98,6 +99,7 @@ public class PayByCardTest {
     	
 		scs = new SelfCheckoutStationBronze();
 		scs.plugIn(PowerGrid.instance());
+		PowerGrid.engageUninterruptiblePowerSource();
 		scs.turnOn();
 		funds = new Funds(scs);
 //		SelfCheckoutStationLogic.installOn(scs, session);
@@ -143,28 +145,47 @@ public class PayByCardTest {
 		ci4.addCardData(debit.number, debit.cardholder, exp, debit.cvv, 2);
 	}
 	
-	@Test (expected = InvalidActionException.class)
-	public void swipeIncorrectState() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException{
-		session.start();
+	@Test (expected = NoPowerException.class)
+	public void powerOffSwipe() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException{
+		scs.turnOff();
 		scs.cardReader.swipe(debit);
+		scs.turnOn();
 		// Swiping a card when the reader is not supposed to be in use (wrong session state
 		// Expect that aCardHasBeenSwiped throws InvalidActionException
 	}
 	
-	@Test (expected = IOException.class)
+	@Test (expected = InvalidActionException.class)
+	public void swipeIncorrectState() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException{
+		session.start();
+		while(!funds.successfulSwipe) {
+			try {
+				scs.cardReader.swipe(debit);
+			} catch (MagneticStripeFailureException e) {
+			}
+		}
+		// Swiping a card when the reader is not supposed to be in use (wrong session state
+		// Expect that aCardHasBeenSwiped throws InvalidActionException
+	}
+	
+	@Test (expected = InvalidActionException.class)
 	public void testInvalidCardNumber() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException{
 		long price = 100;
 		BigDecimal itemPrice = new BigDecimal(price);
 		session.payByCard();
 		funds.update(itemPrice);
 		funds.beginPayment();
-		scs.cardReader.swipe(cdnDep);
+		while(!funds.successfulSwipe) {
+			try {
+				scs.cardReader.swipe(cdnDep);
+			} catch (MagneticStripeFailureException e) {
+			}
+		}
 		// The card numbers do not match and will decline a card if the card is blocked
 		// authorizeHold should return -1 
 		// How do we effectively call authorize hold
 	}
 	
-	@Test (expected = BlockedCardException.class)
+	@Test (expected = InvalidActionException.class)
 	public void testBlockedCard() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException {
 		long price = 100;
 		BigDecimal itemPrice = new BigDecimal(price);
@@ -172,7 +193,13 @@ public class PayByCardTest {
 		funds.update(itemPrice);
 		funds.beginPayment();
 		ci4.block(debit.number);
-		scs.cardReader.swipe(debit);
+		while(!funds.successfulSwipe) {
+			try {
+				scs.cardReader.swipe(debit);
+
+			} catch (MagneticStripeFailureException e) {
+			}
+		}
 		// This will decline a card if the card is blocked
 		// authorizeHold should return -1 
 	}
@@ -192,14 +219,19 @@ public class PayByCardTest {
 		// authorizeHold should return -1 
 	}
 	
-	@Test
+	@Test (expected = InvalidActionException.class)
 	public void testAvailableBalanceDecline() throws CashOverloadException, NoCashAvailableException, DisabledException, IOException {
 		long price = 1000000;
 		BigDecimal itemPrice = new BigDecimal(price);
 		funds.update(itemPrice);
 		session.payByCard();
 		funds.beginPayment();
-		scs.cardReader.swipe(viva);	
+		while(!funds.successfulSwipe) {
+			try {
+				scs.cardReader.swipe(viva);
+			} catch (MagneticStripeFailureException e) {
+			}
+		}
 		// This will decline a card if there is insufficient available balance 
 		// postTransaction should return false 
 	}
@@ -207,12 +239,19 @@ public class PayByCardTest {
 	@Test
 	public void testSuccessfulPostingTransaction() throws CashOverloadException, NoCashAvailableException, DisabledException, IOException {
 
-		long price = 100;
+		long price = 10;
 		BigDecimal itemPrice = new BigDecimal(price);
 		funds.update(itemPrice);
 		session.payByCard();
-		funds.beginPayment();		
-		scs.cardReader.swipe(viva);	
+		funds.beginPayment();
+		
+		while(!funds.successfulSwipe) {
+			try {
+				scs.cardReader.swipe(viva);
+			} catch (MagneticStripeFailureException e) {
+			}
+		}
+		assertTrue(funds.payed);
 		// This will post a successful charge on the given card
 		// postTransaction should return true 
 	}
