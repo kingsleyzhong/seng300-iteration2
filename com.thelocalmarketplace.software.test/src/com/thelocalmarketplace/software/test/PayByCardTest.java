@@ -43,7 +43,6 @@ import com.thelocalmarketplace.software.funds.FundsListener;
 import com.thelocalmarketplace.software.funds.PayByCard;
 import com.thelocalmarketplace.software.funds.SupportedCardIssuers;
 
-import StubClasses.FundsStub;
 import StubClasses.SessionStub;
 import ca.ucalgary.seng300.simulation.SimulationException;
 import powerutility.NoPowerException;
@@ -88,7 +87,6 @@ public class PayByCardTest {
 	private SessionStub session;
 	private BarcodedProduct product;
 	private Barcode barcode; 
-	private boolean magStripe;
 	
 	@Before
 	public void setup() {
@@ -145,8 +143,6 @@ public class PayByCardTest {
 		ci2.addCardData(viva.number, viva.cardholder, exp, viva.cvv, 7500);
 		ci3.addCardData("0", cdnDep.cardholder, exp, cdnDep.cvv, 1);
 		ci4.addCardData(debit.number, debit.cardholder, exp, debit.cvv, 2);
-		
-		magStripe = false;
 	}
 	
 	@Test (expected = NoPowerException.class)
@@ -164,9 +160,7 @@ public class PayByCardTest {
 		while(!funds.successfulSwipe) {
 			try {
 				scs.cardReader.swipe(debit);
-				magStripe = true;
 			} catch (MagneticStripeFailureException e) {
-				magStripe = false;
 			}
 		}
 		// Swiping a card when the reader is not supposed to be in use (wrong session state
@@ -183,12 +177,9 @@ public class PayByCardTest {
 		while(!funds.successfulSwipe) {
 			try {
 				scs.cardReader.swipe(cdnDep);
-				magStripe = true;
 			} catch (MagneticStripeFailureException e) {
-				magStripe = false;
 			}
 		}
-		magStripe = false;
 		// The card numbers do not match and will decline a card if the card is blocked
 		// authorizeHold should return -1 
 		// How do we effectively call authorize hold
@@ -205,12 +196,10 @@ public class PayByCardTest {
 		while(!funds.successfulSwipe) {
 			try {
 				scs.cardReader.swipe(debit);
-				magStripe = true;
+
 			} catch (MagneticStripeFailureException e) {
-				magStripe = false;
 			}
 		}
-		magStripe = false;
 		// This will decline a card if the card is blocked
 		// authorizeHold should return -1 
 	}
@@ -230,7 +219,7 @@ public class PayByCardTest {
 		// authorizeHold should return -1 
 	}
 	
-	@Test
+	@Test (expected = InvalidActionException.class)
 	public void testAvailableBalanceDecline() throws CashOverloadException, NoCashAvailableException, DisabledException, IOException {
 		long price = 1000000;
 		BigDecimal itemPrice = new BigDecimal(price);
@@ -240,12 +229,9 @@ public class PayByCardTest {
 		while(!funds.successfulSwipe) {
 			try {
 				scs.cardReader.swipe(viva);
-				magStripe = true;
 			} catch (MagneticStripeFailureException e) {
-				magStripe = false;
 			}
 		}
-		magStripe = false;
 		// This will decline a card if there is insufficient available balance 
 		// postTransaction should return false 
 	}
@@ -253,7 +239,7 @@ public class PayByCardTest {
 	@Test
 	public void testSuccessfulPostingTransaction() throws CashOverloadException, NoCashAvailableException, DisabledException, IOException {
 
-		long price = 100;
+		long price = 10;
 		BigDecimal itemPrice = new BigDecimal(price);
 		funds.update(itemPrice);
 		session.payByCard();
@@ -262,11 +248,8 @@ public class PayByCardTest {
 		while(!funds.successfulSwipe) {
 			try {
 				scs.cardReader.swipe(viva);
-				magStripe = true;
 			} catch (MagneticStripeFailureException e) {
-				magStripe = false;
 			}
-			magStripe = false;
 		}
 		assertTrue(funds.payed);
 		// This will post a successful charge on the given card

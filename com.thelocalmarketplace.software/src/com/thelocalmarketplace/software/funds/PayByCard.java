@@ -139,6 +139,8 @@ public class PayByCard {
 				}
 				paidBool = true;
 				funds.updatePaidCard(paidBool);
+				successfulSwipe = false;
+				return;
 			}
 							
 		} else if (card.kind == SupportedCardIssuers.TWO.getIssuer()) {
@@ -162,6 +164,8 @@ public class PayByCard {
 				}
 				paidBool = true;
 				funds.updatePaidCard(paidBool);
+				successfulSwipe = false;
+				return;
 			}
 							
 		} else if (card.kind == SupportedCardIssuers.THREE.getIssuer()) {
@@ -185,6 +189,8 @@ public class PayByCard {
 				}
 				paidBool = true;
 				funds.updatePaidCard(paidBool);		
+				successfulSwipe = false;
+				return;
 			}
 			
 		} else if (card.kind == SupportedCardIssuers.FOUR.getIssuer()) {
@@ -208,10 +214,12 @@ public class PayByCard {
 				}
 				paidBool = true;
 				funds.updatePaidCard(paidBool);
+				successfulSwipe = false;
+				return;
 			}
 		} else {
 			throw new InvalidActionException("Declined");
-		}	
-		successfulSwipe = false;
-	}
+		}
+	}	
 }
+
