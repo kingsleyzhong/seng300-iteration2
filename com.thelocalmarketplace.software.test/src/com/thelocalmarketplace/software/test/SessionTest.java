@@ -52,9 +52,9 @@ import java.util.Locale;
  * Subeg CHAHAL : 30196531
  */
 public class SessionTest {
-//    private SelfCheckoutStationBronze scs = new SelfCheckoutStationBronze();
-//    private SelfCheckoutStationSilver scss = new SelfCheckoutStationSilver();
-//    private SelfCheckoutStationGold scsg = new SelfCheckoutStationGold();
+    // private SelfCheckoutStationBronze scs = new SelfCheckoutStationBronze();
+    // private SelfCheckoutStationSilver scss = new SelfCheckoutStationSilver();
+    // private SelfCheckoutStationGold scsg = new SelfCheckoutStationGold();
 
     private SelfCheckoutStationBronze scs;
     private SelfCheckoutStationSilver scss;
@@ -73,18 +73,18 @@ public class SessionTest {
     private Weight weight;
     private Weight weightSilver;
     private Weight weightGold;
-    
+
     // Code added
     private PrintReceipt receiptPrinter;
 
     @Before
     public void setUp() {
-    	AbstractSelfCheckoutStation.resetConfigurationToDefaults();
+        AbstractSelfCheckoutStation.resetConfigurationToDefaults();
 
         scs = new SelfCheckoutStationBronze();
         scss = new SelfCheckoutStationSilver();
         scsg = new SelfCheckoutStationGold();
-    	
+
         session = new Session();
         num = 1;
         numeral = Numeral.valueOf(num);
@@ -227,7 +227,7 @@ public class SessionTest {
     public void payEmpty() {
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight, receiptPrinter);
-        session.pay();
+        session.payByCash();
     }
 
     @Test
@@ -238,7 +238,7 @@ public class SessionTest {
         scs.plugIn(PowerGrid.instance());
         scs.turnOn();
         scs.baggingArea.addAnItem(new BarcodedItem(barcode, new Mass(100.0)));
-        session.pay();
+        session.payByCash();
         assertTrue(Session.getState().inPay());
         Coin.DEFAULT_CURRENCY = Currency.getInstance(Locale.CANADA);
         Coin coin = new Coin(BigDecimal.ONE);
