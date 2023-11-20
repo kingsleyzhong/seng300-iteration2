@@ -39,6 +39,7 @@ import com.thelocalmarketplace.software.funds.FundsListener;
 import com.thelocalmarketplace.software.funds.PayByCard;
 import com.thelocalmarketplace.software.funds.SupportedCardIssuers;
 
+import StubClasses.SessionStub;
 import ca.ucalgary.seng300.simulation.SimulationException;
 import powerutility.PowerGrid;
 
@@ -78,41 +79,31 @@ public class PayByCardTest {
 	private Funds fund;
 	private Funds funds;
 	private Funds fundg;
-	private TestSession session;
-	
-	
-    // Will need to stub my toe really hard to distract myself with a worse pain than this one
-
-	private class TestSession extends Session{
-		private static SessionState sessionState;
-	}
+	private SessionStub session;
 	
 	@Before
 	public void setup() {
 		AbstractSelfCheckoutStation.resetConfigurationToDefaults();
 		
-    	PowerGrid.engageUninterruptiblePowerSource();
 
-		session = new TestSession();
+
+		session = new SessionStub();
     	
 		scs = new SelfCheckoutStationBronze();
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
-		fund = new Funds(scs);
-//		SelfCheckoutStationLogic.installOn(scs, session);
+		funds = new Funds(scs);
 
-		scss = new SelfCheckoutStationSilver();
-		scss.plugIn(PowerGrid.instance());
-		scss.turnOn();
-		funds = new Funds(scss);
-//		SelfCheckoutStationLogic.installOn(scss, session2);
-
-		scsg = new SelfCheckoutStationGold();
-		scsg.plugIn(PowerGrid.instance());
-		scsg.turnOn();
-		fundg = new Funds(scsg);
-//		SelfCheckoutStationLogic.installOn(scsg, session3);  
-
+//		scss = new SelfCheckoutStationSilver();
+//		scss.plugIn(PowerGrid.instance());
+//		scss.turnOn();
+//		fundss = new Funds(scss);
+//
+//		scsg = new SelfCheckoutStationGold();
+//		scsg.plugIn(PowerGrid.instance());
+//		scsg.turnOn();
+//		fundsg = new Funds(scsg);
+		
 		ci1 = new CardIssuer(SupportedCardIssuers.ONE.getIssuer(), 1);
 		ci2 = new CardIssuer(SupportedCardIssuers.TWO.getIssuer(), 5);
 		ci3 = new CardIssuer(SupportedCardIssuers.THREE.getIssuer(), 99);
@@ -146,15 +137,14 @@ public class PayByCardTest {
 	
 	@Test (expected = InvalidActionException.class)
 	public void swipeIncorrectState() throws IOException{
-		session.sessionState = SessionState.PAY_BY_CASH;
-		scs.cardReader.swipe(viva);
+		scs.cardReader.swipe(debit);
 		// Swiping a card when the reader is not supposed to be in use (wrong session state
 		// Expect that aCardHasBeenSwiped throws InvalidActionException
 	}
 	
 	@Test (expected = IOException.class)
 	public void testInvalidCardNumber() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException{
-		session.sessionState = SessionState.PAY_BY_CARD;
+		SessionStub.sessionState = SessionState.PAY_BY_CARD;
 		long price = 100;
 		BigDecimal itemPrice = new BigDecimal(price);
 		funds.update(itemPrice);
@@ -167,7 +157,7 @@ public class PayByCardTest {
 	
 	@Test (expected = BlockedCardException.class)
 	public void testBlockedCard() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException {
-		session.sessionState = SessionState.PAY_BY_CARD;
+		SessionStub.sessionState = SessionState.PAY_BY_CARD;
 		long price = 100;
 		BigDecimal itemPrice = new BigDecimal(price);
 		funds.update(itemPrice);
@@ -182,7 +172,7 @@ public class PayByCardTest {
 	// PayByCard currently is not capable of doing anything with the -1 value; change this?
 	@Test
 	public void testHoldCountDecline() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException {
-		session.sessionState = SessionState.PAY_BY_CARD;
+		SessionStub.sessionState = SessionState.PAY_BY_CARD;
 		ci1.authorizeHold(disCard.number, 1);
 		long price = 100;
 		BigDecimal itemPrice = new BigDecimal(price);
@@ -195,7 +185,7 @@ public class PayByCardTest {
 	
 	@Test
 	public void testAvailableBalanceDecline() throws CashOverloadException, NoCashAvailableException, DisabledException, IOException {
-		session.sessionState = SessionState.PAY_BY_CARD;
+		SessionStub.sessionState = SessionState.PAY_BY_CARD;
 		long price = 1000000;
 		BigDecimal itemPrice = new BigDecimal(price);
 		funds.update(itemPrice);
@@ -207,7 +197,7 @@ public class PayByCardTest {
 
 	@Test
 	public void testSuccessfulPostingTransaction() throws CashOverloadException, NoCashAvailableException, DisabledException, IOException {
-		session.sessionState = SessionState.PAY_BY_CARD;
+		SessionStub.sessionState = SessionState.PAY_BY_CARD;
 		long price = 100;
 		BigDecimal itemPrice = new BigDecimal(price);
 		funds.update(itemPrice);
