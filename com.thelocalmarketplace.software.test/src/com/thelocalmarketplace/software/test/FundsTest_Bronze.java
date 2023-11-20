@@ -34,6 +34,7 @@ import com.thelocalmarketplace.software.funds.FundsListener;
 import com.thelocalmarketplace.software.funds.PayByCard;
 import com.thelocalmarketplace.software.funds.PayByCashController;
 
+import StubClasses.FundsListenerStub;
 import StubClasses.SessionFundsSimulationStub;
 import ca.ucalgary.seng300.simulation.SimulationException;
 import powerutility.PowerGrid;
@@ -209,25 +210,3 @@ public class FundsTest_Bronze {
 		scs.coinValidator.activate();
 	}
 }
-
-class FundsListenerStub implements FundsListener {
-	ArrayList<String> events;
-
-	public FundsListenerStub() {
-		events = new ArrayList<String>();
-	}
-
-	@Override
-	public void notifyPaid() {
-		events.add("Paid");
-
-	}
-
-	public ArrayList<String> getEvents() {
-		return events;
-	}
-
-}
-
-	
-

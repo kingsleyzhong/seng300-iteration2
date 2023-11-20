@@ -4,7 +4,10 @@ import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.SessionState;
 
 /**
- * Testing for the Funds class
+ * <p> A Stub class for the funds class test that allows for the sessionState to be controlled with ease without having to 
+ * create a full session full of unnecessary code and requirements</p> 
+ *  
+ * <p>Project iteration 2 group members: </p>
  * 
  * Project iteration 2 group members:
  * Aj Sallh : 30023811
