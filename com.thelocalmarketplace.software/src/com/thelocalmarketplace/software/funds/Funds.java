@@ -164,10 +164,21 @@ public class Funds {
 		}
 	}
 	
+	/***
+	 * Checks the status of a card payment
+	 * 
+	 * @throws CashOverloadException
+	 * @throws NoCashAvailableException
+	 * @throws DisabledException
+	 */	
 	public void updatePaidCard(boolean paidBool) throws CashOverloadException, NoCashAvailableException, DisabledException {
-		if (paidBool) {
-			this.paid = amountDue;
-			calculateAmountDue();
+		if (Session.getState() == SessionState.PAY_BY_CARD) {
+			if (paidBool) {
+				this.paid = amountDue;
+				calculateAmountDue();
+			}
+		} else {
+			throw new InvalidActionException("Not in Card Payment state");  
 		}
 	}
 

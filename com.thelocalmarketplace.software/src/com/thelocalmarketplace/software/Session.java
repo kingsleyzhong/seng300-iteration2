@@ -276,7 +276,7 @@ public class Session {
 		if (!barcodedItems.isEmpty()) {
 			sessionState = SessionState.PAY_BY_CARD;
 			funds.setPay(true);
-			funds.beginPayment();
+			funds.beginCardPayment();
 		} else {
 			throw new CartEmptyException("Cannot pay for an empty order");
 		}

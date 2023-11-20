@@ -18,13 +18,16 @@ import org.junit.Test;
 
 import com.jjjwelectronics.IllegalDigitException;
 import com.jjjwelectronics.Mass;
+import com.jjjwelectronics.Numeral;
 import com.jjjwelectronics.card.Card;
+import com.jjjwelectronics.scanner.Barcode;
 import com.jjjwelectronics.card.BlockedCardException;
 import com.tdc.CashOverloadException;
 import com.tdc.DisabledException;
 import com.tdc.NoCashAvailableException;
 import com.tdc.coin.CoinValidator;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
+import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
@@ -39,6 +42,7 @@ import com.thelocalmarketplace.software.funds.FundsListener;
 import com.thelocalmarketplace.software.funds.PayByCard;
 import com.thelocalmarketplace.software.funds.SupportedCardIssuers;
 
+import StubClasses.FundsStub;
 import StubClasses.SessionStub;
 import ca.ucalgary.seng300.simulation.SimulationException;
 import powerutility.PowerGrid;
@@ -76,16 +80,19 @@ public class PayByCardTest {
 	private Card viva;
 	private Card cdnDep;
 	private Card debit;
-	private Funds fund;
 	private Funds funds;
-	private Funds fundg;
+	private Funds fundss;
+	private Funds fundsg;
 	private SessionStub session;
+	private BarcodedProduct product;
+	private Barcode barcode; 
 	
 	@Before
 	public void setup() {
 		AbstractSelfCheckoutStation.resetConfigurationToDefaults();
 		
-
+        barcode = new Barcode(new Numeral[] { Numeral.valueOf((byte) 1) });
+        product = new BarcodedProduct(barcode, "Product 1", 10, 100.0);
 
 		session = new SessionStub();
     	
@@ -93,6 +100,7 @@ public class PayByCardTest {
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
 		funds = new Funds(scs);
+//		SelfCheckoutStationLogic.installOn(scs, session);
 
 //		scss = new SelfCheckoutStationSilver();
 //		scss.plugIn(PowerGrid.instance());
@@ -136,7 +144,8 @@ public class PayByCardTest {
 	}
 	
 	@Test (expected = InvalidActionException.class)
-	public void swipeIncorrectState() throws IOException{
+	public void swipeIncorrectState() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException{
+		session.start();
 		scs.cardReader.swipe(debit);
 		// Swiping a card when the reader is not supposed to be in use (wrong session state
 		// Expect that aCardHasBeenSwiped throws InvalidActionException
@@ -144,9 +153,9 @@ public class PayByCardTest {
 	
 	@Test (expected = IOException.class)
 	public void testInvalidCardNumber() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException{
-		SessionStub.sessionState = SessionState.PAY_BY_CARD;
 		long price = 100;
 		BigDecimal itemPrice = new BigDecimal(price);
+		session.payByCard();
 		funds.update(itemPrice);
 		funds.beginPayment();
 		scs.cardReader.swipe(cdnDep);
@@ -157,9 +166,9 @@ public class PayByCardTest {
 	
 	@Test (expected = BlockedCardException.class)
 	public void testBlockedCard() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException {
-		SessionStub.sessionState = SessionState.PAY_BY_CARD;
 		long price = 100;
 		BigDecimal itemPrice = new BigDecimal(price);
+		session.payByCard();
 		funds.update(itemPrice);
 		funds.beginPayment();
 		ci4.block(debit.number);
@@ -172,10 +181,10 @@ public class PayByCardTest {
 	// PayByCard currently is not capable of doing anything with the -1 value; change this?
 	@Test
 	public void testHoldCountDecline() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException {
-		SessionStub.sessionState = SessionState.PAY_BY_CARD;
 		ci1.authorizeHold(disCard.number, 1);
 		long price = 100;
 		BigDecimal itemPrice = new BigDecimal(price);
+		session.payByCard();
 		funds.update(itemPrice);
 		funds.beginPayment();
 		assertEquals(-1, ci1.authorizeHold(disCard.number, 1));
@@ -185,10 +194,10 @@ public class PayByCardTest {
 	
 	@Test
 	public void testAvailableBalanceDecline() throws CashOverloadException, NoCashAvailableException, DisabledException, IOException {
-		SessionStub.sessionState = SessionState.PAY_BY_CARD;
 		long price = 1000000;
 		BigDecimal itemPrice = new BigDecimal(price);
 		funds.update(itemPrice);
+		session.payByCard();
 		funds.beginPayment();
 		scs.cardReader.swipe(viva);	
 		// This will decline a card if there is insufficient available balance 
@@ -197,11 +206,12 @@ public class PayByCardTest {
 
 	@Test
 	public void testSuccessfulPostingTransaction() throws CashOverloadException, NoCashAvailableException, DisabledException, IOException {
-		SessionStub.sessionState = SessionState.PAY_BY_CARD;
+
 		long price = 100;
 		BigDecimal itemPrice = new BigDecimal(price);
 		funds.update(itemPrice);
-		funds.beginPayment();
+		session.payByCard();
+		funds.beginPayment();		
 		scs.cardReader.swipe(viva);	
 		// This will post a successful charge on the given card
 		// postTransaction should return true 

@@ -39,7 +39,9 @@ public class PayByCard {
 	private PayByCard cardController;
 	private double amountDue;
 	boolean paidBool;
+	boolean successfulSwipe;
 	private Funds funds;
+	private AbstractSelfCheckoutStation scs;
 	
 	public PayByCard(AbstractSelfCheckoutStation scs, Funds funds) {
 		InnerListener cardListener = new InnerListener();
@@ -47,6 +49,7 @@ public class PayByCard {
 		
 		amountDue = funds.getAmountDue().doubleValue();
 		this.funds = funds;
+		this.scs = scs;
 	}
 	
 	private class InnerListener implements CardReaderListener {
@@ -77,20 +80,18 @@ public class PayByCard {
 
 		@Override
 		public void aCardHasBeenSwiped(){
-			 try {
-				theDataFromACardHasBeenRead(card.swipe());
-				if(Session.getState() != SessionState.PAY_BY_CARD) {
-					throw new InvalidActionException("Card reader not in use");
-				}
-			} catch (BlockedCardException  | IOException e) {
-				System.out.println("Declined");
-				e.printStackTrace();
-			}
+			paidBool = false;
+			successfulSwipe = true;
+			// TODO Auto-generated method stub
+			
 		}
 
 		@Override
 		public void theDataFromACardHasBeenRead(CardData data) {	
-				card = new Card(data.getType(), data.getNumber(), data.getCardholder(), data.getCVV());
+			card = new Card(data.getType(), data.getNumber(), data.getCardholder(), null);
+			if(Session.getState() != SessionState.PAY_BY_CARD) {
+				throw new InvalidActionException("Card reader not in use");
+			}
 				try {
 					getTransactionFromBank(card);
 				} catch (CashOverloadException e) {
@@ -114,105 +115,101 @@ public class PayByCard {
      * @throws CashOverloadException 
      */
 	public void getTransactionFromBank(Card card) throws CashOverloadException, NoCashAvailableException, DisabledException {
-		if (Session.getState() == SessionState.PAY_BY_CARD) {
-			// We need to retrieve the funds
-			// We determine the type of card, check the database for validity, then attempt 		
-			if (card.kind == SupportedCardIssuers.ONE.getIssuer()) {
-				long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).authorizeHold(card.number, 1);
-				
-				if (holdNumber == -1L) {
-					// There are not enough available holds
-					// Invalid card
-					// Blocked card
-					// Maxed holds
+		// We need to retrieve the funds
+		// We determine the type of card, check the database for validity, then attempt 		
+		if (card.kind == SupportedCardIssuers.ONE.getIssuer()) {
+			long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).authorizeHold(card.number, 1);
+			
+			if (holdNumber == -1L) {
+				// There are not enough available holds
+				// Invalid card
+				// Blocked card
+				// Maxed holds
+				return;
+			} else {	
+				boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
+				if (!post) {
+					// This failed for some reason
+					// Credit limit
 					return;
-				} else {	
-					boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
-					if (!post) {
-						// This failed for some reason
-						// Credit limit
-						return;
-					} else {
-						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-						CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).releaseHold(card.number, 1);
-					}
-					paidBool = true;
-					funds.updatePaidCard(paidBool);
+				} else {
+					// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
+					CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).releaseHold(card.number, 1);
 				}
-								
-			} else if (card.kind == SupportedCardIssuers.TWO.getIssuer()) {
-				long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).authorizeHold(card.number, 1);
-				
-				if (holdNumber == -1L) {
-					// There are not enough available holds
-					// Invalid card
-					// Blocked card
-					// Maxed holds
+				paidBool = true;
+				funds.updatePaidCard(paidBool);
+			}
+							
+		} else if (card.kind == SupportedCardIssuers.TWO.getIssuer()) {
+			long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).authorizeHold(card.number, 1);
+			
+			if (holdNumber == -1L) {
+				// There are not enough available holds
+				// Invalid card
+				// Blocked card
+				// Maxed holds
+				return;
+			} else {	
+				boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
+				if (!post) {
+					// This failed for some reason
+					// Credit limit
 					return;
-				} else {	
-					boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
-					if (!post) {
-						// This failed for some reason
-						// Credit limit
-						return;
-					} else {
-						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-						CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).releaseHold(card.number, 1);
-					}
-					paidBool = true;
-					funds.updatePaidCard(paidBool);
+				} else {
+					// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
+					CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).releaseHold(card.number, 1);
 				}
-								
-			} else if (card.kind == SupportedCardIssuers.THREE.getIssuer()) {
-				long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).authorizeHold(card.number, 1);
-				
-				if (holdNumber == -1L) {
-					// There are not enough available holds
-					// Invalid card
-					// Blocked card
-					// Maxed holds
+				paidBool = true;
+				funds.updatePaidCard(paidBool);
+			}
+							
+		} else if (card.kind == SupportedCardIssuers.THREE.getIssuer()) {
+			long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).authorizeHold(card.number, 1);
+			
+			if (holdNumber == -1L) {
+				// There are not enough available holds
+				// Invalid card
+				// Blocked card
+				// Maxed holds
+				return;
+			} else {	
+				boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
+				if (!post) {
+					// This failed for some reason
+					// Credit limit
 					return;
-				} else {	
-					boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
-					if (!post) {
-						// This failed for some reason
-						// Credit limit
-						return;
-					} else {
-						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-						CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).releaseHold(card.number, 1);
-					}
-					paidBool = true;
-					funds.updatePaidCard(paidBool);		
+				} else {
+					// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
+					CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).releaseHold(card.number, 1);
 				}
-				
-			} else if (card.kind == SupportedCardIssuers.FOUR.getIssuer()) {
-				long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).authorizeHold(card.number, 1);
-				
-				if (holdNumber == -1L) {
-					// There are not enough available holds
-					// Invalid card
-					// Blocked card
-					// Maxed holds
+				paidBool = true;
+				funds.updatePaidCard(paidBool);		
+			}
+			
+		} else if (card.kind == SupportedCardIssuers.FOUR.getIssuer()) {
+			long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).authorizeHold(card.number, 1);
+			
+			if (holdNumber == -1L) {
+				// There are not enough available holds
+				// Invalid card
+				// Blocked card
+				// Maxed holds
+				return;
+			} else {	
+				boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
+				if (!post) {
+					// This failed for some reason
+					// Credit limit
 					return;
-				} else {	
-					boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
-					if (!post) {
-						// This failed for some reason
-						// Credit limit
-						return;
-					} else {
-						// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-						CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).releaseHold(card.number, 1);
-					}
-					paidBool = true;
-					funds.updatePaidCard(paidBool);
+				} else {
+					// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
+					CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).releaseHold(card.number, 1);
 				}
-			} else {
-				throw new InvalidActionException("Declined");
-			}		
+				paidBool = true;
+				funds.updatePaidCard(paidBool);
+			}
 		} else {
-			throw new InvalidActionException("Not in Card Payment state");
-		}
+			throw new InvalidActionException("Declined");
+		}		
 	}
 }

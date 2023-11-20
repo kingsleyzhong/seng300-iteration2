@@ -1,8 +1,13 @@
 package StubClasses;
 
 import com.jjjwelectronics.Mass;
+import com.tdc.CashOverloadException;
+import com.tdc.DisabledException;
+import com.tdc.NoCashAvailableException;
 import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.SessionState;
+import com.thelocalmarketplace.software.exceptions.CartEmptyException;
+import com.thelocalmarketplace.software.funds.Funds;
 
 
 /**
@@ -23,4 +28,14 @@ import com.thelocalmarketplace.software.SessionState;
  */
 public class SessionStub extends Session{
 	public static SessionState sessionState;
+	
+	@Override
+	public void payByCard() {
+		sessionState = SessionState.PAY_BY_CARD;
+		} 
+	
+	@Override
+	public void start() {
+		sessionState = SessionState.IN_SESSION;
+		} 
 }
