@@ -31,12 +31,14 @@ import com.thelocalmarketplace.software.SessionState;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.funds.FundsListener;
+import com.thelocalmarketplace.software.funds.PayByCard;
 import com.thelocalmarketplace.software.funds.PayByCashController;
 
+import StubClasses.SessionFundsSimulationStub;
 import ca.ucalgary.seng300.simulation.SimulationException;
 import powerutility.PowerGrid;
 
-/*
+/**
  * Testing for the Funds class
  * 
  * Project iteration 2 group members:
@@ -56,7 +58,7 @@ public class FundsTest_Bronze {
 	
 	private SelfCheckoutStationBronze scs;
 	private PayByCashController cashControllerBronze;
-//	private PayByCardController cardControllerBronze;
+	private PayByCard cardControllerBronze;
 	private Funds funds;
 	private BigDecimal amountPaid;
 	private BigDecimal price;
@@ -123,7 +125,7 @@ public class FundsTest_Bronze {
 		funds.register(stub);
 		funds.update(price);
 		
-		SessionSimulation sampleSimulation = new SessionSimulation();
+		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
 		sampleSimulation.setPayByCash();
 		
 		scs.coinSlot.receive(coinAmountPaid);
@@ -168,7 +170,7 @@ public class FundsTest_Bronze {
 		funds.deregister(stub);
 		funds.update(price);
 		
-		SessionSimulation sampleSimulation = new SessionSimulation();
+		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
 		sampleSimulation.setPayByCash();
 		
 		scs.coinSlot.receive(coinAmountPaid);
@@ -190,7 +192,7 @@ public class FundsTest_Bronze {
 		funds.deregisterAll();
 		funds.update(price);
 		
-		SessionSimulation sampleSimulation = new SessionSimulation();
+		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
 		sampleSimulation.setPayByCash();
 		
 		scs.coinSlot.receive(coinAmountPaid);
@@ -225,21 +227,6 @@ class FundsListenerStub implements FundsListener {
 		return events;
 	}
 
-}
-
-class SessionSimulation extends Session {
-		
-	public void setPayByCash() {
-		sessionState = SessionState.PAY_BY_CASH;
-	}
-	
-	public void setPayByCard() {
-		sessionState = SessionState.PAY_BY_CARD;
-	}
-		
-	public void block() {
-		sessionState = SessionState.BLOCKED;
-	}
 }
 
 	
