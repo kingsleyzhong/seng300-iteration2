@@ -55,7 +55,6 @@ import powerutility.PowerGrid;
 public class FundsTest_Bronze {
 	
 	private SelfCheckoutStationBronze scs;
-	private CoinValidator validator;
 	private PayByCashController cashControllerBronze;
 //	private PayByCardController cardControllerBronze;
 	private Funds funds;
@@ -156,18 +155,19 @@ public class FundsTest_Bronze {
 	
 	 @Test(expected = SimulationException.class)
 	    public void testDeregisterInvalidListener() {
-		 funds.deregister(null);
+		FundsListenerStub stub = null; 
+		funds.deregister(stub);
 	}
 
 	@Test
 	public void testUnregisterListener() {
-//		FundListenerStub stub = new FundListenerStub();
-//		fund.register(stub);
-//		fund.deregister(stub);
-//		fund.update(price);
+//		FundsListenerStub stub = new FundsListenerStub();
+//		funds.register(stub);
+//		funds.deregister(stub);
+//		funds.update(price);
 //		value = new BigDecimal(5);
 //		fund.new InnerListener().validCoinDetected(validator, value);
-//		assertFalse("Paid event called", stub.getEvents().contains("Paid"));
+//		assertFalse("Paid event not called", stub.getEvents().contains("Paid"));
 	}
 
 	@Test
