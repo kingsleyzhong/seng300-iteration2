@@ -133,7 +133,7 @@ public class Funds {
 		return isPay;
 	}
 
-	public void beginPayment() throws NoCashAvailableException {
+	public void beginPayment() {
 		if (amountDue.compareTo(BigDecimal.ZERO) <= 0) {
 			throw new IllegalDigitException("Price should be positive.");
 		}
@@ -144,7 +144,6 @@ public class Funds {
 	/**
 	 * Calculates the amount due by subtracting the paid amount from the total items
 	 * price.
-	 * @throws NoCashAvailableException 
 	 */
 	private void calculateAmountDue() {
 
@@ -197,9 +196,7 @@ public class Funds {
 	}
 
 	/***
-	 * Calculates the change needed
-	 * @throws NoCashAvailableException 
-	 * 
+	 * Calculates the change needed	 * 
 	 */
 	private void returnChange() {
 
@@ -215,8 +212,7 @@ public class Funds {
 	 * Returns the change back to customer
 	 * 
 	 * @param changeDue
-	 * @throws NoCashAvailableException 
-	 */
+	 * 	 */
 	private void changeHelper(int changeDue){
 		if (changeDue < 0) {
 			throw new InternalError("Change due is negative, which should not happen");
