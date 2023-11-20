@@ -570,6 +570,117 @@ public class AddBulkyItemTest {
         assertFalse("Bulky item is cancelled", session.getBulkyItemCalled());
     }
 
+    /**
+     * test case for calling add bulky item when attendant did not approve
+     */
+    @Test
+    public void testRequestNotApproved() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        session.bulkyItemCalled();
+        // call addBulkyItem without attendant approval
+        session.addBulkyItem();
+        assertFalse("Bulky item request is not approved.", session.getRequestApproved());
+    }
+
+    /**
+     * test case for cancelling add bulky item when it was not called
+     */
+    @Test
+    public void testBulkyItemNotCalled() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        // cancel bulky item when bulky item was not called
+        session.cancelBulkyItem();
+        assertFalse("Bulky item was not called.", session.getBulkyItemCalled());
+    }
+
+    /**
+     * test case for checking that attendant is not called when there is no weight discrepancy using bronze station
+     */
+    @Test
+    public void testAttendantNotCalledBronze() {
+        scs.plugIn(PowerGrid.instance());
+        scs.turnOn();
+
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        session.bulkyItemCalled();
+        session.assistantApprove();
+        session.addBulkyItem();
+        session.cancelBulkyItem();
+
+        // there is no weight discrepancy; no need for attendant
+        scs.baggingArea.addAnItem(item);
+        session.callAssistantForWeightDiscrepancy();
+        session.attendantFixWeightDiscrepancy(scs, item);
+        assertFalse("There is no weight discrepancy.", session.getWeight().isDiscrepancy());
+    }
+
+    /**
+     * test case for checking that attendant is not called when there is no weight discrepancy using silver station
+     */
+    @Test
+    public void testAttendantNotCalledSilver() {
+        scss.plugIn(PowerGrid.instance());
+        scss.turnOn();
+
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        session.bulkyItemCalled();
+        session.assistantApprove();
+        session.addBulkyItem();
+        session.cancelBulkyItem();
+
+        // there is no weight discrepancy; no need for attendant
+        scss.baggingArea.addAnItem(item);
+        session.callAssistantForWeightDiscrepancy();
+        session.attendantFixWeightDiscrepancy(scss, item);
+        assertFalse("There is no weight discrepancy.", session.getWeight().isDiscrepancy());
+    }
+
+    /**
+     * test case for checking that attendant is not called when there is no weight discrepancy using gold station
+     */
+    @Test
+    public void testAttendantNotCalledGold() {
+        scsg.plugIn(PowerGrid.instance());
+        scsg.turnOn();
+
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        session.bulkyItemCalled();
+        session.assistantApprove();
+        session.addBulkyItem();
+        session.cancelBulkyItem();
+
+        // there is no weight discrepancy; no need for attendant
+        scsg.baggingArea.addAnItem(item);
+        session.callAssistantForWeightDiscrepancy();
+        session.attendantFixWeightDiscrepancy(scsg, item);
+        assertFalse("There is no weight discrepancy.", session.getWeight().isDiscrepancy());
+    }
+
+    /**
+     * test case for no weight discrepancy (attendant is not called)
+     */
+    @Test
+    public void testNoWeightDiscrepancy() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        session.bulkyItemCalled();
+        session.assistantApprove();
+        session.addBulkyItem();
+        session.attendantFixWeightDiscrepancy();
+        assertFalse("There is no weight discrepancy.", session.getWeight().isDiscrepancy());
+    }
+
     public class ScannerListenerStub implements BarcodeScannerListener {
         public ArrayList<Barcode> barcodesScanned;
 
