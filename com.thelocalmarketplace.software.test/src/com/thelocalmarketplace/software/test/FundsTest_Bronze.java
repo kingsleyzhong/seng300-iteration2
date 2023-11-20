@@ -155,8 +155,22 @@ public class FundsTest_Bronze {
 	}
 	
 	@Test
-	public void testAmountPaidPartialCash() {
+	public void testAmountPaidPartialCash() throws DisabledException, CashOverloadException {
+		price = BigDecimal.valueOf(2);
+
+		Currency currency = Currency.getInstance(Locale.CANADA);
+		Coin coinAmountPaid = new Coin(currency, amountPaid);
+
+		FundsListenerStub stub = new FundsListenerStub();
+		funds.register(stub);
+		funds.update(price);
 		
+		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
+		sampleSimulation.setPayByCash();
+		
+		scs.coinSlot.receive(coinAmountPaid);
+
+		assertFalse("Paid event not called", stub.getEvents().contains("Paid"));
 	}
 	
 	@Test
