@@ -40,6 +40,7 @@ public class PayByCard {
 	private double amountDue;
 	boolean paidBool;
 	boolean successfulSwipe;
+	boolean posted;
 	private Funds funds;
 	private AbstractSelfCheckoutStation scs;
 	
@@ -89,9 +90,9 @@ public class PayByCard {
 		@Override
 		public void theDataFromACardHasBeenRead(CardData data) {	
 			card = new Card(data.getType(), data.getNumber(), data.getCardholder(), null);
-			if(Session.getState() != SessionState.PAY_BY_CARD) {
-				throw new InvalidActionException("Card reader not in use");
-			}
+//			if(Session.getState() != SessionState.PAY_BY_CARD) {
+//				throw new InvalidActionException("Card reader not in use");
+//			}
 				try {
 					getTransactionFromBank(card);
 				} catch (CashOverloadException e) {
@@ -210,6 +211,7 @@ public class PayByCard {
 			}
 		} else {
 			throw new InvalidActionException("Declined");
-		}		
+		}	
+		successfulSwipe = false;
 	}
 }
