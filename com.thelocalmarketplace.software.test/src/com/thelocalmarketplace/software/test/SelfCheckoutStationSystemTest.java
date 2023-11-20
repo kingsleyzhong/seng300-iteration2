@@ -4,8 +4,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Currency;
 import java.util.HashMap;
 import java.util.List;
@@ -16,10 +18,13 @@ import org.junit.Test;
 
 import com.jjjwelectronics.Mass;
 import com.jjjwelectronics.Numeral;
+import com.jjjwelectronics.card.Card;
+import com.jjjwelectronics.card.MagneticStripeFailureException;
 import com.jjjwelectronics.scanner.Barcode;
 import com.jjjwelectronics.scanner.BarcodedItem;
 import com.tdc.CashOverloadException;
 import com.tdc.DisabledException;
+import com.tdc.NoCashAvailableException;
 import com.tdc.banknote.Banknote;
 import com.tdc.coin.Coin;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
@@ -27,12 +32,15 @@ import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
+import com.thelocalmarketplace.hardware.external.CardIssuer;
 import com.thelocalmarketplace.hardware.external.ProductDatabases;
 import com.thelocalmarketplace.software.SelfCheckoutStationLogic;
 import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.SessionState;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
+import com.thelocalmarketplace.software.funds.CardIssuerDatabase;
 import com.thelocalmarketplace.software.funds.Funds;
+import com.thelocalmarketplace.software.funds.SupportedCardIssuers;
 import com.thelocalmarketplace.software.weight.Weight;
 
 import powerutility.PowerGrid;
@@ -85,6 +93,7 @@ public class SelfCheckoutStationSystemTest {
 	@Before
 	public void setup() {
 		AbstractSelfCheckoutStation.resetConfigurationToDefaults();
+		
 		AbstractSelfCheckoutStation.configureBanknoteDenominations(new BigDecimal[] {new BigDecimal(20), 
 				new BigDecimal(10), new BigDecimal(5)});
 		AbstractSelfCheckoutStation.configureCoinDenominations(new BigDecimal[] {BigDecimal.ONE, new BigDecimal(0.25), 
@@ -304,6 +313,78 @@ public class SelfCheckoutStationSystemTest {
 		assertEquals("Dispensed $5", five, banknotechange.get(0));	
 	}
 	
+	// Tests for paying Credit via swipe
+	
+	@Test
+	public void testPayWithCredit() throws CashOverloadException, NoCashAvailableException, DisabledException, IOException {
+		CardIssuer ci1 = new CardIssuer(SupportedCardIssuers.ONE.getIssuer(), 1);
+		CardIssuerDatabase.CARD_ISSUER_DATABASE.put(SupportedCardIssuers.ONE.getIssuer(), ci1);
+		Card creditCard = new Card(SupportedCardIssuers.ONE.getIssuer(), "5299334598001547", "Brandon Chan", "666");
+		
+		Calendar exp = Calendar.getInstance();
+		exp.set(Calendar.YEAR, 2099);
+		exp.set(Calendar.MONTH, 12);
+		
+		ci1.addCardData(creditCard.number, creditCard.cardholder, exp, creditCard.cvv, 10000);
+		
+		session.start();
+		for(int i =0; i < 100; i++) {
+			scs.mainScanner.scan(item);
+		}
+		scs.baggingArea.addAnItem(item);
+		session.payByCard();
+		
+		Funds funds = session.getFunds();
+		
+		assertEquals(SessionState.PAY_BY_CARD, Session.getState());
+		
+		boolean read = false;
+		while (!read) {
+			try {
+				scs.cardReader.swipe(creditCard);
+				read = true;
+			} catch (MagneticStripeFailureException e) {
+			}
+		}		
+		assertEquals("Session is fully paid for", BigDecimal.ZERO, funds.getAmountDue());
+		assertEquals("Session has been notified of full payment", Session.getState(), SessionState.PRE_SESSION);
+	}
+	
+	@Test
+	public void testPayWithDebit() throws CashOverloadException, NoCashAvailableException, DisabledException, IOException {
+		CardIssuer ci1 = new CardIssuer(SupportedCardIssuers.ONE.getIssuer(), 1);
+		CardIssuerDatabase.CARD_ISSUER_DATABASE.put(SupportedCardIssuers.ONE.getIssuer(), ci1);
+		Card debitCard = new Card(SupportedCardIssuers.ONE.getIssuer(), "5299334598001547", "Brandon Chan", "666");
+		
+		Calendar exp = Calendar.getInstance();
+		exp.set(Calendar.YEAR, 2099);
+		exp.set(Calendar.MONTH, 12);
+		
+		ci1.addCardData(debitCard.number, debitCard.cardholder, exp, debitCard.cvv, 10000);
+		
+		session.start();
+		for(int i =0; i < 100; i++) {
+			scs.mainScanner.scan(item);
+		}
+		scs.baggingArea.addAnItem(item);
+		session.payByCard();
+		
+		Funds funds = session.getFunds();
+		
+		assertEquals(SessionState.PAY_BY_CARD, Session.getState());
+		
+		boolean read = false;
+		while (!read) {
+			try {
+				scs.cardReader.swipe(debitCard);
+				read = true;
+			} catch (MagneticStripeFailureException e) {
+			}
+		}		
+		assertEquals("Session is fully paid for", BigDecimal.ZERO, funds.getAmountDue());
+		assertEquals("Session has been notified of full payment", Session.getState(), SessionState.PRE_SESSION);
+	}
+	
 	// Tests for weight Discrepancy
 
 	@Test
@@ -353,8 +434,6 @@ public class SelfCheckoutStationSystemTest {
 
 	@Test
 	public void testDiscrepancyDuringPay() {
-		// todo: fix this; rethink behavior
-		// do we want to allow the user to remove the item and continue paying?
 		session.start();
 		for(int i =0; i < 100; i++) {
 			scs.mainScanner.scan(item);
