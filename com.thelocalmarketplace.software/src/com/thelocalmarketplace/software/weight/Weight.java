@@ -1,5 +1,6 @@
 package com.thelocalmarketplace.software.weight;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
@@ -101,9 +102,19 @@ public class Weight {
 	 * DisrepancyFixed() on it's listener and set isDiscrepancy False
 	 * if two value are not equal, call notifyDiscrepancy on it's listeners.
 	 * Still need to figure out how to set a range of Mass as effective error
+	 * Tolerance of +-5% or 5 grams (bronze)
 	 */
 	public void checkDiscrepancy() {
-		if (!expectedWeight.equals(actualWeight)) {
+		BigDecimal difference = expectedWeight.difference(actualWeight).abs().inGrams();
+		BigDecimal percentageDifference;
+		if (expectedWeight.inGrams().equals(BigDecimal.ZERO)) {
+			percentageDifference = new BigDecimal(0);
+		} else {
+			percentageDifference = difference.divide(expectedWeight.inGrams(), BigDecimal.ROUND_HALF_UP);
+		}
+
+		if (percentageDifference.compareTo(new BigDecimal(0.05)) == 1
+				&& difference.compareTo(new BigDecimal(5.0)) == 1) {
 			isDiscrepancy = true;
 			for (WeightListener l : listeners) {
 				l.notifyDiscrepancy();
