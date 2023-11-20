@@ -47,6 +47,7 @@ import com.thelocalmarketplace.software.weight.WeightListener;
  */
 public class Session {
 	protected static SessionState sessionState;
+	private SessionState prevState;
 	private HashMap<BarcodedProduct, Integer> barcodedItems;
 	private Funds funds;
 	private Weight weight;
@@ -232,22 +233,19 @@ public class Session {
 	 * Blocks the current session, preventing further action from the customer
 	 */
 	private void block() {
-		if (sessionState.inPay()) {
-			funds.setPay(false);
-		} else {
-			sessionState = SessionState.BLOCKED;
-		}
+		prevState = sessionState;
+		sessionState = SessionState.BLOCKED;
+		
 	}
 
 	/**
 	 * Resumes the session, allowing the customer to continue interaction
 	 */
 	private void resume() {
-		if (sessionState.inPay()) {
-			funds.setPay(true);
-		} else {
-			sessionState = SessionState.IN_SESSION;
+		if(funds.isPay()) {
+			sessionState = prevState;
 		}
+		else sessionState = SessionState.IN_SESSION;
 	}
 
 	/**
@@ -255,11 +253,13 @@ public class Session {
 	 * items by freezing session.
 	 */
 	public void payByCash() {
-		if (!barcodedItems.isEmpty()) {
-			sessionState = SessionState.PAY_BY_CASH;
-			funds.setPay(true);
-		} else {
-			throw new CartEmptyException("Cannot pay for an empty order");
+		if (sessionState == SessionState.IN_SESSION) {
+			if (!barcodedItems.isEmpty()) {
+				sessionState = SessionState.PAY_BY_CASH;
+				funds.setPay(true);
+			} else {
+				throw new CartEmptyException("Cannot pay for an empty order");
+			}
 		}
 	}
 
@@ -271,11 +271,13 @@ public class Session {
 	 * @throws CashOverloadException 
 	 */
 	public void payByCard() throws CashOverloadException, NoCashAvailableException, DisabledException {
-		if (!barcodedItems.isEmpty()) {
-			sessionState = SessionState.PAY_BY_CARD;
-			funds.setPay(true);
-		} else {
-			throw new CartEmptyException("Cannot pay for an empty order");
+		if (sessionState == SessionState.IN_SESSION) {
+			if (!barcodedItems.isEmpty()) {
+				sessionState = SessionState.PAY_BY_CARD;
+				funds.setPay(true);
+			} else {
+				throw new CartEmptyException("Cannot pay for an empty order");
+			}
 		}
 	}
 
