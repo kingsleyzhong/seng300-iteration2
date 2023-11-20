@@ -20,6 +20,7 @@ import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.SessionState;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import com.thelocalmarketplace.software.funds.Funds;
+import com.thelocalmarketplace.software.receipt.PrintReceipt;
 import com.thelocalmarketplace.software.weight.Weight;
 
 import powerutility.PowerGrid;
@@ -72,6 +73,9 @@ public class SessionTest {
     private Weight weight;
     private Weight weightSilver;
     private Weight weightGold;
+    
+    // Code added
+    private PrintReceipt receiptPrinter;
 
     @Before
     public void setUp() {
@@ -91,6 +95,7 @@ public class SessionTest {
         product2 = new BarcodedProduct(barcode2, "Sample Product 2", 15, 20.0);
         funds = new Funds(scs);
         weight = new Weight(scs);
+        receiptPrinter = new PrintReceipt(scs);
     }
 
     @Test
@@ -117,7 +122,7 @@ public class SessionTest {
     @Test
     public void testAddItem() {
         session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight, receiptPrinter);
         session.addItem(product);
         HashMap<BarcodedProduct, Integer> list = session.getBarcodedItems();
         assertTrue("Contains product in list", list.containsKey(product));
@@ -128,7 +133,7 @@ public class SessionTest {
     @Test
     public void testAddItemQuantity() {
         session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight, receiptPrinter);
         // Add multiple quantities of the same product
         session.addItem(product);
         session.addItem(product);
@@ -141,7 +146,7 @@ public class SessionTest {
     @Test
     public void addTwoDifItems() {
         session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight, receiptPrinter);
         session.addItem(product);
         session.addItem(product2);
         HashMap<BarcodedProduct, Integer> list = session.getBarcodedItems();
@@ -155,7 +160,7 @@ public class SessionTest {
     @Test
     public void addItemFundUpdate() {
         session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight, receiptPrinter);
         session.addItem(product);
         Funds fund = session.getFunds();
         BigDecimal actual = fund.getItemsPrice();
@@ -166,7 +171,7 @@ public class SessionTest {
     @Test
     public void addTwoItemsFundUpdate() {
         session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight, receiptPrinter);
         session.addItem(product);
         session.addItem(product2);
         Funds fund = session.getFunds();
@@ -178,7 +183,7 @@ public class SessionTest {
     @Test
     public void addItemWeightUpdate() {
         session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight, receiptPrinter);
         session.addItem(product);
         Weight itemWeight = session.getWeight();
         Mass actual = itemWeight.getExpectedWeight();
@@ -189,7 +194,7 @@ public class SessionTest {
     @Test
     public void addTwoItemsWeightUpdate() {
         session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight, receiptPrinter);
         session.addItem(product);
         session.addItem(product2);
         Weight itemWeight = session.getWeight();
@@ -201,7 +206,7 @@ public class SessionTest {
     @Test
     public void testWeightDiscrepancy() {
         session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight, receiptPrinter);
         session.addItem(product);
         assertEquals("Discrepancy must have occured", Session.getState(), SessionState.BLOCKED);
     }
@@ -209,7 +214,7 @@ public class SessionTest {
     @Test
     public void testWeightDiscrepancyResolved() {
         session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight, receiptPrinter);
         session.addItem(product);
         scs.plugIn(PowerGrid.instance());
         scs.turnOn();
@@ -221,14 +226,14 @@ public class SessionTest {
     @Test(expected = InvalidActionException.class)
     public void payEmpty() {
         session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight, receiptPrinter);
         session.pay();
     }
 
     @Test
     public void testPaid() throws DisabledException, CashOverloadException {
         session.start();
-        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight, receiptPrinter);
         session.addItem(product);
         scs.plugIn(PowerGrid.instance());
         scs.turnOn();

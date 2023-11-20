@@ -55,6 +55,7 @@ public class Funds {
 	private BigDecimal amountDue; // Remaining amount to be paid (in cents)
 	private boolean isPay; // Flag indicating if the session is in pay mode
 	private PayByCashController cashController;
+	private PayByCard cardController;
 
 	// private PayByCardController cardController;
 
@@ -76,7 +77,8 @@ public class Funds {
 		this.amountDue = BigDecimal.ZERO;
 		this.isPay = false;
 		this.cashController = new PayByCashController(scs, this);
-		
+
+		this.cardController = new PayByCard(scs, this);
 
 		// this.cardController = new PayByCardController(scs);
 
@@ -88,7 +90,7 @@ public class Funds {
 	 * 
 	 * @param price The price to be added (in cents)
 	 */
-	public void update(BigDecimal price){
+	public void update(BigDecimal price) {
 		if (price.compareTo(BigDecimal.ZERO) <= 0) {
 			throw new IllegalDigitException("Price should be positive.");
 		}
@@ -121,18 +123,30 @@ public class Funds {
 		return isPay;
 	}
 
+	public void beginPayment() {
+		if (amountDue.compareTo(BigDecimal.ZERO) <= 0) {
+			throw new IllegalDigitException("Price should be positive.");
+		}
+		cardController.paidBool = false;
+		calculateAmountDue();
+	}
+
 	/**
 	 * Calculates the amount due by subtracting the paid amount from the total items
 	 * price.
 	 */
 	private void calculateAmountDue() {
 
+		if (Session.getState() == SessionState.PAY_BY_CASH) {
+			this.paid = cashController.getCashPaid();
+		}
+
 		this.amountDue = this.itemsPrice.subtract(this.paid);
-		
+
 		// To account for any rounding errors, checks if less that 0.0005 rather than
 		// just 0
 		if (amountDue.intValue() <= 0.0005) {
-	
+
 			for (FundsListener l : listeners)
 				l.notifyPaid();
 
@@ -143,22 +157,34 @@ public class Funds {
 
 		}
 	}
-	
-	
+
+	/***
+	 * Checks the status of a card payment
+	 */
+	public void updatePaidCard(boolean paidBool) {
+		if (Session.getState() == SessionState.PAY_BY_CARD) {
+			if (paidBool) {
+				this.paid = amountDue;
+				calculateAmountDue();
+			}
+		} else {
+			throw new InvalidActionException("Not in Card Payment state");
+		}
+	}
+
 	/***
 	 * Updates Payment based on the PayByCash Controller
 	 */
-	public void updatePaid()  {
-	
+	public void updatePaid() {
+
 		if (Session.getState() == SessionState.PAY_BY_CASH) {
 			this.paid = cashController.getCashPaid();
-			
-			calculateAmountDue();
-			
-		}
-	
-	}
 
+			calculateAmountDue();
+
+		}
+
+	}
 
 	/***
 	 * Calculates the change needed
@@ -167,7 +193,7 @@ public class Funds {
 	private void returnChange() {
 
 		int changeDue = (this.amountDue).abs().intValue();
-			
+
 		changeHelper(changeDue);
 
 	}
@@ -177,41 +203,39 @@ public class Funds {
 	 * 
 	 * @param changeDue
 	 */
-	private void changeHelper(int changeDue){
+	private void changeHelper(int changeDue) {
 		if (changeDue < 0) {
 			throw new InternalError("Change due is negative, which should not happen");
 		}
 
-		//Getting banknote denominations and sorting from descending order by value
+		// Getting banknote denominations and sorting from descending order by value
 		Set<BigDecimal> banknoteType = scs.banknoteDispensers.keySet();
 		ArrayList banknoteList = new ArrayList(banknoteType);
 		Collections.sort(banknoteList);
 		Collections.reverse(banknoteList);
-		
-		//Getting coin denominations and sorting from descending order by value
+
+		// Getting coin denominations and sorting from descending order by value
 		Set<BigDecimal> coinType = scs.banknoteDispensers.keySet();
 		ArrayList coinList = new ArrayList(coinType);
 		Collections.sort(coinList);
 		Collections.reverse(coinList);
-		
+
 		// Going through each banknoteDispenser by denomination
 		Iterator itrBanknote = banknoteList.iterator();
-		
-		while (itrBanknote.hasNext()) {
 
+		while (itrBanknote.hasNext()) {
 
 			// Getting the number of change from a specific that can "fit" into the
 			// changeDue
 			BigDecimal banknoteDenomination = (BigDecimal) itrBanknote.next();
-			
+
 			int denominationNum = changeDue / banknoteDenomination.intValue();
-			
 
 			// Checking to see if there is enough bills in the dispenser
 			if (scs.banknoteDispensers.get(banknoteDenomination).size() >= denominationNum) {
 
 				for (int i = 0; i < denominationNum; i++) {
-					
+
 					try {
 						scs.banknoteDispensers.get(banknoteDenomination).emit();
 					} catch (NoCashAvailableException e) {
@@ -223,21 +247,20 @@ public class Funds {
 					}
 
 					changeDue = changeDue - banknoteDenomination.intValue();
-					
-																									
+
 				}
 			}
 		}
 
 		// Going through each coinDispenser by denomination
 		Iterator itrCoin = coinList.iterator();
-		
+
 		while (itrCoin.hasNext()) {
 
 			// Getting the number of change from a specific that can "fit" into the
 			// changeDue
 			BigDecimal coinDenomination = (BigDecimal) itrCoin.next();
-			
+
 			int denominationNum = changeDue / coinDenomination.intValue();
 
 			// Checking to see if there is enough bills in the dispenser
@@ -259,12 +282,10 @@ public class Funds {
 				}
 			}
 		}
-	
+
 		if (changeDue > 0.005) {
 			System.out.print("Not enough change available in the machine. Please get attendant");
 		}
-
-		
 
 	}
 
@@ -274,7 +295,7 @@ public class Funds {
 	public synchronized boolean deregister(FundsListener listener) {
 		if (listener == null)
 			throw new NullPointerSimulationException("listener");
-		
+
 		return listeners.remove(listener);
 	}
 

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.software.funds.Funds;
+import com.thelocalmarketplace.software.receipt.PrintReceipt;
 import com.thelocalmarketplace.software.rules.ItemAddedRule;
 import com.thelocalmarketplace.software.weight.Weight;
 
@@ -55,8 +56,9 @@ public class SelfCheckoutStationLogic {
 	private SelfCheckoutStationLogic(AbstractSelfCheckoutStation scs, Session session) {
 		Funds funds = new Funds(scs);
 		Weight weight = new Weight(scs);
+		PrintReceipt receiptPrinter = new PrintReceipt(scs);
 		HashMap<BarcodedProduct, Integer> barcodedItems = new HashMap<BarcodedProduct, Integer>();
-		session.setup(barcodedItems, funds, weight);
+		session.setup(barcodedItems, funds, weight, receiptPrinter);
 		new ItemAddedRule(scs, session);
 	}
 }
