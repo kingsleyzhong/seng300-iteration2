@@ -57,8 +57,6 @@ public class Funds {
 	private PayByCashController cashController;
 	private PayByCard cardController;
 
-	// private PayByCardController cardController;
-
 	private AbstractSelfCheckoutStation scs;
 
 	/**
@@ -79,8 +77,6 @@ public class Funds {
 		this.cashController = new PayByCashController(scs, this);
 
 		this.cardController = new PayByCard(scs, this);
-
-		// this.cardController = new PayByCardController(scs);
 
 		this.scs = scs;
 	}
