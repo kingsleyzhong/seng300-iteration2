@@ -90,7 +90,7 @@ public class PayByCashControllerTest {
 		Coin coin = new Coin(currency, value);
 						
 		MockSession mockSession = new MockSession();
-		mockSession.pay();
+		mockSession.payByCash();
 		
 		scs.coinValidator.receive(coin);
 		Assert.assertEquals(BigDecimal.ONE, fundScs.getPaid());	
@@ -120,7 +120,7 @@ public class PayByCashControllerTest {
 		Coin coin = new Coin(currency, value);
 						
 		MockSession mockSession = new MockSession();
-		mockSession.pay();
+		mockSession.payByCash();
 		
 		scs.coinValidator.receive(coin);
 		Assert.assertEquals(BigDecimal.ZERO, cashControllerBronze.getCashPaid());	
@@ -214,7 +214,7 @@ public class PayByCashControllerTest {
 		Banknote note = new Banknote(currency, value);
 		
 		MockSession mockSession = new MockSession();
-		mockSession.pay();
+		mockSession.payByCash();
 		
 		scs.banknoteValidator.receive(note);
 		Assert.assertEquals(BigDecimal.ONE, cashControllerBronze.getCashPaid());	
@@ -243,7 +243,7 @@ public class PayByCashControllerTest {
 		Banknote note = new Banknote(currency, value);
 						
 		MockSession mockSession = new MockSession();
-		mockSession.pay();
+		mockSession.payByCash();
 		
 		scs.banknoteValidator.receive(note);
 		Assert.assertEquals(BigDecimal.ZERO, cashControllerBronze.getCashPaid());	
@@ -327,7 +327,7 @@ public class PayByCashControllerTest {
 	public class MockSession extends Session {
 		
 		@Override
-		public void pay() {
+		public void payByCash() {
 			sessionState = SessionState.PAY_BY_CASH;
 		}
 		

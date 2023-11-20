@@ -168,7 +168,6 @@ public class Funds {
 				returnChange();
 			}
 			payed = true;
-
 		}
 	}
 
@@ -176,11 +175,11 @@ public class Funds {
 	 * Checks the status of a card payment
 	 */
 	public void updatePaidCard(boolean paidBool) {
-//		if (Session.getState() == SessionState.PAY_BY_CARD) {
+		if (Session.getState() == SessionState.PAY_BY_CARD) {
 			if (paidBool) {
 				this.paid = amountDue;
 				calculateAmountDue();
-//			}
+			}
 		} else {
 			throw new InvalidActionException("Not in Card Payment state");
 		}
