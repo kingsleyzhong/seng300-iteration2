@@ -67,6 +67,7 @@ public class Funds {
 	 * @param scs The self-checkout station
 	 */
 	public Funds(AbstractSelfCheckoutStation scs) {
+
 		if (scs == null) {
 			throw new IllegalArgumentException("SelfCheckoutStation should not be null.");
 		}
@@ -75,6 +76,7 @@ public class Funds {
 		this.amountDue = BigDecimal.ZERO;
 		this.isPay = false;
 		this.cashController = new PayByCashController(scs, this);
+		
 
 		// this.cardController = new PayByCardController(scs);
 
@@ -85,11 +87,8 @@ public class Funds {
 	 * Updates the total items price.
 	 * 
 	 * @param price The price to be added (in cents)
-	 * @throws DisabledException
-	 * @throws NoCashAvailableException
-	 * @throws CashOverloadException
 	 */
-	public void update(BigDecimal price) throws CashOverloadException, NoCashAvailableException, DisabledException {
+	public void update(BigDecimal price){
 		if (price.compareTo(BigDecimal.ZERO) <= 0) {
 			throw new IllegalDigitException("Price should be positive.");
 		}
@@ -125,18 +124,15 @@ public class Funds {
 	/**
 	 * Calculates the amount due by subtracting the paid amount from the total items
 	 * price.
-	 * 
-	 * @throws DisabledException
-	 * @throws NoCashAvailableException
-	 * @throws CashOverloadException
 	 */
-	private void calculateAmountDue() throws CashOverloadException, NoCashAvailableException, DisabledException {
+	private void calculateAmountDue() {
 
 		this.amountDue = this.itemsPrice.subtract(this.paid);
-
+		
 		// To account for any rounding errors, checks if less that 0.0005 rather than
 		// just 0
 		if (amountDue.intValue() <= 0.0005) {
+	
 			for (FundsListener l : listeners)
 				l.notifyPaid();
 
@@ -151,16 +147,14 @@ public class Funds {
 	
 	/***
 	 * Updates Payment based on the PayByCash Controller
-	 * @return
-	 * @throws DisabledException 
-	 * @throws NoCashAvailableException 
-	 * @throws CashOverloadException 
 	 */
-	public void updatePaid() throws CashOverloadException, NoCashAvailableException, DisabledException  {
+	public void updatePaid()  {
 	
 		if (Session.getState() == SessionState.PAY_BY_CASH) {
 			this.paid = cashController.getCashPaid();
+			
 			calculateAmountDue();
+			
 		}
 	
 	}
@@ -169,15 +163,12 @@ public class Funds {
 	/***
 	 * Calculates the change needed
 	 * 
-	 * @throws CashOverloadException
-	 * @throws NoCashAvailableException
-	 * @throws DisabledException
 	 */
-	private void returnChange() throws CashOverloadException, NoCashAvailableException, DisabledException {
+	private void returnChange() {
 
-		int change = (this.amountDue).abs().intValue();
-		
-		changeHelper(change);
+		int changeDue = (this.amountDue).abs().intValue();
+			
+		changeHelper(changeDue);
 
 	}
 
@@ -185,11 +176,8 @@ public class Funds {
 	 * Returns the change back to customer
 	 * 
 	 * @param changeDue
-	 * @throws CashOverloadException
-	 * @throws NoCashAvailableException
-	 * @throws DisabledException
 	 */
-	private void changeHelper(int changeDue) throws CashOverloadException, NoCashAvailableException, DisabledException {
+	private void changeHelper(int changeDue){
 		if (changeDue < 0) {
 			throw new InternalError("Change due is negative, which should not happen");
 		}
@@ -205,30 +193,38 @@ public class Funds {
 		ArrayList coinList = new ArrayList(coinType);
 		Collections.sort(coinList);
 		Collections.reverse(coinList);
-				
-
+		
 		// Going through each banknoteDispenser by denomination
 		Iterator itrBanknote = banknoteList.iterator();
 		
 		while (itrBanknote.hasNext()) {
+
 
 			// Getting the number of change from a specific that can "fit" into the
 			// changeDue
 			BigDecimal banknoteDenomination = (BigDecimal) itrBanknote.next();
 			
 			int denominationNum = changeDue / banknoteDenomination.intValue();
+			
 
 			// Checking to see if there is enough bills in the dispenser
 			if (scs.banknoteDispensers.get(banknoteDenomination).size() >= denominationNum) {
 
 				for (int i = 0; i < denominationNum; i++) {
-
-					scs.banknoteDispensers.get(banknoteDenomination).emit();
+					
+					try {
+						scs.banknoteDispensers.get(banknoteDenomination).emit();
+					} catch (NoCashAvailableException e) {
+						System.out.println("There is no banknotes available");
+					} catch (DisabledException e) {
+						System.out.println("Machine is not turned on");
+					} catch (CashOverloadException e) {
+						System.out.println("Too much cash, the machine has broken");
+					}
 
 					changeDue = changeDue - banknoteDenomination.intValue();
 					
-					System.out.println(changeDue);
-					
+																									
 				}
 			}
 		}
@@ -249,20 +245,26 @@ public class Funds {
 
 				for (int i = 0; i < denominationNum; i++) {
 
-					scs.coinDispensers.get(coinDenomination).emit();
+					try {
+						scs.coinDispensers.get(coinDenomination).emit();
+					} catch (NoCashAvailableException e) {
+						System.out.println("There is no c available");
+					} catch (DisabledException e) {
+						System.out.println("Machine is not turned on");
+					} catch (CashOverloadException e) {
+						System.out.println("Too much cash, the machine has broken");
+					}
 
 					changeDue = changeDue - coinDenomination.intValue();
 				}
 			}
 		}
 	
-
-		// If there is still remaining change left, then the machine does not have
-		// enough change yet
-		if (changeDue >= 0.0005) {
-			throw new NoCashAvailableException();
-
+		if (changeDue > 0.005) {
+			System.out.print("Not enough change available in the machine. Please get attendant");
 		}
+
+		
 
 	}
 
