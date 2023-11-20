@@ -21,17 +21,24 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-	SelfCheckoutStationSystemTest.class,
-	SelfCheckoutStationLogicTest.class,
-	SessionTest.class,
-	ItemAddedRuleTest.class,
-	FundsTest.class,
-	WeightTest.class,
 	AddBagsTest_Bronze.class,
-	AddBagsTest_Silver.class,
 	AddBagsTest_Gold.class,
+	AddBagsTest_Silver.class,
 	AddBulkyItemTest.class,
-	RemoveItemTests.class
+	FundsTest_Bronze.class,
+	FundsTest_Gold.class,
+	FundsTest_Silver.class,
+	ItemAddedRuleTest.class,
+	PayByCardTest.class,
+	PayByCashControllerTest.class,
+	PrintReceiptTest_Bronze.class,
+	PrintReceiptTest_Gold.class,
+	PrintReceiptTest_Silver.class,
+	RemoveItemTests.class,
+	SelfCheckoutStationLogicTest.class,
+	SelfCheckoutStationSystemTest.class,
+	SessionTest.class,
+	WeightTest.class,
 })
 
 public class TestSuite {

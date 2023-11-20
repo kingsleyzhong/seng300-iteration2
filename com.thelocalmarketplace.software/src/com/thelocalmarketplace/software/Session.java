@@ -6,6 +6,9 @@ import java.util.Map;
 
 import com.jjjwelectronics.Mass;
 import com.jjjwelectronics.scanner.BarcodedItem;
+import com.tdc.CashOverloadException;
+import com.tdc.DisabledException;
+import com.tdc.NoCashAvailableException;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.jjjwelectronics.scanner.BarcodedItem;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
@@ -45,7 +48,7 @@ import com.thelocalmarketplace.software.weight.WeightListener;
  *
  */
 public class Session {
-	private static SessionState sessionState;
+	protected static SessionState sessionState;
 	private HashMap<BarcodedProduct, Integer> barcodedItems;
 	private Funds funds;
 	private Weight weight;
@@ -250,13 +253,30 @@ public class Session {
 	}
 
 	/**
-	 * Enters the pay mode for the customer. Prevents customer from adding further
+	 * Enters the cash payment mode for the customer. Prevents customer from adding further
 	 * items by freezing session.
 	 */
-	public void pay() {
+	public void payByCash() {
 		if (!barcodedItems.isEmpty()) {
 			sessionState = SessionState.PAY_BY_CASH;
 			funds.setPay(true);
+		} else {
+			throw new CartEmptyException("Cannot pay for an empty order");
+		}
+	}
+
+	/**
+	 * Enters the card payment mode for the customer. Prevents customer from adding further
+	 * items by freezing session.
+	 * @throws DisabledException 
+	 * @throws NoCashAvailableException 
+	 * @throws CashOverloadException 
+	 */
+	public void payByCard() throws CashOverloadException, NoCashAvailableException, DisabledException {
+		if (!barcodedItems.isEmpty()) {
+			sessionState = SessionState.PAY_BY_CARD;
+			funds.setPay(true);
+			funds.beginCardPayment();
 		} else {
 			throw new CartEmptyException("Cannot pay for an empty order");
 		}
