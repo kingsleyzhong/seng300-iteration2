@@ -251,8 +251,12 @@ public class SessionTest {
         assertTrue(Session.getState().inPay());
         Coin.DEFAULT_CURRENCY = Currency.getInstance(Locale.CANADA);
         Coin coin = new Coin(BigDecimal.ONE);
-        for (int i = 0; i < 10; i++) {
-            scs.coinSlot.receive(coin);
+        int count = 0;
+        while(count < 10) {
+        	scs.coinSlot.receive(coin);
+        	if(scs.coinTray.collectCoins().isEmpty()) {
+        		count++;
+        	}
         }
         assertEquals(Session.getState(), SessionState.PRE_SESSION);
     }
