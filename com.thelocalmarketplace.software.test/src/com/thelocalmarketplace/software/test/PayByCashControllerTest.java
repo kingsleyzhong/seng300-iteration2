@@ -92,13 +92,13 @@ public class PayByCashControllerTest {
 		MockSession mockSession = new MockSession();
 		mockSession.payByCash();
 		
-		scs.coinValidator.receive(coin);
+		scs.coinSlot.receive(coin);
 		Assert.assertEquals(BigDecimal.ONE, fundScs.getPaid());	
 		
-		scss.coinValidator.receive(coin);
+		scss.coinSlot.receive(coin);
 		Assert.assertEquals(BigDecimal.ONE, cashControllerSilver.getCashPaid());
 		
-		scsg.coinValidator.receive(coin);
+		scsg.coinSlot.receive(coin);
 		Assert.assertEquals(BigDecimal.ONE, cashControllerGold.getCashPaid());
 		
 
@@ -122,13 +122,13 @@ public class PayByCashControllerTest {
 		MockSession mockSession = new MockSession();
 		mockSession.payByCash();
 		
-		scs.coinValidator.receive(coin);
+		scs.coinSlot.receive(coin);
 		Assert.assertEquals(BigDecimal.ZERO, cashControllerBronze.getCashPaid());	
 		
-		scss.coinValidator.receive(coin);
+		scss.coinSlot.receive(coin);
 		Assert.assertEquals(BigDecimal.ZERO, cashControllerSilver.getCashPaid());
 		
-		scsg.coinValidator.receive(coin);
+		scsg.coinSlot.receive(coin);
 		Assert.assertEquals(BigDecimal.ZERO, cashControllerGold.getCashPaid());	
 	}
 	
@@ -150,7 +150,7 @@ public class PayByCashControllerTest {
 		
 		Coin coin = new Coin(currency, value);
 						
-		scs.coinValidator.receive(coin);
+		scs.coinSlot.receive(coin);
 		
 	}
 	
@@ -172,7 +172,7 @@ public class PayByCashControllerTest {
 		
 		Coin coin = new Coin(currency, value);
 						
-		scss.coinValidator.receive(coin);
+		scss.coinSlot.receive(coin);
 		
 	}
 	
@@ -194,7 +194,7 @@ public class PayByCashControllerTest {
 		
 		Coin coin = new Coin(currency, value);
 						
-		scsg.coinValidator.receive(coin);
+		scsg.coinSlot.receive(coin);
 		
 	}
 	
@@ -216,13 +216,13 @@ public class PayByCashControllerTest {
 		MockSession mockSession = new MockSession();
 		mockSession.payByCash();
 		
-		scs.banknoteValidator.receive(note);
+		scs.banknoteInput.receive(note);
 		Assert.assertEquals(BigDecimal.ONE, cashControllerBronze.getCashPaid());	
 		
-		scss.banknoteValidator.receive(note);
+		scss.banknoteInput.receive(note);
 		Assert.assertEquals(BigDecimal.ONE, cashControllerSilver.getCashPaid());
 		
-		scsg.banknoteValidator.receive(note);
+		scsg.banknoteInput.receive(note);
 		Assert.assertEquals(BigDecimal.ONE, cashControllerGold.getCashPaid());
 
 	}
@@ -245,13 +245,13 @@ public class PayByCashControllerTest {
 		MockSession mockSession = new MockSession();
 		mockSession.payByCash();
 		
-		scs.banknoteValidator.receive(note);
+		scs.banknoteInput.receive(note);
 		Assert.assertEquals(BigDecimal.ZERO, cashControllerBronze.getCashPaid());	
 		
-		scss.banknoteValidator.receive(note);
+		scss.banknoteInput.receive(note);
 		Assert.assertEquals(BigDecimal.ZERO, cashControllerSilver.getCashPaid());
 		
-		scsg.banknoteValidator.receive(note);
+		scsg.banknoteInput.receive(note);
 		Assert.assertEquals(BigDecimal.ZERO, cashControllerGold.getCashPaid());	
 	}
 
@@ -273,7 +273,7 @@ public class PayByCashControllerTest {
 		MockSession mockSession = new MockSession();
 		mockSession.block();
 								
-		scs.banknoteValidator.receive(note);
+		scs.banknoteInput.receive(note);
 		
 	}
 	
@@ -295,7 +295,7 @@ public class PayByCashControllerTest {
 		MockSession mockSession = new MockSession();
 		mockSession.block();
 								
-		scss.banknoteValidator.receive(note);
+		scss.banknoteInput.receive(note);
 		
 	}
 	
@@ -317,7 +317,7 @@ public class PayByCashControllerTest {
 		MockSession mockSession = new MockSession();
 		mockSession.block();
 						
-		scsg.banknoteValidator.receive(note);
+		scsg.banknoteInput.receive(note);
 		
 	}	
 	
