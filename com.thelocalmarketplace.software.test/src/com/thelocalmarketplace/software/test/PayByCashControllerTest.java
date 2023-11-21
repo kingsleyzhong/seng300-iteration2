@@ -180,9 +180,10 @@ public class PayByCashControllerTest {
 		mockSession.block();
 		
 		Coin coin = new Coin(currency, value);
-						
-		scss.coinSlot.receive(coin);
 		
+		for(int i = 0; i<10; i++) {
+			scss.coinSlot.receive(coin);
+		}
 	}
 	
 /***
