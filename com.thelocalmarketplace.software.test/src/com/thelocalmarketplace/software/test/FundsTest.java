@@ -69,6 +69,8 @@ public class FundsTest {
 
 	private PayByCard cardControllerBronze;
 	private Funds funds;
+	private Funds fundss;
+	private Funds fundsg;
 	private BigDecimal amountPaid;
 	private BigDecimal price;
 
@@ -94,9 +96,17 @@ public class FundsTest {
 		this.funds = funds;
 		funds.setPay(true);
 		
+		Funds fundss = new Funds(scss);
+		this.fundss = fundss;
+		fundss.setPay(true);
+		
+		Funds fundsg = new Funds(scsg);
+		this.fundsg = fundsg;
+		fundsg.setPay(true);
+		
 		this.cashControllerBronze = new PayByCashController(scs, funds);
-		this.cashControllerSilver = new PayByCashController(scss, funds);
-		this.cashControllerGold = new PayByCashController(scsg, funds);
+		this.cashControllerSilver = new PayByCashController(scss, fundss);
+		this.cashControllerGold = new PayByCashController(scsg, fundsg);
 
 		price = BigDecimal.valueOf(1);
 		amountPaid = BigDecimal.valueOf(1);
@@ -199,8 +209,8 @@ public class FundsTest {
 		Coin coinAmountPaid = new Coin(currency, amountPaid);
 
 		FundsListenerStub stub = new FundsListenerStub();
-		funds.register(stub);
-		funds.update(price);
+		fundss.register(stub);
+		fundss.update(price);
 		
 		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
 		sampleSimulation.setPayByCash();
@@ -218,8 +228,8 @@ public class FundsTest {
 		Coin coinAmountPaid = new Coin(currency, amountPaid);
 
 		FundsListenerStub stub = new FundsListenerStub();
-		funds.register(stub);
-		funds.update(price);
+		fundss.register(stub);
+		fundss.update(price);
 		
 		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
 		sampleSimulation.setPayByCash();
@@ -235,8 +245,8 @@ public class FundsTest {
 		Coin coinAmountPaid = new Coin(currency, amountPaid);
 
 		FundsListenerStub stub = new FundsListenerStub();
-		funds.register(stub);
-		funds.update(price);
+		fundsg.register(stub);
+		fundsg.update(price);
 		
 		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
 		sampleSimulation.setPayByCash();
@@ -254,8 +264,8 @@ public class FundsTest {
 		Coin coinAmountPaid = new Coin(currency, amountPaid);
 
 		FundsListenerStub stub = new FundsListenerStub();
-		funds.register(stub);
-		funds.update(price);
+		fundsg.register(stub);
+		fundsg.update(price);
 		
 		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
 		sampleSimulation.setPayByCash();
