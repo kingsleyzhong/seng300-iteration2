@@ -138,7 +138,7 @@ public class PayByCardTest_Silver {
 // ---------- SILVER TESTS ----------	
 		
 	@Test (expected = NoPowerException.class)
-	public void powerOffSwipe() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException{
+	public void powerOffSwipe() throws IOException{
 		scs.turnOff();
 		scs.cardReader.swipe(debit);
 		scs.turnOn();
@@ -147,7 +147,7 @@ public class PayByCardTest_Silver {
 	}
 	
 	@Test (expected = InvalidActionException.class)
-	public void swipeIncorrectState() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException{
+	public void swipeIncorrectState() throws IOException{
 		mockSession.block();
 		while(!funds.successfulSwipe) {
 			try {
@@ -160,7 +160,7 @@ public class PayByCardTest_Silver {
 	}
 	
 	@Test (expected = InvalidActionException.class)
-	public void testInvalidCardNumber() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException{
+	public void testInvalidCardNumber() throws IOException{
 		long price = 100;
 		BigDecimal itemPrice = new BigDecimal(price);
 		mockSession.payByCard();
@@ -178,7 +178,7 @@ public class PayByCardTest_Silver {
 	}
 	
 	@Test (expected = InvalidActionException.class)
-	public void testBlockedCard() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException {
+	public void testBlockedCard() throws IOException{
 		long price = 100;
 		BigDecimal itemPrice = new BigDecimal(price);
 		mockSession.payByCard();
@@ -199,7 +199,7 @@ public class PayByCardTest_Silver {
 	// PayByCard currently is not capable of doing anything with the -1 value; change this?
 	// Otherwise testing both that cards are counting correct hold counts or not (redundant?)
 	@Test (expected = InvalidActionException.class)
-	public void testHoldCountDecline() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException {
+	public void testHoldCountDecline() throws IOException{
 		ci1.authorizeHold(disCard.number, 1);
 		long price = 100;
 		BigDecimal itemPrice = new BigDecimal(price);
@@ -218,7 +218,7 @@ public class PayByCardTest_Silver {
 	}
 	
 	@Test (expected = InvalidActionException.class)
-	public void testAvailableBalanceDecline() throws CashOverloadException, NoCashAvailableException, DisabledException, IOException {
+	public void testAvailableBalanceDecline() throws IOException{
 		long price = 1000000;
 		BigDecimal itemPrice = new BigDecimal(price);
 		funds.update(itemPrice);
@@ -235,7 +235,7 @@ public class PayByCardTest_Silver {
 	}
 
 	@Test
-	public void testSuccessfulPostingTransaction() throws CashOverloadException, NoCashAvailableException, DisabledException, IOException {
+	public void testSuccessfulPostingTransaction() throws IOException{
 		mockSession.payByCard();
 		long price = 10;
 		BigDecimal itemPrice = new BigDecimal(price);
