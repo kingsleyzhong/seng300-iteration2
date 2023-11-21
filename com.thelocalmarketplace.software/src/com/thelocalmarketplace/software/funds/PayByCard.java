@@ -129,19 +129,16 @@ public class PayByCard {
 				return;
 			} else {	
 				boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
-				if (!post) {
-					// This failed for some reason
-					// Credit limit
-					return;
-				} else {
-					// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-					CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).releaseHold(card.number, 1);
+				// May failed for some reason
+				// Credit limit
+
+				// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
+				CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).releaseHold(card.number, 1);
 				}
 				paidBool = true;
 				funds.updatePaidCard(paidBool);
 				successfulSwipe = false;
 				return;
-			}
 							
 		} else if (card.kind == SupportedCardIssuers.TWO.getIssuer()) {
 			long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).authorizeHold(card.number, 1);
@@ -154,19 +151,15 @@ public class PayByCard {
 				return;
 			} else {	
 				boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
-				if (!post) {
-					// This failed for some reason
-					// Credit limit
-					return;
-				} else {
-					// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-					CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).releaseHold(card.number, 1);
+				// May failed for some reason
+				// Credit limit
+
+				// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
+				CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).releaseHold(card.number, 1);
 				}
 				paidBool = true;
 				funds.updatePaidCard(paidBool);
-				successfulSwipe = false;
 				return;
-			}
 							
 		} else if (card.kind == SupportedCardIssuers.THREE.getIssuer()) {
 			long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).authorizeHold(card.number, 1);
@@ -179,19 +172,16 @@ public class PayByCard {
 				return;
 			} else {	
 				boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
-				if (!post) {
-					// This failed for some reason
-					// Credit limit
-					return;
-				} else {
-					// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-					CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).releaseHold(card.number, 1);
+				// May failed for some reason
+				// Credit limit
+
+				// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
+				CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).releaseHold(card.number, 1);
 				}
 				paidBool = true;
 				funds.updatePaidCard(paidBool);		
 				successfulSwipe = false;
 				return;
-			}
 			
 		} else if (card.kind == SupportedCardIssuers.FOUR.getIssuer()) {
 			long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).authorizeHold(card.number, 1);
@@ -204,14 +194,12 @@ public class PayByCard {
 				return;
 			} else {	
 				boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
-				if (!post) {
-					// This failed for some reason
-					// Credit limit
-					return;
-				} else {
-					// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-					CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).releaseHold(card.number, 1);
-				}
+				// May failed for some reason
+				// Credit limit
+
+				// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
+				CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).releaseHold(card.number, 1);
+
 				paidBool = true;
 				funds.updatePaidCard(paidBool);
 				successfulSwipe = false;
