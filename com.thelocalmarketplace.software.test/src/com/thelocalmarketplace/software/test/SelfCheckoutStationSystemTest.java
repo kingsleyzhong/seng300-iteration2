@@ -245,8 +245,12 @@ public class SelfCheckoutStationSystemTest {
 		}
 		scs.baggingArea.addAnItem(item);
 		session.payByCash();
-		for (int i = 0; i < 10; i++) {
+		int count = 0;
+		while(count<10) {
 			scs.coinSlot.receive(dollar);
+			if(scs.coinTray.collectCoins().isEmpty()) {
+				count = count + 1;
+			}
 		}
 		Funds funds = session.getFunds();
 		assertEquals("Session is fully paid for", BigDecimal.ZERO, funds.getAmountDue());
@@ -263,8 +267,16 @@ public class SelfCheckoutStationSystemTest {
 		}
 		scs.baggingArea.addAnItem(item);
 		session.payByCash();
-		scs.banknoteInput.receive(twenty);
-		
+		boolean inserted = false;
+		while(!inserted) {
+			scs.banknoteInput.receive(twenty);
+			if(!scs.banknoteInput.hasDanglingBanknotes()) {
+				inserted = true;
+			}
+			else {
+				scs.banknoteInput.removeDanglingBanknote();
+			}
+		}
 		Funds funds = session.getFunds();
 		assertEquals("Paid $20", new BigDecimal(20), funds.getPaid());
 		assertTrue("Session is fully paid for", funds.getAmountDue().compareTo(BigDecimal.ZERO)<0);
@@ -294,8 +306,16 @@ public class SelfCheckoutStationSystemTest {
 		}
 		scs.baggingArea.addAnItem(item2);
 		session.payByCash();
-		scs.banknoteInput.receive(twenty);
-		
+		boolean inserted = false;
+		while(!inserted) {
+			scs.banknoteInput.receive(twenty);
+			if(!scs.banknoteInput.hasDanglingBanknotes()) {
+				inserted = true;
+			}
+			else {
+				scs.banknoteInput.removeDanglingBanknote();
+			}
+		}
 		Funds funds = session.getFunds();
 		assertEquals("Paid $20", new BigDecimal(20), funds.getPaid());
 		assertTrue("Session is fully paid for", funds.getAmountDue().compareTo(BigDecimal.ZERO)<0);
@@ -385,6 +405,48 @@ public class SelfCheckoutStationSystemTest {
 		assertEquals("Session has been notified of full payment", Session.getState(), SessionState.PRE_SESSION);
 	}
 	
+	// Tests for removing an item
+	
+	@Test
+	public void testAddThenRemoveItem() throws DisabledException, CashOverloadException {
+		session.start();
+		for(int i =0; i < 100; i++) {
+			scs.mainScanner.scan(item);
+		}
+		scs.baggingArea.addAnItem(item);
+		for(int i =0; i < 100; i++) {
+			scs.mainScanner.scan(item2);
+		}
+		scs.baggingArea.addAnItem(item2);
+		session.removeItem(product);
+		scs.baggingArea.removeAnItem(item);
+		session.payByCash();
+		int count = 0;
+		while(count<10) {
+			scs.coinSlot.receive(dollar);
+			if(scs.coinTray.collectCoins().isEmpty()) {
+				count = count + 1;
+			}
+		}
+		Funds funds = session.getFunds();
+		assertEquals("Session is fully paid for", BigDecimal.ZERO, funds.getAmountDue());
+		assertEquals("Session has been notified of full payment", Session.getState(), SessionState.PRE_SESSION);
+	}
+	
+	// Test add bulky item
+	
+	@Test
+	public void testAddBulkyItem() {
+		session.start();
+		for(int i =0; i < 100; i++) {
+			scs.mainScanner.scan(item);
+		}
+		session.bulkyItemCalled();
+		session.assistantApprove();
+		session.addBulkyItem();
+		assertEquals("Session is in session", SessionState.IN_SESSION, Session.getState());
+	}
+	
 	// Tests for weight Discrepancy
 
 	@Test
@@ -429,7 +491,13 @@ public class SelfCheckoutStationSystemTest {
 		scs.baggingArea.addAnItem(item);
 		session.payByCash();
 		scs.baggingArea.addAnItem(item2);
-		scs.coinSlot.receive(dollar);
+		int count = 0;
+		while(count<1) {
+			scs.coinSlot.receive(dollar);
+			if(scs.coinTray.collectCoins().isEmpty()) {
+				count = count + 1;
+			}
+		}
 	}
 
 	@Test
