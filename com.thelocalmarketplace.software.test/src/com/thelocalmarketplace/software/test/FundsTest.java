@@ -16,6 +16,7 @@ import com.jjjwelectronics.IllegalDigitException;
 import com.tdc.CashOverloadException;
 import com.tdc.DisabledException;
 import com.tdc.NoCashAvailableException;
+import com.tdc.banknote.Banknote;
 import com.tdc.banknote.BanknoteDispenserBronze;
 import com.tdc.coin.Coin;
 import com.tdc.coin.CoinDispenserBronze;
@@ -29,6 +30,7 @@ import com.thelocalmarketplace.software.SelfCheckoutStationLogic;
 import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.SessionState;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
+import com.thelocalmarketplace.software.exceptions.NotEnoughChangeException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.funds.FundsListener;
 import com.thelocalmarketplace.software.funds.PayByCard;
@@ -262,16 +264,6 @@ public class FundsTest {
 
 		assertFalse("Paid event not called", stub.getEvents().contains("Paid"));
 	}
-	
-	@Test
-	public void testReturnInsufficientChange() {
-		
-	}
-	
-	@Test
-	public void testReturnChange() {
-		
-	}
 
 	@Test(expected = SimulationException.class)
 	public void testRegisterInvalidListener() {
@@ -332,5 +324,23 @@ public class FundsTest {
 		scs.coinValidator.enable();
 		scs.coinValidator.disactivate();
 		scs.coinValidator.activate();
+	}
+	
+	@Test (expected = NotEnoughChangeException.class)
+	public void testNotEnoughChange() throws DisabledException, CashOverloadException {
+		
+		Currency currency = Currency.getInstance(Locale.CANADA);
+		Banknote ones = new Banknote(currency, BigDecimal.ONE);
+			
+		FundsListenerStub stub = new FundsListenerStub();
+		
+		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
+		sampleSimulation.setPayByCash();
+		
+		funds.update(BigDecimal.valueOf(1));
+		
+		scs.banknoteInput.receive(ones);
+		scs.banknoteInput.receive(ones);
+				
 	}
 }
