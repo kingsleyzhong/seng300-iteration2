@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Locale;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,9 +12,14 @@ import org.junit.Test;
 import com.jjjwelectronics.scanner.BarcodedItem;
 import com.tdc.CashOverloadException;
 import com.tdc.DisabledException;
+import com.tdc.IComponent;
+import com.tdc.IComponentObserver;
 import com.tdc.banknote.Banknote;
+import com.tdc.banknote.BanknoteValidator;
+import com.tdc.banknote.BanknoteValidatorObserver;
 import com.tdc.coin.Coin;
 import com.tdc.coin.CoinValidator;
+import com.tdc.coin.CoinValidatorObserver;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationBronze;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
@@ -43,6 +49,9 @@ public class PayByCashControllerTest {
 	private Funds fundScs;
 	private Funds fundScss;
 	private Funds fundScsg;
+	private stubCVListener cvListenerBronze,cvListenerSilver,cvListenerGold;
+	private stubBVListener bvListenerBronze,bvListenerSilver,bvListenerGold;
+	
 	
 /***
  * setting up
@@ -73,14 +82,39 @@ public class PayByCashControllerTest {
 		this.fundScsg = new Funds(scsg);
 		this.cashControllerGold = new PayByCashController(scss, fundScsg);
 		
+		// register listeners
+		cvListenerBronze = new stubCVListener();
+		scs.coinValidator.attach(cvListenerBronze);
+		cvListenerSilver = new stubCVListener();
+		scss.coinValidator.attach(cvListenerSilver);		
+		cvListenerGold = new stubCVListener();
+		scsg.coinValidator.attach(cvListenerGold);
+		
+		bvListenerBronze = new stubBVListener();
+		scs.banknoteValidator.attach(bvListenerBronze);
+		bvListenerSilver = new stubBVListener();
+		scss.banknoteValidator.attach(bvListenerSilver);
+		bvListenerGold = new stubBVListener();
+		scsg.banknoteValidator.attach(bvListenerGold);
+		
 		this.price = BigDecimal.TEN;
 		
 		fundScs.update(price);
 		fundScss.update(price);
 		fundScsg.update(price);
 
-		
-		
+	}
+	
+	@After
+	public void tearDown() {
+		// clear all listeners
+		scs.coinValidator.detachAll();
+		scss.coinValidator.detachAll();
+		scsg.coinValidator.detachAll();
+
+		scs.banknoteValidator.detachAll();
+		scss.banknoteValidator.detachAll();
+		scsg.banknoteValidator.detachAll();
 	}
 	
 /***
@@ -101,13 +135,19 @@ public class PayByCashControllerTest {
 		MockSession mockSession = new MockSession();
 		mockSession.payByCash();
 		
-		scs.coinSlot.receive(coin);
+		while(!cvListenerBronze.coinIsValid) {
+			scs.coinSlot.receive(coin);
+		}
 		Assert.assertEquals(BigDecimal.ONE, fundScs.getPaid());	
 		
-		scss.coinSlot.receive(coin);
+		while(!cvListenerSilver.coinIsValid) {
+			scss.coinSlot.receive(coin);
+		}
 		Assert.assertEquals(BigDecimal.ONE, cashControllerSilver.getCashPaid());
 		
-		scsg.coinSlot.receive(coin);
+		while(!cvListenerGold.coinIsValid) {
+			scsg.coinSlot.receive(coin);
+		}
 		Assert.assertEquals(BigDecimal.ONE, cashControllerGold.getCashPaid());
 		
 
@@ -159,7 +199,9 @@ public class PayByCashControllerTest {
 		
 		Coin coin = new Coin(currency, value);
 						
-		scs.coinSlot.receive(coin);
+		while(!cvListenerBronze.coinIsValid) {
+			scs.coinSlot.receive(coin);
+		}
 		
 	}
 	
@@ -181,7 +223,7 @@ public class PayByCashControllerTest {
 		
 		Coin coin = new Coin(currency, value);
 		
-		for(int i = 0; i<10; i++) {
+		while(!cvListenerSilver.coinIsValid) {
 			scss.coinSlot.receive(coin);
 		}
 	}
@@ -204,7 +246,9 @@ public class PayByCashControllerTest {
 		
 		Coin coin = new Coin(currency, value);
 						
-		scsg.coinSlot.receive(coin);
+		while(!cvListenerGold.coinIsValid) {
+			scsg.coinSlot.receive(coin);
+		}
 		
 	}
 	
@@ -226,13 +270,28 @@ public class PayByCashControllerTest {
 		MockSession mockSession = new MockSession();
 		mockSession.payByCash();
 		
-		scs.banknoteInput.receive(note);
+		while(!bvListenerBronze.cashIsValid) {
+			if(scs.banknoteInput.hasDanglingBanknotes()) {
+				scs.banknoteInput.removeDanglingBanknote();
+			}
+			scs.banknoteInput.receive(note);
+		}		
 		Assert.assertEquals(BigDecimal.ONE, cashControllerBronze.getCashPaid());	
 		
-		scss.banknoteInput.receive(note);
+		while(!bvListenerSilver.cashIsValid) {
+			if(scss.banknoteInput.hasDanglingBanknotes()) {
+				scss.banknoteInput.removeDanglingBanknote();
+			}
+			scss.banknoteInput.receive(note);
+		}
 		Assert.assertEquals(BigDecimal.ONE, cashControllerSilver.getCashPaid());
 		
-		scsg.banknoteInput.receive(note);
+		while(!bvListenerGold.cashIsValid) {
+			if(scsg.banknoteInput.hasDanglingBanknotes()) {
+				scsg.banknoteInput.removeDanglingBanknote();
+			}
+			scsg.banknoteInput.receive(note);
+		}
 		Assert.assertEquals(BigDecimal.ONE, cashControllerGold.getCashPaid());
 
 	}
@@ -282,8 +341,13 @@ public class PayByCashControllerTest {
 		
 		MockSession mockSession = new MockSession();
 		mockSession.block();
-								
-		scs.banknoteInput.receive(note);
+		
+		while(!bvListenerBronze.cashIsValid) {
+			if(scs.banknoteInput.hasDanglingBanknotes()) {
+				scs.banknoteInput.removeDanglingBanknote();
+			}
+			scs.banknoteInput.receive(note);
+		}
 		
 	}
 	
@@ -305,9 +369,13 @@ public class PayByCashControllerTest {
 		MockSession mockSession = new MockSession();
 		mockSession.block();
 								
-		scss.banknoteInput.receive(note);
-		
-	}
+		while(!bvListenerSilver.cashIsValid) {
+			if(scss.banknoteInput.hasDanglingBanknotes()) {
+				scss.banknoteInput.removeDanglingBanknote();
+			}
+			scss.banknoteInput.receive(note);
+		}		
+}
 	
 /***
  * Insert a valid banknote of value 1, but pay is not active
@@ -326,9 +394,13 @@ public class PayByCashControllerTest {
 		
 		MockSession mockSession = new MockSession();
 		mockSession.block();
-						
-		scsg.banknoteInput.receive(note);
 		
+		while(!bvListenerGold.cashIsValid) {
+			if(scsg.banknoteInput.hasDanglingBanknotes()) {
+				scsg.banknoteInput.removeDanglingBanknote();
+			}
+			scsg.banknoteInput.receive(note);
+		}
 	}	
 	
 /***
@@ -346,4 +418,70 @@ public class PayByCashControllerTest {
 		}
 	}
 	
+	/**
+	 * a Stub of the coin validator listener to check if coins have been "seen" or not
+	 */
+	public class stubCVListener implements CoinValidatorObserver{
+		public boolean coinIsValid = false;
+		@Override
+		public void enabled(IComponent<? extends IComponentObserver> component) {
+
+		}
+
+		@Override
+		public void disabled(IComponent<? extends IComponentObserver> component) {
+
+		}
+
+		@Override
+		public void turnedOn(IComponent<? extends IComponentObserver> component) {			
+		}
+
+		@Override
+		public void turnedOff(IComponent<? extends IComponentObserver> component) {
+		}
+
+		@Override
+		public void validCoinDetected(CoinValidator validator, BigDecimal value) {
+			coinIsValid = true;
+		}
+
+		@Override
+		public void invalidCoinDetected(CoinValidator validator) {
+			coinIsValid = false;
+
+		}
+	}
+	
+	/**
+	 * a stub that listens to see if a valid banknote has been detected or not
+	 */
+	public class stubBVListener implements BanknoteValidatorObserver{
+		public boolean cashIsValid = false;
+		@Override
+		public void enabled(IComponent<? extends IComponentObserver> component) {
+		}
+
+		@Override
+		public void disabled(IComponent<? extends IComponentObserver> component) {	
+		}
+
+		@Override
+		public void turnedOn(IComponent<? extends IComponentObserver> component) {
+		}
+
+		@Override
+		public void turnedOff(IComponent<? extends IComponentObserver> component) {
+		}
+
+		@Override
+		public void goodBanknote(BanknoteValidator validator, Currency currency, BigDecimal denomination) {
+			cashIsValid = true;
+		}
+
+		@Override
+		public void badBanknote(BanknoteValidator validator) {
+			cashIsValid = false;		
+		}
+	}
 }
