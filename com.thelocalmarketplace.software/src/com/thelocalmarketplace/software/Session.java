@@ -49,6 +49,7 @@ public class Session {
 	protected static SessionState sessionState;
 	private SessionState prevState;
 	private HashMap<BarcodedProduct, Integer> barcodedItems;
+	private HashMap<BarcodedProduct, Integer> bulkyItem;
 	private Funds funds;
 	private Weight weight;
 	private PrintReceipt receiptPrinter; // Code added
@@ -584,6 +585,44 @@ public class Session {
 
 		else
 			return;
+	}
+
+	public void removeBulkyItem(BarcodedProduct item) {
+		long price = item.getPrice();
+		BigDecimal itemPrice = new BigDecimal(price);
+
+		if (this.bulkyItemCalled) {
+			if (this.requestApproved) {
+				if (bulkyItem.containsKey(item) && bulkyItem.get(item) >= 1 ) {
+					bulkyItem.replace(item, bulkyItem.get(item)-1);
+					funds.removeItemPrice(itemPrice);
+				} else if (bulkyItem.containsKey(item) && bulkyItem.get(item) == 1 ) {
+					funds.removeItemPrice(itemPrice);
+					bulkyItem.remove(item);
+				} else {
+					throw new ProductNotFoundException("Item not found");
+				}
+			}
+		}
+	}
+
+	public void setup2(HashMap<BarcodedProduct, Integer> barcodedItems, Funds funds, Weight weight) {
+		this.bulkyItem = barcodedItems;
+		this.funds = funds;
+		this.weight = weight;
+		this.weight.register(new WeightDiscrepancyListener());
+		this.funds.register(new PayListener());
+	}
+	public void addBulkyItemToMap(BarcodedProduct item) {
+		if (this.bulkyItemCalled) {
+			if (this.requestApproved) {
+				if (bulkyItem.containsKey(item)) {
+					bulkyItem.replace(item, bulkyItem.get(item) + 1);
+				} else {
+					bulkyItem.put(item, 1);
+				}
+			}
+		}
 	}
 
 	public void cancelBulkyItem() {

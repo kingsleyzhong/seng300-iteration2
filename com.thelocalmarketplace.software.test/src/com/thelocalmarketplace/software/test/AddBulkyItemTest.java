@@ -6,6 +6,7 @@ import com.jjjwelectronics.IDevice;
 import com.jjjwelectronics.IDeviceListener;
 import com.jjjwelectronics.scanner.BarcodeScannerListener;
 import com.jjjwelectronics.scanner.IBarcodeScanner;
+import com.thelocalmarketplace.software.exceptions.ProductNotFoundException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -679,6 +680,104 @@ public class AddBulkyItemTest {
         session.addBulkyItem();
         session.attendantFixWeightDiscrepancy();
         assertFalse("There is no weight discrepancy.", session.getWeight().isDiscrepancy());
+    }
+
+    @Test
+    public void testRemoveBulkyItem() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup2(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
+        // customer calls add bulky item
+        session.addBulkyItem();
+        session.addBulkyItemToMap(product);
+        session.removeBulkyItem(product);
+        Weight itemWeight = session.getWeight();
+        Mass actual = itemWeight.getExpectedWeight();
+        Mass expected = new Mass(0);
+        assertEquals("Mass is 0", expected, actual);
+    }
+
+    @Test
+    public void testRemoveBulkyItemTwoItems() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup2(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        session.addItem(product);
+        session.bulkyItemCalled();
+        session.assistantApprove();
+        session.addBulkyItem();
+        session.addBulkyItemToMap(product);
+        session.addBulkyItemToMap(product);
+        session.removeBulkyItem(product);
+        Weight itemWeight = session.getWeight();
+        Mass actual = itemWeight.getExpectedWeight();
+        Mass expected = new Mass(BigDecimal.valueOf(100));
+        assertEquals("Mass is 100", expected, actual);
+    }
+
+    @Test
+    public void testRemoveBulkyItemThreeItems() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup2(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        session.addItem(product);
+        session.addItem(product);
+        session.bulkyItemCalled();
+        session.assistantApprove();
+        session.addBulkyItem();
+        session.addBulkyItemToMap(product);
+        session.addBulkyItemToMap(product);
+        session.addBulkyItemToMap(product);
+        session.removeBulkyItem(product);
+        Weight itemWeight = session.getWeight();
+        Mass actual = itemWeight.getExpectedWeight();
+        Mass expected = new Mass(BigDecimal.valueOf(200));
+        assertEquals("Mass is 200", expected, actual);
+    }
+
+    @Test (expected = ProductNotFoundException.class)
+    public void testRemoveBulkyItemNotFound() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup2(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        // customer indicates they want to not bag item
+        session.bulkyItemCalled();
+        // assistant approves
+        session.assistantApprove();
+        // customer calls add bulky item
+        session.addBulkyItem();
+        session.removeBulkyItem(product);
+    }
+
+    @Test
+    public void testRemoveBulkyItemNotCalled() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup2(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        session.addBulkyItemToMap(product);
+        session.removeBulkyItem(product);
+        assertFalse(session.getBulkyItemCalled());
+    }
+
+    @Test
+    public void testRemoveBulkyItemRequestNotApproved() {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.setup2(new HashMap<BarcodedProduct, Integer>(), funds, weight);
+        session.addItem(product);
+        session.bulkyItemCalled();
+        session.addBulkyItemToMap(product);
+        session.removeBulkyItem(product);
+        assertFalse(session.getRequestApproved());
     }
 
     public class ScannerListenerStub implements BarcodeScannerListener {
