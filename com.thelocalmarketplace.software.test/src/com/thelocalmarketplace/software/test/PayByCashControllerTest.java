@@ -55,8 +55,7 @@ public class PayByCashControllerTest {
 		scs = new SelfCheckoutStationBronze();
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
-		Funds fundScs = new Funds(scs);
-		this.fundScs = fundScs;
+		this.fundScs = new Funds(scs);
 		this.cashControllerBronze = new PayByCashController(scs, fundScs);
 		
 		scss = new SelfCheckoutStationSilver();
@@ -70,6 +69,13 @@ public class PayByCashControllerTest {
 		scsg.turnOn();
 		this.fundScsg = new Funds(scsg);
 		this.cashControllerGold = new PayByCashController(scss, fundScsg);
+		
+		this.price = BigDecimal.TEN;
+		
+		fundScs.update(price);
+		fundScss.update(price);
+		fundScsg.update(price);
+
 		
 		
 	}
