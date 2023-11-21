@@ -31,12 +31,15 @@ import com.thelocalmarketplace.software.SessionState;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.funds.FundsListener;
+import com.thelocalmarketplace.software.funds.PayByCard;
 import com.thelocalmarketplace.software.funds.PayByCashController;
 
+import StubClasses.FundsListenerStub;
+import StubClasses.SessionFundsSimulationStub;
 import ca.ucalgary.seng300.simulation.SimulationException;
 import powerutility.PowerGrid;
 
-/*
+/**
  * Testing for the Funds class
  * 
  * Project iteration 2 group members:
@@ -55,9 +58,8 @@ import powerutility.PowerGrid;
 public class FundsTest_Bronze {
 	
 	private SelfCheckoutStationBronze scs;
-	private CoinValidator validator;
 	private PayByCashController cashControllerBronze;
-//	private PayByCardController cardControllerBronze;
+	private PayByCard cardControllerBronze;
 	private Funds funds;
 	private BigDecimal amountPaid;
 	private BigDecimal price;
@@ -76,8 +78,8 @@ public class FundsTest_Bronze {
 		
 		this.cashControllerBronze = new PayByCashController(scs, funds);
 
-		price = BigDecimal.valueOf(5.00);
-		amountPaid = BigDecimal.valueOf(5.00);
+		price = BigDecimal.valueOf(1);
+		amountPaid = BigDecimal.valueOf(1);
 	}
 	
 	@Test (expected = IllegalArgumentException.class)
@@ -102,6 +104,26 @@ public class FundsTest_Bronze {
 	public void testUpdateInvalidPriceNegative() throws CashOverloadException, NoCashAvailableException, DisabledException {
 		funds.update(BigDecimal.valueOf(-1.00));
 	}
+	
+	@Test
+	public void testRemoveValidItemPrice() throws CashOverloadException, NoCashAvailableException, DisabledException {
+		funds.update(price);
+		funds.removeItemPrice(price);
+		assertEquals(BigDecimal.valueOf(0), funds.getItemsPrice());
+		assertEquals(BigDecimal.valueOf(0), funds.getAmountDue());
+	}
+	
+	@Test(expected = IllegalDigitException.class)
+	public void testRemoveInvalidItemPriceZero() throws CashOverloadException, NoCashAvailableException, DisabledException {
+		funds.update(price);
+		funds.removeItemPrice(BigDecimal.valueOf(0.00));
+	}
+	
+	@Test(expected = IllegalDigitException.class)
+	public void testRemoveInvalidItemPriceNegative() throws CashOverloadException, NoCashAvailableException, DisabledException {
+		funds.update(price);
+		funds.removeItemPrice(BigDecimal.valueOf(-1.00));
+	}
 
 	@Test
 	public void testTurnOnPay() {
@@ -117,7 +139,6 @@ public class FundsTest_Bronze {
 
 	@Test
 	public void testAmountPaidFullCash() throws DisabledException, CashOverloadException, NoCashAvailableException {
-		
 		Currency currency = Currency.getInstance(Locale.CANADA);
 		Coin coinAmountPaid = new Coin(currency, amountPaid);
 
@@ -125,7 +146,7 @@ public class FundsTest_Bronze {
 		funds.register(stub);
 		funds.update(price);
 		
-		SessionSimulation sampleSimulation = new SessionSimulation();
+		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
 		sampleSimulation.setPayByCash();
 		
 		scs.coinSlot.receive(coinAmountPaid);
@@ -134,8 +155,22 @@ public class FundsTest_Bronze {
 	}
 	
 	@Test
-	public void testAmountPaidPartial() {
+	public void testAmountPaidPartialCash() throws DisabledException, CashOverloadException {
+		price = BigDecimal.valueOf(2);
+
+		Currency currency = Currency.getInstance(Locale.CANADA);
+		Coin coinAmountPaid = new Coin(currency, amountPaid);
+
+		FundsListenerStub stub = new FundsListenerStub();
+		funds.register(stub);
+		funds.update(price);
 		
+		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
+		sampleSimulation.setPayByCash();
+		
+		scs.coinSlot.receive(coinAmountPaid);
+
+		assertFalse("Paid event not called", stub.getEvents().contains("Paid"));
 	}
 	
 	@Test
@@ -156,32 +191,49 @@ public class FundsTest_Bronze {
 	
 	 @Test(expected = SimulationException.class)
 	    public void testDeregisterInvalidListener() {
-		 funds.deregister(null);
+		FundsListenerStub stub = null; 
+		funds.deregister(stub);
 	}
 
 	@Test
-	public void testUnregisterListener() {
-//		FundListenerStub stub = new FundListenerStub();
-//		fund.register(stub);
-//		fund.deregister(stub);
-//		fund.update(price);
-//		value = new BigDecimal(5);
-//		fund.new InnerListener().validCoinDetected(validator, value);
-//		assertFalse("Paid event called", stub.getEvents().contains("Paid"));
+	public void testUnregisterListener() throws DisabledException, CashOverloadException {
+		Currency currency = Currency.getInstance(Locale.CANADA);
+		Coin coinAmountPaid = new Coin(currency, amountPaid);
+
+		FundsListenerStub stub = new FundsListenerStub();
+		funds.register(stub);
+		funds.deregister(stub);
+		funds.update(price);
+		
+		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
+		sampleSimulation.setPayByCash();
+		
+		scs.coinSlot.receive(coinAmountPaid);
+
+		assertFalse("Paid event should not be called", stub.getEvents().contains("Paid"));
 	}
 
 	@Test
-	public void testUnregisterAllListeners() {
-//		FundListenerStub stub = new FundListenerStub();
-//		FundListenerStub stub2 = new FundListenerStub();
-//		fund.register(stub);
-//		fund.register(stub2);
-//		fund.deregisterAll();
-//		fund.update(price);
-//		value = new BigDecimal(5);
-//		fund.new InnerListener().validCoinDetected(validator, value);
-//		assertFalse("Paid event called", stub.getEvents().contains("Paid"));
-//		assertFalse("Paid event called", stub2.getEvents().contains("Paid"));
+	public void testUnregisterAllListeners() throws DisabledException, CashOverloadException {
+		Currency currency = Currency.getInstance(Locale.CANADA);
+		Coin coinAmountPaid = new Coin(currency, amountPaid);
+
+		FundsListenerStub stub = new FundsListenerStub();
+		FundsListenerStub stub2 = new FundsListenerStub();
+
+		funds.register(stub);
+		funds.register(stub2);
+
+		funds.deregisterAll();
+		funds.update(price);
+		
+		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
+		sampleSimulation.setPayByCash();
+		
+		scs.coinSlot.receive(coinAmountPaid);
+
+		assertFalse("Paid event should not be called", stub.getEvents().contains("Paid"));
+		assertFalse("Paid event should not be called", stub2.getEvents().contains("Paid"));
 	}
 
 	@Test
@@ -192,40 +244,3 @@ public class FundsTest_Bronze {
 		scs.coinValidator.activate();
 	}
 }
-
-class FundsListenerStub implements FundsListener {
-	ArrayList<String> events;
-
-	public FundsListenerStub() {
-		events = new ArrayList<String>();
-	}
-
-	@Override
-	public void notifyPaid() {
-		events.add("Paid");
-
-	}
-
-	public ArrayList<String> getEvents() {
-		return events;
-	}
-
-}
-
-class SessionSimulation extends Session {
-		
-	public void setPayByCash() {
-		sessionState = SessionState.PAY_BY_CASH;
-	}
-	
-	public void setPayByCard() {
-		sessionState = SessionState.PAY_BY_CARD;
-	}
-		
-	public void block() {
-		sessionState = SessionState.BLOCKED;
-	}
-}
-
-	
-
