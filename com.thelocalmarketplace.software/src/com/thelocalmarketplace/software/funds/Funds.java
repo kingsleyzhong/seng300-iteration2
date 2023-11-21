@@ -259,7 +259,7 @@ public class Funds {
 					try {
 						scs.banknoteDispensers.get(banknoteDenomination).emit();
 					} catch (NoCashAvailableException e) {
-						System.out.println("There is no banknotes available");
+						throw new NotEnoughChangeException("There are no banknotes available");
 					} catch (DisabledException e) {
 						System.out.println("Machine is not turned on");
 					} catch (CashOverloadException e) {
@@ -291,7 +291,7 @@ public class Funds {
 					try {
 						scs.coinDispensers.get(coinDenomination).emit();
 					} catch (NoCashAvailableException e) {
-						System.out.println("There is are no coins available");
+						throw new NotEnoughChangeException("There are no coins available");
 					} catch (DisabledException e) {
 						System.out.println("Machine is not turned on");
 					} catch (CashOverloadException e) {
