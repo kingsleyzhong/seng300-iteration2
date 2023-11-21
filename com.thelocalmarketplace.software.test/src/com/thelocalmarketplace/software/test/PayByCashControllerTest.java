@@ -58,6 +58,9 @@ public class PayByCashControllerTest {
 		this.fundScs = new Funds(scs);
 		this.cashControllerBronze = new PayByCashController(scs, fundScs);
 		
+		// engage uninteruptable power source
+		PowerGrid.instance().engageUninterruptiblePowerSource();
+		
 		scss = new SelfCheckoutStationSilver();
 		scss.plugIn(PowerGrid.instance());
 		scss.turnOn();
@@ -177,9 +180,10 @@ public class PayByCashControllerTest {
 		mockSession.block();
 		
 		Coin coin = new Coin(currency, value);
-						
-		scss.coinSlot.receive(coin);
 		
+		for(int i = 0; i<10; i++) {
+			scss.coinSlot.receive(coin);
+		}
 	}
 	
 /***
