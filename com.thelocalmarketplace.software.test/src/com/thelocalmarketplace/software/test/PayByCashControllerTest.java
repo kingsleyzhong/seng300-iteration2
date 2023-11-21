@@ -58,6 +58,9 @@ public class PayByCashControllerTest {
 		this.fundScs = new Funds(scs);
 		this.cashControllerBronze = new PayByCashController(scs, fundScs);
 		
+		// engage uninteruptable power source
+		PowerGrid.instance().engageUninterruptiblePowerSource();
+		
 		scss = new SelfCheckoutStationSilver();
 		scss.plugIn(PowerGrid.instance());
 		scss.turnOn();
