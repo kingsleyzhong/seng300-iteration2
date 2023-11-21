@@ -26,9 +26,8 @@ import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 public class PrintReceipt {
 	
 	public ArrayList<PrintReceiptListener> listeners = new ArrayList<>();
-	private boolean isOutOfPaper = false; //Flag for running our of paper, set to false in default
-	private boolean isOutOfInk = false; //Flag for running our of ink, set to false in default
-	private boolean lowOnInk = false; //Flag for running our of ink, set to false in default
+	private boolean isOutOfPaper = false; //Flag for running out of paper, set to false in default
+	private boolean isOutOfInk = false; //Flag for running out of ink, set to false in default
 	private boolean duplicateNeeded = false; //Flag for if the receipt was not printed out fully and a duplicate is needed.
 	private String receipt; //The receipt that should be printed
 	private IReceiptPrinter printer; //The printer associated with the session;
@@ -83,7 +82,6 @@ public class PrintReceipt {
 
 		@Override
 		public void thePrinterHasLowInk() {
-			lowOnInk = true;
 		}
 
 		@Override
