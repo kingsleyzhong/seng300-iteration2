@@ -239,7 +239,7 @@ public class Funds {
 		Collections.reverse(banknoteList);
 
 		// Getting coin denominations and sorting from descending order by value
-		Set<BigDecimal> coinType = scs.banknoteDispensers.keySet();
+		Set<BigDecimal> coinType = scs.coinDispensers.keySet();
 		ArrayList coinList = new ArrayList(coinType);
 		Collections.sort(coinList);
 		Collections.reverse(coinList);
@@ -285,7 +285,7 @@ public class Funds {
 			// changeDue
 			BigDecimal coinDenomination = (BigDecimal) itrCoin.next();
 
-			int denominationNum = changeDue / coinDenomination.intValue();
+			int denominationNum = (int)(changeDue / coinDenomination.doubleValue());
 
 			// Checking to see if there is enough bills in the dispenser
 			if (scs.coinDispensers.get(coinDenomination).size() >= denominationNum) {
@@ -307,6 +307,8 @@ public class Funds {
 			}
 		}
 
+		scs.banknoteOutput.dispense();
+		
 		if (changeDue > 0.005) {
 			throw new NotEnoughChangeException("Not enough change in the machine");
 		}
