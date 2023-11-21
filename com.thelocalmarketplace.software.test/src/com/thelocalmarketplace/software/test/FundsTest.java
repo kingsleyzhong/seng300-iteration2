@@ -16,6 +16,7 @@ import com.jjjwelectronics.IllegalDigitException;
 import com.tdc.CashOverloadException;
 import com.tdc.DisabledException;
 import com.tdc.NoCashAvailableException;
+import com.tdc.banknote.Banknote;
 import com.tdc.banknote.BanknoteDispenserBronze;
 import com.tdc.coin.Coin;
 import com.tdc.coin.CoinDispenserBronze;
@@ -29,6 +30,7 @@ import com.thelocalmarketplace.software.SelfCheckoutStationLogic;
 import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.SessionState;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
+import com.thelocalmarketplace.software.exceptions.NotEnoughChangeException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.funds.FundsListener;
 import com.thelocalmarketplace.software.funds.PayByCard;
@@ -55,10 +57,16 @@ import powerutility.PowerGrid;
  * Subeg CHAHAL : 30196531
  */
 
-public class FundsTest_Bronze {
+public class FundsTest {
 	
 	private SelfCheckoutStationBronze scs;
+	private SelfCheckoutStationSilver scss;
+	private SelfCheckoutStationGold scsg;
+
 	private PayByCashController cashControllerBronze;
+	private PayByCashController cashControllerSilver;
+	private PayByCashController cashControllerGold;
+
 	private PayByCard cardControllerBronze;
 	private Funds funds;
 	private BigDecimal amountPaid;
@@ -67,23 +75,35 @@ public class FundsTest_Bronze {
 	@Before
 	public void setUp() {
 		SelfCheckoutStationBronze.resetConfigurationToDefaults();
+		SelfCheckoutStationSilver.resetConfigurationToDefaults();
+		SelfCheckoutStationGold.resetConfigurationToDefaults();
 		
 		scs = new SelfCheckoutStationBronze();
 		scs.plugIn(PowerGrid.instance());
 		scs.turnOn();
+		
+		scss = new SelfCheckoutStationSilver();
+		scss.plugIn(PowerGrid.instance());
+		scss.turnOn();
+		
+		scsg = new SelfCheckoutStationGold();
+		scsg.plugIn(PowerGrid.instance());
+		scsg.turnOn();
 		
 		Funds funds = new Funds(scs);
 		this.funds = funds;
 		funds.setPay(true);
 		
 		this.cashControllerBronze = new PayByCashController(scs, funds);
+		this.cashControllerSilver = new PayByCashController(scss, funds);
+		this.cashControllerGold = new PayByCashController(scsg, funds);
 
 		price = BigDecimal.valueOf(1);
 		amountPaid = BigDecimal.valueOf(1);
 	}
 	
 	@Test (expected = IllegalArgumentException.class)
-	public void testNullSelfCheckoutStationBronze() {
+	public void testNullSelfCheckoutStation() {
 		scs = null;
 		funds = new Funds(scs);
 	}
@@ -138,7 +158,7 @@ public class FundsTest_Bronze {
 	}
 
 	@Test
-	public void testAmountPaidFullCash() throws DisabledException, CashOverloadException, NoCashAvailableException {
+	public void testAmountPaidFullCashBronze() throws DisabledException, CashOverloadException, NoCashAvailableException {
 		Currency currency = Currency.getInstance(Locale.CANADA);
 		Coin coinAmountPaid = new Coin(currency, amountPaid);
 
@@ -155,7 +175,7 @@ public class FundsTest_Bronze {
 	}
 	
 	@Test
-	public void testAmountPaidPartialCash() throws DisabledException, CashOverloadException {
+	public void testAmountPaidPartialCashBronze() throws DisabledException, CashOverloadException {
 		price = BigDecimal.valueOf(2);
 
 		Currency currency = Currency.getInstance(Locale.CANADA);
@@ -174,13 +194,75 @@ public class FundsTest_Bronze {
 	}
 	
 	@Test
-	public void testReturnInsufficientChange() {
+	public void testAmountPaidFullCashSilver() throws DisabledException, CashOverloadException, NoCashAvailableException {
+		Currency currency = Currency.getInstance(Locale.CANADA);
+		Coin coinAmountPaid = new Coin(currency, amountPaid);
+
+		FundsListenerStub stub = new FundsListenerStub();
+		funds.register(stub);
+		funds.update(price);
 		
+		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
+		sampleSimulation.setPayByCash();
+		
+		scss.coinSlot.receive(coinAmountPaid);
+
+		assertTrue("Paid event called", stub.getEvents().contains("Paid"));
 	}
 	
 	@Test
-	public void testReturnChange() {
+	public void testAmountPaidPartialCashSilver() throws DisabledException, CashOverloadException {
+		price = BigDecimal.valueOf(2);
+
+		Currency currency = Currency.getInstance(Locale.CANADA);
+		Coin coinAmountPaid = new Coin(currency, amountPaid);
+
+		FundsListenerStub stub = new FundsListenerStub();
+		funds.register(stub);
+		funds.update(price);
 		
+		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
+		sampleSimulation.setPayByCash();
+		
+		scss.coinSlot.receive(coinAmountPaid);
+
+		assertFalse("Paid event not called", stub.getEvents().contains("Paid"));
+	}
+	
+	@Test
+	public void testAmountPaidFullCashGold() throws DisabledException, CashOverloadException, NoCashAvailableException {
+		Currency currency = Currency.getInstance(Locale.CANADA);
+		Coin coinAmountPaid = new Coin(currency, amountPaid);
+
+		FundsListenerStub stub = new FundsListenerStub();
+		funds.register(stub);
+		funds.update(price);
+		
+		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
+		sampleSimulation.setPayByCash();
+		
+		scsg.coinSlot.receive(coinAmountPaid);
+
+		assertTrue("Paid event called", stub.getEvents().contains("Paid"));
+	}
+	
+	@Test
+	public void testAmountPaidPartialCashGold() throws DisabledException, CashOverloadException {
+		price = BigDecimal.valueOf(2);
+
+		Currency currency = Currency.getInstance(Locale.CANADA);
+		Coin coinAmountPaid = new Coin(currency, amountPaid);
+
+		FundsListenerStub stub = new FundsListenerStub();
+		funds.register(stub);
+		funds.update(price);
+		
+		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
+		sampleSimulation.setPayByCash();
+		
+		scsg.coinSlot.receive(coinAmountPaid);
+
+		assertFalse("Paid event not called", stub.getEvents().contains("Paid"));
 	}
 
 	@Test(expected = SimulationException.class)
@@ -237,10 +319,28 @@ public class FundsTest_Bronze {
 	}
 
 	@Test
-	public void testEnable() {
+	public void testEnableDisable() {
 		scs.coinValidator.disable();
 		scs.coinValidator.enable();
 		scs.coinValidator.disactivate();
 		scs.coinValidator.activate();
+	}
+	
+	@Test (expected = NotEnoughChangeException.class)
+	public void testNotEnoughChange() throws DisabledException, CashOverloadException {
+		
+		Currency currency = Currency.getInstance(Locale.CANADA);
+		Banknote ones = new Banknote(currency, BigDecimal.ONE);
+			
+		FundsListenerStub stub = new FundsListenerStub();
+		
+		SessionFundsSimulationStub sampleSimulation = new SessionFundsSimulationStub();
+		sampleSimulation.setPayByCash();
+		
+		funds.update(BigDecimal.valueOf(1));
+		
+		scs.banknoteInput.receive(ones);
+		scs.banknoteInput.receive(ones);
+				
 	}
 }
