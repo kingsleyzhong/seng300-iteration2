@@ -86,9 +86,6 @@ public class Funds {
 		this.cashController = new PayByCashController(scs, this);
 		this.cardController = new PayByCard(scs, this);
 
-		// Testing only
-		this.successfulSwipe = cardController.successfulSwipe;
-
 
 		this.scs = scs;
 	}
@@ -178,9 +175,6 @@ public class Funds {
 				returnChange();
 			}
 			payed = true;
-			
-			// Testing only
-			cardController.successfulSwipe = false;
 		}
 	}
 
@@ -315,10 +309,6 @@ public class Funds {
 			throw new NotEnoughChangeException("Not enough change in the machine");
 		}
 
-	}
-	
-	public boolean getSuccessfulSwipe() {
-		return cardController.successfulSwipe;
 	}
 
 	/**
