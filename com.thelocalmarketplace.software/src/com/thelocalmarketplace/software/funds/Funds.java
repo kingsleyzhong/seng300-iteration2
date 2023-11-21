@@ -59,6 +59,12 @@ public class Funds {
 	private PayByCashController cashController;
 	private PayByCard cardController;
 
+  // from old version, delete if unused/ it breaks stuff
+	// Testing ONLY
+	public boolean payed;
+	public boolean successfulSwipe;
+  // end old version stuff to delete
+  
 	private AbstractSelfCheckoutStation scs;
 
 	/**
@@ -76,8 +82,15 @@ public class Funds {
 		this.paid = BigDecimal.ZERO;
 		this.amountDue = BigDecimal.ZERO;
 		this.isPay = false;
+		this.payed = false;
 		this.cashController = new PayByCashController(scs, this);
 		this.cardController = new PayByCard(scs, this);
+
+    // this is from an old version, delete it if it breaks anything
+		// this.cardController = new PayByCardController(scs);
+		this.successfulSwipe = cardController.successfulSwipe;
+    // end stuff to delete
+    
 		this.scs = scs;
 	}
 
@@ -134,6 +147,7 @@ public class Funds {
 	}
 
 	public void beginPayment() {
+		
 		if (amountDue.compareTo(BigDecimal.ZERO) <= 0) {
 			throw new IllegalDigitException("Price should be positive.");
 		}
@@ -164,7 +178,7 @@ public class Funds {
 			if (amountDue.intValue() <= -1) {
 				returnChange();
 			}
-
+			payed = true;
 		}
 	}
 
@@ -297,6 +311,10 @@ public class Funds {
 			throw new NotEnoughChangeException("Not enough change in the machine");
 		}
 
+	}
+	
+	public boolean getSuccessfulSwipe() {
+		return cardController.successfulSwipe;
 	}
 
 	/**

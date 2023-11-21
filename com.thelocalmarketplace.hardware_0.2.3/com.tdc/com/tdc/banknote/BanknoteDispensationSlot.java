@@ -92,7 +92,8 @@ public final class BanknoteDispensationSlot extends AbstractComponent<BanknoteDi
 		if(danglingDispensedBanknotes.isEmpty())
 			throw new NullPointerSimulationException("danglingEjectedBanknote");
 
-		List<Banknote> banknotes = Collections.unmodifiableList(danglingDispensedBanknotes);
+		@SuppressWarnings("unchecked")
+		List<Banknote> banknotes = Collections.unmodifiableList((List<Banknote>)danglingDispensedBanknotes.clone());
 		danglingDispensedBanknotes.clear();
 		notifyBanknotesRemoved();
 

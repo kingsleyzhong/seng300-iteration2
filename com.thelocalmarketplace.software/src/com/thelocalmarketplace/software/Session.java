@@ -10,8 +10,6 @@ import com.tdc.CashOverloadException;
 import com.tdc.DisabledException;
 import com.tdc.NoCashAvailableException;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
-import com.jjjwelectronics.scanner.BarcodedItem;
-import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
 import com.thelocalmarketplace.software.exceptions.CartEmptyException;
 import com.thelocalmarketplace.software.exceptions.ProductNotFoundException;
@@ -277,6 +275,7 @@ public class Session {
 			sessionState = SessionState.PAY_BY_CARD;
 			funds.setPay(true);
 			funds.beginPayment();
+
 		} else {
 			throw new CartEmptyException("Cannot pay for an empty order");
 		}

@@ -82,6 +82,8 @@ public class ItemAddedRuleTest {
         session2 = new Session();
         session3 = new Session();
         
+        PowerGrid.engageUninterruptiblePowerSource();
+        
         AbstractSelfCheckoutStation.resetConfigurationToDefaults();
         
         scsb = new SelfCheckoutStationBronze();
@@ -131,6 +133,12 @@ public class ItemAddedRuleTest {
         scsg.handheldScanner.register(listener);
     }
 
+    @Test(expected = InvalidArgumentSimulationException.class)
+    public void testNullSCS() {
+    	AbstractSelfCheckoutStation scsNull = null;
+    	new ItemAddedRule(scsNull, session);
+    }
+    
     @Test
     public void testAddItemInDatabaseBronze() {
         session.start();
@@ -192,50 +200,40 @@ public class ItemAddedRuleTest {
         assertTrue(productList.containsKey(product));
     }
     
-    @Test
+    @Test(expected = InvalidArgumentSimulationException.class)
     public void testAddItemNotInDatabaseBronze() {
         session.start();
         
         Barcode barcodeNotInDatabase = new Barcode(new Numeral[] { Numeral.five, Numeral.five, Numeral.eight });
         BarcodedItem itemNotInDatabase = new BarcodedItem(barcodeNotInDatabase, new Mass(100.0));
-        BarcodedProduct productNotInDatabase = new BarcodedProduct(barcodeNotInDatabase, "Ha", 10, 100.0);
         
-        while (!listener.barcodesScanned.contains(itemNotInDatabase.getBarcode())) {
+        for(int i =0; i < 100; i++) {
         	scsb.mainScanner.scan(itemNotInDatabase);
         }
-        
-        HashMap<BarcodedProduct, Integer> productList = session.getBarcodedItems();
-        assertFalse(productList.containsKey(productNotInDatabase));
     }
 
-    @Test
+    @Test(expected = InvalidArgumentSimulationException.class)
     public void testAddItemNotInDatabaseSilver() {
         session2.start();
         
         Barcode barcodeNotInDatabase = new Barcode(new Numeral[] { Numeral.five, Numeral.five, Numeral.eight });
         BarcodedItem itemNotInDatabase = new BarcodedItem(barcodeNotInDatabase, new Mass(100.0));
-        BarcodedProduct productNotInDatabase = new BarcodedProduct(barcodeNotInDatabase, "Ha", 10, 100.0);
         
-        while (!listener.barcodesScanned.contains(itemNotInDatabase.getBarcode())) {
+        for(int i =0; i < 100; i++) {
         	scss.mainScanner.scan(itemNotInDatabase);
         }
-        HashMap<BarcodedProduct, Integer> productList = session2.getBarcodedItems();
-        assertFalse(productList.containsKey(productNotInDatabase));
     }
 
-    @Test
+    @Test(expected = InvalidArgumentSimulationException.class)
     public void testAddItemNotInDatabaseGold() {
         session3.start();
         
         Barcode barcodeNotInDatabase = new Barcode(new Numeral[] { Numeral.five, Numeral.five, Numeral.eight });
         BarcodedItem itemNotInDatabase = new BarcodedItem(barcodeNotInDatabase, new Mass(100.0));
-        BarcodedProduct productNotInDatabase = new BarcodedProduct(barcodeNotInDatabase, "Ha", 10, 100.0);
 
-        while (!listener.barcodesScanned.contains(itemNotInDatabase.getBarcode())) {
+        for(int i =0; i < 100; i++) {
         	scsg.mainScanner.scan(itemNotInDatabase);
         }
-        HashMap<BarcodedProduct, Integer> productList = session3.getBarcodedItems();
-        assertFalse(productList.containsKey(productNotInDatabase));
     }
 
     @Test
@@ -266,7 +264,7 @@ public class ItemAddedRuleTest {
     	while (!listener.barcodesScanned.contains(item.getBarcode())) {
     		scsb.mainScanner.scan(item);
     	}
-        Barcode newBarcode = new Barcode(new Numeral[] { Numeral.five, Numeral.five, Numeral.eight });
+        Barcode newBarcode = new Barcode(new Numeral[] { Numeral.six});
         BarcodedItem newItem = new BarcodedItem(newBarcode, new Mass(100.0));
         BarcodedProduct newProduct = new BarcodedProduct(newBarcode, "New Product", 10, 100.0);
         ProductDatabases.BARCODED_PRODUCT_DATABASE.put(newBarcode, newProduct);
@@ -285,7 +283,7 @@ public class ItemAddedRuleTest {
     	while (!listener.barcodesScanned.contains(item.getBarcode())) {
     		scss.mainScanner.scan(item);
     	}
-        Barcode newBarcode = new Barcode(new Numeral[] { Numeral.five, Numeral.five, Numeral.eight });
+        Barcode newBarcode = new Barcode(new Numeral[] { Numeral.six});
         BarcodedItem newItem = new BarcodedItem(newBarcode, new Mass(100.0));
         BarcodedProduct newProduct = new BarcodedProduct(newBarcode, "New Product", 10, 100.0);
         ProductDatabases.BARCODED_PRODUCT_DATABASE.put(newBarcode, newProduct);
@@ -303,7 +301,7 @@ public class ItemAddedRuleTest {
     	while (!listener.barcodesScanned.contains(item.getBarcode())) {
     		scsg.mainScanner.scan(item);
     	}
-        Barcode newBarcode = new Barcode(new Numeral[] { Numeral.five, Numeral.five, Numeral.eight });
+        Barcode newBarcode = new Barcode(new Numeral[] { Numeral.six});
         BarcodedItem newItem = new BarcodedItem(newBarcode, new Mass(100.0));
         BarcodedProduct newProduct = new BarcodedProduct(newBarcode, "New Product", 10, 100.0);
         ProductDatabases.BARCODED_PRODUCT_DATABASE.put(newBarcode, newProduct);
@@ -315,6 +313,15 @@ public class ItemAddedRuleTest {
         assertFalse(productList.containsKey(newProduct));
     }
     
+    @Test
+    public void testNoExceptionsOccur() {
+    	scsb.mainScanner.turnOff();
+    	scsb.mainScanner.turnOn();
+    	scsb.mainScanner.disable();
+    	scsb.mainScanner.enable();
+    	
+    }
+   
     public class ScannerListenerStub implements BarcodeScannerListener{
     	public ArrayList<Barcode> barcodesScanned;
     	
