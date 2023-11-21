@@ -141,12 +141,12 @@ public class AddBagsTest_Silver{
 		// call addBags
 		session.addBags();
 		
-		// add the bags to the bagging area
-		scs.baggingArea.addAnItem(bag);
+		// a bag is not physically added because that will cause a discrepancy
 				
 		// the session has not started
-		assertFalse(session.getState() == SessionState.PRE_SESSION); 
+		assertTrue(session.getState() == SessionState.PRE_SESSION); 
 	}
+	
 	/*
 	 * Tests that calling addBag() before the session has started has no impact on the state of session
 	 * ie: the expected weight doesnt change and the session remains in pre-session state 
