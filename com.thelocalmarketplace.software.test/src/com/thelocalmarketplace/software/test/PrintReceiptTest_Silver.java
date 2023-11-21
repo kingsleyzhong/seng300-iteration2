@@ -17,8 +17,11 @@ package com.thelocalmarketplace.software.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.HashMap;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -53,6 +56,9 @@ public class PrintReceiptTest_Silver {
     private Funds fundsSilver;
     private Weight weightSilver;
     private PrintReceipt receiptPrinterSilver;
+    
+    private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+    private final PrintStream originalErr = System.err;
 
     @Before
     public void setUp() {
@@ -75,6 +81,13 @@ public class PrintReceiptTest_Silver {
         fundsSilver = new Funds(scss);
         weightSilver = new Weight(scss);
         receiptPrinterSilver = new PrintReceipt(scss);
+        
+        System.setErr(new PrintStream(errContent));
+    }
+    
+    @After
+    public void restoreStreams() {
+    	System.setErr(originalErr);
     }
     
     @Test (expected = IllegalArgumentException.class)
@@ -93,6 +106,38 @@ public class PrintReceiptTest_Silver {
     	scss.printer.cutPaper();
         String testReceipt = scss.printer.removeReceipt();
         assertTrue(testReceipt.contains("Item: Sample Product Amount: 1 Price: 10\n"));
+    }
+    
+    @Test
+    public void testPrintReceiptOnlyAddPaper() throws OverloadedDevice {
+    	session.start();
+    	session.setup(new HashMap<BarcodedProduct, Integer>(), fundsSilver, weightSilver, receiptPrinterSilver);
+    	session.addItem(product);
+    	session.printReceipt();
+    	scss.printer.cutPaper();
+        String testReceipt = scss.printer.removeReceipt();
+        assertTrue(testReceipt.contains(""));
+        scss.printer.addPaper(512);
+        session.printReceipt();
+        scss.printer.cutPaper();
+        String testReceipt2 = scss.printer.removeReceipt();
+        assertTrue(testReceipt2.contains(""));
+    }
+    
+    @Test
+    public void testPrintReceiptOnlyAddInk() throws OverloadedDevice {
+    	session.start();
+    	session.setup(new HashMap<BarcodedProduct, Integer>(), fundsSilver, weightSilver, receiptPrinterSilver);
+    	session.addItem(product);
+    	session.printReceipt();
+    	scss.printer.cutPaper();
+        String testReceipt = scss.printer.removeReceipt();
+        assertTrue(testReceipt.contains(""));
+        scss.printer.addInk(1024);
+        session.printReceipt();
+        scss.printer.cutPaper();
+        String testReceipt2 = scss.printer.removeReceipt();
+        assertTrue(testReceipt2.contains(""));
     }
     
     @Test
@@ -205,6 +250,19 @@ public class PrintReceiptTest_Silver {
     	receiptPrinterSilver.register(stub);
     	receiptPrinterSilver.deregisterAll();
     	assertTrue(receiptPrinterSilver.listeners.isEmpty());
+    }
+    
+    @Test
+    public void testPrintingLineLongerThenCharLimit() throws OverloadedDevice {
+    	BarcodedProduct product3 = new BarcodedProduct(barcode2, "A very long long long long long long long product name", 15, 20.0);
+    	scss.printer.addPaper(512);
+    	scss.printer.addInk(1024);
+    	session.start();
+    	session.setup(new HashMap<BarcodedProduct, Integer>(), fundsSilver, weightSilver, receiptPrinterSilver);
+    	session.addItem(product3);
+    	session.printReceipt();
+    	String errorMessage = errContent.toString();
+    	assertTrue(errorMessage.contains("The line is too long. Add a newline"));
     }
     
 	// Stub listener
