@@ -86,11 +86,7 @@ public class Funds {
 		this.cashController = new PayByCashController(scs, this);
 		this.cardController = new PayByCard(scs, this);
 
-    // this is from an old version, delete it if it breaks anything
-		// this.cardController = new PayByCardController(scs);
-		this.successfulSwipe = cardController.successfulSwipe;
-    // end stuff to delete
-    
+
 		this.scs = scs;
 	}
 
@@ -263,7 +259,7 @@ public class Funds {
 					try {
 						scs.banknoteDispensers.get(banknoteDenomination).emit();
 					} catch (NoCashAvailableException e) {
-						System.out.println("There is no banknotes available");
+						throw new NotEnoughChangeException("There are no banknotes available");
 					} catch (DisabledException e) {
 						System.out.println("Machine is not turned on");
 					} catch (CashOverloadException e) {
@@ -295,7 +291,7 @@ public class Funds {
 					try {
 						scs.coinDispensers.get(coinDenomination).emit();
 					} catch (NoCashAvailableException e) {
-						System.out.println("There is are no coins available");
+						throw new NotEnoughChangeException("There are no coins available");
 					} catch (DisabledException e) {
 						System.out.println("Machine is not turned on");
 					} catch (CashOverloadException e) {
@@ -313,10 +309,6 @@ public class Funds {
 			throw new NotEnoughChangeException("Not enough change in the machine");
 		}
 
-	}
-	
-	public boolean getSuccessfulSwipe() {
-		return cardController.successfulSwipe;
 	}
 
 	/**

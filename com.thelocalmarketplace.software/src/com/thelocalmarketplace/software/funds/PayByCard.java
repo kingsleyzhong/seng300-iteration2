@@ -39,7 +39,6 @@ public class PayByCard {
 	private PayByCard cardController;
 	private double amountDue;
 	boolean paidBool;
-	boolean successfulSwipe;
 	boolean posted;
 	private Funds funds;
 	private AbstractSelfCheckoutStation scs;
@@ -82,7 +81,6 @@ public class PayByCard {
 		@Override
 		public void aCardHasBeenSwiped(){
 			paidBool = false;
-			successfulSwipe = true;
 			// TODO Auto-generated method stub
 			
 		}
@@ -90,21 +88,7 @@ public class PayByCard {
 		@Override
 		public void theDataFromACardHasBeenRead(CardData data) {	
 			card = new Card(data.getType(), data.getNumber(), data.getCardholder(), null);
-//			if(Session.getState() != SessionState.PAY_BY_CARD) {
-//				throw new InvalidActionException("Card reader not in use");
-//			}
-				try {
-					getTransactionFromBank(card);
-				} catch (CashOverloadException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (NoCashAvailableException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (DisabledException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+			getTransactionFromBank(card);
 		}
 	}
 
@@ -115,9 +99,9 @@ public class PayByCard {
      * @throws NoCashAvailableException 
      * @throws CashOverloadException 
      */
-	public void getTransactionFromBank(Card card) throws CashOverloadException, NoCashAvailableException, DisabledException {
-		// We need to retrieve the funds
-		// We determine the type of card, check the database for validity, then attempt 		
+	public void getTransactionFromBank(Card card){
+		// Determine the type of card, check the database for validity, then attempt to process a transaction
+		// All failures to process/post will be handled simply as "Declined" as that is all a self-checkout POS would typically report
 		if (card.kind == SupportedCardIssuers.ONE.getIssuer()) {
 			long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).authorizeHold(card.number, 1);
 			
@@ -128,20 +112,15 @@ public class PayByCard {
 				// Maxed holds
 				return;
 			} else {	
+				// Posting may fail for some reason such as insufficient available Credit limit
 				boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
-				if (!post) {
-					// This failed for some reason
-					// Credit limit
-					return;
-				} else {
-					// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-					CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).releaseHold(card.number, 1);
+
+				// This can fail and return -1 but this should not ever happen as this cannot fail if the transaction gets this far
+				CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.ONE.getIssuer()).releaseHold(card.number, 1);
 				}
 				paidBool = true;
 				funds.updatePaidCard(paidBool);
-				successfulSwipe = false;
 				return;
-			}
 							
 		} else if (card.kind == SupportedCardIssuers.TWO.getIssuer()) {
 			long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).authorizeHold(card.number, 1);
@@ -153,20 +132,15 @@ public class PayByCard {
 				// Maxed holds
 				return;
 			} else {	
+				// Posting may fail for some reason such as insufficient available Credit limit
 				boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
-				if (!post) {
-					// This failed for some reason
-					// Credit limit
-					return;
-				} else {
-					// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-					CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).releaseHold(card.number, 1);
+
+				// This can fail and return -1 but this should not ever happen as this cannot fail if the transaction gets this far
+				CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.TWO.getIssuer()).releaseHold(card.number, 1);
 				}
 				paidBool = true;
 				funds.updatePaidCard(paidBool);
-				successfulSwipe = false;
 				return;
-			}
 							
 		} else if (card.kind == SupportedCardIssuers.THREE.getIssuer()) {
 			long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).authorizeHold(card.number, 1);
@@ -178,20 +152,15 @@ public class PayByCard {
 				// Maxed holds
 				return;
 			} else {	
+				// Posting may fail for some reason such as insufficient available Credit limit
 				boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
-				if (!post) {
-					// This failed for some reason
-					// Credit limit
-					return;
-				} else {
-					// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-					CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).releaseHold(card.number, 1);
+
+				// This can fail and return -1 but this should not ever happen as this cannot fail if the transaction gets this far
+				CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.THREE.getIssuer()).releaseHold(card.number, 1);
 				}
 				paidBool = true;
 				funds.updatePaidCard(paidBool);		
-				successfulSwipe = false;
 				return;
-			}
 			
 		} else if (card.kind == SupportedCardIssuers.FOUR.getIssuer()) {
 			long holdNumber = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).authorizeHold(card.number, 1);
@@ -202,19 +171,15 @@ public class PayByCard {
 				// Blocked card
 				// Maxed holds
 				return;
-			} else {	
+			} else {
+				// Posting may fail for some reason such as insufficient available Credit limit
 				boolean post = CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).postTransaction(card.number, holdNumber, amountDue);
-				if (!post) {
-					// This failed for some reason
-					// Credit limit
-					return;
-				} else {
-					// This can fail and return -1 or false or whatever but tbh it seems redundant to even look
-					CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).releaseHold(card.number, 1);
-				}
+				
+				// This can fail and return -1 but this should not ever happen as this cannot fail if the transaction gets this far
+				CardIssuerDatabase.CARD_ISSUER_DATABASE.get(SupportedCardIssuers.FOUR.getIssuer()).releaseHold(card.number, 1);
+
 				paidBool = true;
 				funds.updatePaidCard(paidBool);
-				successfulSwipe = false;
 				return;
 			}
 		} else {
@@ -222,4 +187,5 @@ public class PayByCard {
 		}
 	}	
 }
+
 

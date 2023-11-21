@@ -10,6 +10,7 @@ import com.jjjwelectronics.scanner.Barcode;
 import com.jjjwelectronics.scanner.BarcodedItem;
 import com.tdc.CashOverloadException;
 import com.tdc.DisabledException;
+import com.tdc.NoCashAvailableException;
 import com.tdc.coin.Coin;
 import com.thelocalmarketplace.hardware.AbstractSelfCheckoutStation;
 import com.thelocalmarketplace.hardware.BarcodedProduct;
@@ -18,6 +19,7 @@ import com.thelocalmarketplace.hardware.SelfCheckoutStationGold;
 import com.thelocalmarketplace.hardware.SelfCheckoutStationSilver;
 import com.thelocalmarketplace.software.Session;
 import com.thelocalmarketplace.software.SessionState;
+import com.thelocalmarketplace.software.exceptions.CartEmptyException;
 import com.thelocalmarketplace.software.exceptions.InvalidActionException;
 import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.receipt.PrintReceipt;
@@ -223,13 +225,20 @@ public class SessionTest {
 
     }
 
-    @Test(expected = InvalidActionException.class)
-    public void payEmpty() {
+    @Test(expected = CartEmptyException.class)
+    public void payEmpty_payByCash() {
         session.start();
         session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight, receiptPrinter);
         session.payByCash();
     }
 
+    @Test(expected = CartEmptyException.class)
+    public void payEmpty_payByCard() throws CashOverloadException, NoCashAvailableException, DisabledException {
+        session.start();
+        session.setup(new HashMap<BarcodedProduct, Integer>(), funds, weight, receiptPrinter);
+        session.payByCard();
+    }
+    
     @Test
     public void testPaid() throws DisabledException, CashOverloadException {
         session.start();
@@ -247,4 +256,7 @@ public class SessionTest {
         }
         assertEquals(Session.getState(), SessionState.PRE_SESSION);
     }
+
+
+
 }

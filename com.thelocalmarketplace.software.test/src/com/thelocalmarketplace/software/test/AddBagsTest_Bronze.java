@@ -103,7 +103,7 @@ public class AddBagsTest_Bronze {
         // create "bags"
         
         bagMass = new Mass(10 * Mass.MICROGRAMS_PER_GRAM);// bag of mass 100g < BAG MASS LIMIT
-        overweightBagMass = new Mass((BAG_MASS_LIMIT + 60) );// mass > BAG MASS LIMIT
+        overweightBagMass = new Mass((BAG_MASS_LIMIT + 60.0) );// mass > BAG MASS LIMIT
         weightLimitBagMass = new Mass(BAG_MASS_LIMIT );// mass equal to the limited size of a bag in the session software
 		notBagMass = new Mass((30 * Mass.MICROGRAMS_PER_GRAM));
 
@@ -143,11 +143,10 @@ public class AddBagsTest_Bronze {
 		// call addBags
 		session.addBags();
 		
-		// add the bags to the bagging area
-		scs.baggingArea.addAnItem(bag);
+		// a bag is not physically added because that will cause a discrepancy
 				
 		// the session has not started
-		assertFalse(session.getState() == SessionState.PRE_SESSION); 
+		assertTrue(session.getState() == SessionState.PRE_SESSION); 
 	}
 	/*
 	 * Tests that calling addBag() before the session has started has no impact on the state of session
