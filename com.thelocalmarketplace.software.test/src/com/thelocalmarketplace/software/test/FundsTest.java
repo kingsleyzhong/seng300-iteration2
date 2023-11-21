@@ -55,7 +55,7 @@ import powerutility.PowerGrid;
  * Subeg CHAHAL : 30196531
  */
 
-public class FundsTest_Bronze {
+public class FundsTest {
 	
 	private SelfCheckoutStationBronze scs;
 	private PayByCashController cashControllerBronze;
