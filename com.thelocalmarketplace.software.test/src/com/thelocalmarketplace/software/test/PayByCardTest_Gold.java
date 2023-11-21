@@ -42,15 +42,13 @@ import com.thelocalmarketplace.software.funds.Funds;
 import com.thelocalmarketplace.software.funds.FundsListener;
 import com.thelocalmarketplace.software.funds.PayByCard;
 import com.thelocalmarketplace.software.funds.SupportedCardIssuers;
-import com.thelocalmarketplace.software.test.PayByCashControllerTest.MockSession;
 
-import StubClasses.SessionStub;
 import ca.ucalgary.seng300.simulation.SimulationException;
 import powerutility.NoPowerException;
 import powerutility.PowerGrid;
 
 /**
- *  <p> Testing for the Funds class </p>
+ *  <p> Testing for the PayByCard class with Gold hardware </p>
  * 
  *  <p> Project iteration 2 group members: </p>
  * 		Aj Sallh 				: 30023811
@@ -65,14 +63,8 @@ import powerutility.PowerGrid;
  *		Subeg CHAHAL 			: 30196531
  */
 
-public class PayByCardTest {
-	private SelfCheckoutStationBronze scs;
-	private SelfCheckoutStationSilver scss;
-	private SelfCheckoutStationGold scsg;
-    private CoinValidator validator;
-    private BigDecimal value;
-    private BigDecimal price;
-	private static SupportedCardIssuers supportedCards;
+public class PayByCardTest_Gold {
+	private SelfCheckoutStationGold scs;
 	private ArrayList <CardIssuer> supportedCardsClasses = new ArrayList <CardIssuer>();
 	private CardIssuer ci1;
 	private CardIssuer ci2;
@@ -83,11 +75,6 @@ public class PayByCardTest {
 	private Card cdnDep;
 	private Card debit;
 	private Funds funds;
-	private Funds fundss;
-	private Funds fundsg;
-	private SessionStub session;
-	private BarcodedProduct product;
-	private Barcode barcode; 
 	private MockSession mockSession;
 	
 	/***
@@ -108,27 +95,14 @@ public class PayByCardTest {
 	@Before
 	public void setup() {
 		AbstractSelfCheckoutStation.resetConfigurationToDefaults();
-		
-        barcode = new Barcode(new Numeral[] { Numeral.valueOf((byte) 1) });
-        product = new BarcodedProduct(barcode, "Product 1", 10, 100.0);
 
 		mockSession = new MockSession();
     	
-		scs = new SelfCheckoutStationBronze();
+		scs = new SelfCheckoutStationGold();
 		scs.plugIn(PowerGrid.instance());
 		PowerGrid.engageUninterruptiblePowerSource();
 		scs.turnOn();
 		funds = new Funds(scs);
-
-		scss = new SelfCheckoutStationSilver();
-		scss.plugIn(PowerGrid.instance());
-		scss.turnOn();
-		fundss = new Funds(scss);
-
-		scsg = new SelfCheckoutStationGold();
-		scsg.plugIn(PowerGrid.instance());
-		scsg.turnOn();
-		fundsg = new Funds(scsg);
 		
 		ci1 = new CardIssuer(SupportedCardIssuers.ONE.getIssuer(), 1);
 		ci2 = new CardIssuer(SupportedCardIssuers.TWO.getIssuer(), 5);
@@ -146,29 +120,27 @@ public class PayByCardTest {
 			index ++;
 		}
 		
-		disCard = new Card(SupportedCardIssuers.ONE.getIssuer(), "5299334598001547", "Brandon Chan", "666");
-		viva = new Card(SupportedCardIssuers.TWO.getIssuer(), "4504389022574000", "Dorris Giles", "343");
-		cdnDep = new Card(SupportedCardIssuers.THREE.getIssuer(), "1111111111111111", "Not A Real Person", "420");
-		debit = new Card(SupportedCardIssuers.FOUR.getIssuer(), "5160617843321186", "Robehrt Lazar", "111");
+		disCard = new Card(SupportedCardIssuers.ONE.getIssuer(), "0000000000000000", "NO ONE", "000");
+		viva = new Card(SupportedCardIssuers.TWO.getIssuer(), "4504389022574000", "Stan Bozik", "343");
+		cdnDep = new Card(SupportedCardIssuers.THREE.getIssuer(), "5299445733248855", "Zach Ly", "999");
+		debit = new Card(SupportedCardIssuers.FOUR.getIssuer(), "5160617843321186", "Edmond Mark", "111");
 		
 		Calendar exp = Calendar.getInstance();
 		exp.set(Calendar.YEAR, 2099);
 		exp.set(Calendar.MONTH, 12);
 		
-		ci1.addCardData(disCard.number, disCard.cardholder, exp, disCard.cvv, 10000);
+		ci1.addCardData("0", disCard.cardholder, exp, disCard.cvv, 10000);
 		ci2.addCardData(viva.number, viva.cardholder, exp, viva.cvv, 7500);
-		ci3.addCardData("0", cdnDep.cardholder, exp, cdnDep.cvv, 1);
-		ci4.addCardData(debit.number, debit.cardholder, exp, debit.cvv, 2);
+		ci3.addCardData(cdnDep.number, cdnDep.cardholder, exp, cdnDep.cvv, 1000);
+		ci4.addCardData(debit.number, debit.cardholder, exp, debit.cvv, 2000);
 	}
 	
-// ---------- BRONZE TESTS ----------	
-	
-	
-	
+// ---------- GOLD TESTS ----------	
+		
 	@Test (expected = NoPowerException.class)
 	public void powerOffSwipe() throws IOException, CashOverloadException, NoCashAvailableException, DisabledException{
 		scs.turnOff();
-		scs.cardReader.swipe(debit);
+		scs.cardReader.swipe(disCard);
 		scs.turnOn();
 		// Swiping a card when the reader is not supposed to be in use (wrong session state
 		// Expect that aCardHasBeenSwiped throws InvalidActionException
@@ -179,7 +151,7 @@ public class PayByCardTest {
 		mockSession.block();
 		while(!funds.successfulSwipe) {
 			try {
-				scs.cardReader.swipe(debit);
+				scs.cardReader.swipe(disCard);
 			} catch (MagneticStripeFailureException e) {
 			}
 		}
@@ -194,9 +166,10 @@ public class PayByCardTest {
 		mockSession.payByCard();
 		funds.update(itemPrice);
 		funds.beginPayment();
-		while(!funds.successfulSwipe) {
+		int i = 0;
+		while(i < 1000) {
 			try {
-				scs.cardReader.swipe(cdnDep);
+				scs.cardReader.swipe(disCard);
 			} catch (MagneticStripeFailureException e) {
 			}
 		}
@@ -212,10 +185,11 @@ public class PayByCardTest {
 		mockSession.payByCard();
 		funds.update(itemPrice);
 		funds.beginPayment();
-		ci4.block(debit.number);
-		while(!funds.successfulSwipe) {
+		ci4.block(viva.number);
+		int i = 0;
+		while(i < 1000) {
 			try {
-				scs.cardReader.swipe(debit);
+				scs.cardReader.swipe(viva);
 
 			} catch (MagneticStripeFailureException e) {
 			}
@@ -237,7 +211,8 @@ public class PayByCardTest {
 		ci1.authorizeHold(disCard.number, 1);
 		assertEquals(-1, ci1.authorizeHold(disCard.number, 1));
 		ci1.releaseHold(disCard.number, 1);
-		while(!funds.successfulSwipe) {
+		int i = 0;
+		while(i < 1000) {
 			try {
 				scs.cardReader.swipe(disCard);
 			} catch (MagneticStripeFailureException e) {
@@ -252,9 +227,10 @@ public class PayByCardTest {
 		funds.update(itemPrice);
 		mockSession.payByCard();
 		funds.beginPayment();
-		while(!funds.successfulSwipe) {
+		int i = 0;
+		while(i < 1000) {
 			try {
-				scs.cardReader.swipe(viva);
+				scs.cardReader.swipe(debit);
 			} catch (MagneticStripeFailureException e) {
 			}
 		}
@@ -270,21 +246,30 @@ public class PayByCardTest {
 		funds.update(itemPrice);
 		funds.beginPayment();
 		
-		while(!funds.successfulSwipe) {
+		while(!funds.payed) {
 			try {
-				scs.cardReader.swipe(viva);
+				scs.cardReader.swipe(cdnDep);
+				assertTrue(funds.payed);
 			} catch (MagneticStripeFailureException e) {
 			}
 		}
-		assertTrue(funds.payed);
 		// This will post a successful charge on the given card
 		// postTransaction should return true 
 	}
 	
-	// ---------- SILVER TESTS ----------
-	
-	
-	// ---------- GOLD TESTS ---------- 
-	
-	
+	@Test (expected = MagneticStripeFailureException.class)
+	public void magStripeFailureTest() throws CashOverloadException, NoCashAvailableException, DisabledException, IOException {
+		mockSession.payByCard();
+		long price = 10;
+		BigDecimal itemPrice = new BigDecimal(price);
+		funds.update(itemPrice);
+		funds.beginPayment();
+		int i = 0;
+		while(i < 1000) {
+				scs.cardReader.swipe(cdnDep);
+				i++;
+		}
+		// This will post a successful charge on the given card
+		// postTransaction should return true 
+	}
 }

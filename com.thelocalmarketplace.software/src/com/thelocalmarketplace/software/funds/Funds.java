@@ -86,11 +86,10 @@ public class Funds {
 		this.cashController = new PayByCashController(scs, this);
 		this.cardController = new PayByCard(scs, this);
 
-    // this is from an old version, delete it if it breaks anything
-		// this.cardController = new PayByCardController(scs);
+		// Testing only
 		this.successfulSwipe = cardController.successfulSwipe;
-    // end stuff to delete
-    
+
+
 		this.scs = scs;
 	}
 
@@ -179,6 +178,9 @@ public class Funds {
 				returnChange();
 			}
 			payed = true;
+			
+			// Testing only
+			cardController.successfulSwipe = false;
 		}
 	}
 
