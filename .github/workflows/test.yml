@@ -2,6 +2,7 @@ name: Java CI with Maven
 
 on:
   pull_request:
+  push:
 jobs:
   build:
 
