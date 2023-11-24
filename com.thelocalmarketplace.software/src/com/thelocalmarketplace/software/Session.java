@@ -49,7 +49,6 @@ public class Session {
 	protected static SessionState sessionState;
 	private SessionState prevState;
 	private HashMap<BarcodedProduct, Integer> barcodedItems;
-	private HashMap<BarcodedProduct, Integer> bulkyItem;
 	private Funds funds;
 	private Weight weight;
 	private PrintReceipt receiptPrinter; // Code added
@@ -458,7 +457,10 @@ public class Session {
 	/**
 	 * Removes a selected product from the hashMap of barcoded items.
 	 * Updates the weight and price of the products.
-	 * 
+	 *
+	 * Removes a selected product from the hashMap of bulky items.
+	 * Updates the price of the products.
+	 *
 	 * @param product
 	 *                The product to be removed from the HashMap.
 	 */
@@ -467,7 +469,23 @@ public class Session {
 		long price = product.getPrice(); 
 		Mass mass = new Mass(weight);
 		BigDecimal ItemPrice = new BigDecimal(price);
-		
+
+		// remove bulky item
+		if (!this.getBulkyItem().isEmpty()) {
+			if (bulkyItem.get(product) > 1) {
+				bulkyItem.replace(product, bulkyItem.get(product) - 1);
+				barcodedItems.replace(product, barcodedItems.get(product)-1);
+				funds.removeItemPrice(ItemPrice);
+			} else if (bulkyItem.get(product) == 1) {
+				funds.removeItemPrice(ItemPrice);
+				bulkyItem.remove(product);
+				barcodedItems.remove(product);
+			}
+
+			return;
+		}
+
+		// remove item
 		if (barcodedItems.containsKey(product) && barcodedItems.get(product) > 1 ) {
 			barcodedItems.replace(product, barcodedItems.get(product)-1);
 			this.weight.removeItemWeightUpdate(mass);
@@ -508,172 +526,54 @@ public class Session {
 
 	// Handle Bulky Item Use Case
 	private boolean bulkyItemCalled;
-	private boolean callAssistantForWeightDiscrepancy;
-	private boolean informAssistantBulkyItemCalled;
-	private boolean requestApproved;
+	private HashMap<BarcodedProduct, Integer> bulkyItem = new HashMap<BarcodedProduct, Integer>();
 
 	/**
-	 * method to reset all states regarding handling bulky item
+	 * get hash map that contains all the bulky item
 	 */
-	public void reset() {
-		this.bulkyItemCalled = false;
-		this.callAssistantForWeightDiscrepancy = false;
-		this.informAssistantBulkyItemCalled = false;
-		this.requestApproved = false;
-	}
-
+	public HashMap getBulkyItem() { return this.bulkyItem; }
 	/**
 	 * method that records if customer calls handle bulky item (to the system and to
 	 * the assistant)
 	 */
-	public void bulkyItemCalled() {
-		// nothing happens if there is no weight discrepancy
-		if (Session.getState() != SessionState.BLOCKED) {
-			return;
-		}
-
-		this.bulkyItemCalled = true;
-		// assistant is also informed
-		this.informAssistantBulkyItemCalled = true;
-	}
-
-	/**
-	 * method to allow assistant to approve customer request for bulky item
-	 */
-	public void assistantApprove() {
-		if (this.informAssistantBulkyItemCalled) {
-			this.requestApproved = true;
-		}
-	}
+	public void bulkyItemCalled() { this.bulkyItemCalled = true; }
 
 	/**
 	 * Subtracts the weight of the bulky item from the total expected weight
 	 * of the system
 	 * notifies that the event has happened
-	 *
-	 * Only get called if assistant approves request or if assistant itself calls it
-	 * If called when there is no weight discrepancy, then nothing happens
 	 */
-	public void addBulkyItem() {
-		// customer calls add bulky item themselves
+	public void addBulkyItem(BarcodedProduct item) {
+		this.block();
 		if (this.bulkyItemCalled) {
-			// block session
-			this.block();
-
-			if (this.requestApproved) {
-				// subtract the bulky item weight from total weight if assistant has approved
-				Mass bulkyItemWeight = this.weight.getLastWeightAdded();
-				this.weight.subtract(bulkyItemWeight);
-			} else {
-				// assistant has not approved the request
-				return;
-			}
-
-			// resume session
-			this.resume();
-		}
-
-		// attendant calls add bulky item
-		else if (this.callAssistantForWeightDiscrepancy) {
-			this.block();
-
+			// subtract the bulky item weight from total weight if assistant has approved
 			Mass bulkyItemWeight = this.weight.getLastWeightAdded();
 			this.weight.subtract(bulkyItemWeight);
-
-			this.resume();
-		}
-
-		else
-			return;
-	}
-
-	public void removeBulkyItem(BarcodedProduct item) {
-		long price = item.getPrice();
-		BigDecimal itemPrice = new BigDecimal(price);
-
-		if (this.bulkyItemCalled) {
-			if (this.requestApproved) {
-				if (bulkyItem.containsKey(item) && bulkyItem.get(item) >= 1 ) {
-					bulkyItem.replace(item, bulkyItem.get(item)-1);
-					funds.removeItemPrice(itemPrice);
-				} else if (bulkyItem.containsKey(item) && bulkyItem.get(item) == 1 ) {
-					funds.removeItemPrice(itemPrice);
-					bulkyItem.remove(item);
-				} else {
-					throw new ProductNotFoundException("Item not found");
-				}
+			if (bulkyItem.containsKey(item)) {
+				bulkyItem.replace(item, bulkyItem.get(item) + 1);
+			} else {
+				bulkyItem.put(item, 1);
 			}
 		}
+		this.resume();
 	}
 
-	public void setup2(HashMap<BarcodedProduct, Integer> barcodedItems, Funds funds, Weight weight) {
-		this.bulkyItem = barcodedItems;
-		this.funds = funds;
-		this.weight = weight;
-		this.weight.register(new WeightDiscrepancyListener());
-		this.funds.register(new PayListener());
-	}
-	public void addBulkyItemToMap(BarcodedProduct item) {
+	/**
+	 * method to cancel handle bulky item request
+	 * customer handles bulky item but claims that it is not a bulky item anymore
+	 */
+	public void cancelBulkyItem(BarcodedProduct product) {
 		if (this.bulkyItemCalled) {
-			if (this.requestApproved) {
-				if (bulkyItem.containsKey(item)) {
-					bulkyItem.replace(item, bulkyItem.get(item) + 1);
-				} else {
-					bulkyItem.put(item, 1);
-				}
-			}
-		}
-	}
-
-	public void cancelBulkyItem() {
-		if (this.bulkyItemCalled)
 			this.bulkyItemCalled = false;
-		else
-			return;
-	}
+			Mass bulkyItemWeight = this.weight.getLastWeightAdded();
+			this.weight.update(bulkyItemWeight);
 
-	/**
-	 * method that allows attendant to fix weight discrepancy by calling add Bulky
-	 * Item
-	 */
-	public void attendantFixWeightDiscrepancy() {
-		if (this.callAssistantForWeightDiscrepancy) {
-			this.addBulkyItem();
-			this.reset();
+			if (bulkyItem.get(product) > 1) {
+				bulkyItem.replace(product, bulkyItem.get(product) - 1);
+			} else if (bulkyItem.get(product) == 1) {
+				bulkyItem.remove(product);
+			}
 		}
 	}
 
-	/**
-	 * method that allows attendant to fix weight discrepancy by removing item from
-	 * bagging area
-	 */
-	public void attendantFixWeightDiscrepancy(AbstractSelfCheckoutStation sc, BarcodedItem item) {
-		if (this.callAssistantForWeightDiscrepancy) {
-			sc.baggingArea.removeAnItem(item);
-			this.reset();
-		}
-	}
-
-	/**
-	 * notifies that the customer has called assistant for weight discrepancy
-	 */
-	public void callAssistantForWeightDiscrepancy() {
-		// if there is weight discrepancy, call attendant for assistance
-		if (weight.isDiscrepancy())
-			this.callAssistantForWeightDiscrepancy = true;
-	}
-
-	/**
-	 * method to get if the request from customer has been approved
-	 */
-	public boolean getRequestApproved() {
-		return this.requestApproved;
-	}
-
-	/**
-	 * method to get if bulky item has been called by customer
-	 */
-	public boolean getBulkyItemCalled() {
-		return this.bulkyItemCalled;
-	}
 }
