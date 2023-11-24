@@ -442,8 +442,7 @@ public class SelfCheckoutStationSystemTest {
 			scs.mainScanner.scan(item);
 		}
 		session.bulkyItemCalled();
-		session.assistantApprove();
-		session.addBulkyItem();
+		session.addBulkyItem(product);
 		assertEquals("Session is in session", SessionState.IN_SESSION, Session.getState());
 	}
 	
